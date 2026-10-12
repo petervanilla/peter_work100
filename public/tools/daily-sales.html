@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>매출 일보</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#b45309;--bad:#e11d48;--r:14px}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+[hidden]{display:none!important}
+.wrap{max-width:1000px;margin:0 auto}h1{font-size:18px;font-weight:800;letter-spacing:-.02em}.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04);min-width:0}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:7px 11px;font-weight:700;font-size:12px;transition:.12s}button:hover{border-color:#c7cddb;background:#fafafa}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}button.primary:hover{filter:brightness(1.07)}
+input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:13px;min-width:0}
+input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:11px;font-weight:800;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}.grow{flex:1;min-width:110px}.muted{color:var(--sub);font-size:12px}.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{border-bottom:1px solid var(--line);padding:7px 6px;text-align:left}th{font-size:11px;color:var(--sub);background:#f8fafc}td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tbody tr[data-d]{cursor:pointer}tbody tr[data-d]:hover{background:#f8fafc}tbody tr.sel{background:#eef2ff}
+.pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap}
+.ok{background:#ecfdf5;color:#047857}.wn{background:#fffbeb;color:#b45309}.bd{background:#fef2f2;color:#be123c}.in{background:#eef2ff;color:#4338ca}
+.bar{height:8px;background:#eef2f7;border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--brand),#8b5cf6)}
+.usecases{margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}.usecases h2{font-size:12px;font-weight:800;color:var(--sub);margin-bottom:6px}.usecases li{font-size:12px;color:var(--sub);margin-left:15px;margin-bottom:3px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+@media(max-width:760px){.two{grid-template-columns:minmax(0,1fr)}}
+.fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.tot{font-size:32px;font-weight:900;letter-spacing:-.04em;font-variant-numeric:tabular-nums;line-height:1.1}
+.kv{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:12px}.kv b{font-variant-numeric:tabular-nums}
+.bars{display:flex;align-items:flex-end;gap:4px;height:84px;margin-top:8px}.bw{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px;cursor:pointer;height:100%}
+.bw i{display:block;width:100%;border-radius:4px 4px 0 0;background:#c7d2fe;min-height:2px}.bw.sel i{background:var(--brand)}.bw span{font-size:9px;color:var(--sub)}
+@media print{body{background:#fff;padding:0}.no-print{display:none!important}.card{box-shadow:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>🧾 매출 일보</h1><p class="sub">하루 매출·객수·지출만 적으면 객단가와 순이익, 어제·지난주 같은 요일과의 비교, 이번 달 흐름까지 자동으로 정리돼요.</p></header>
+
+<section class="card">
+  <div class="row">
+    <button id="prev" aria-label="전날">◀</button>
+    <div><label for="date">날짜</label><input id="date" type="date" style="width:160px"></div>
+    <button id="next" aria-label="다음날">▶</button>
+    <button id="todayBtn">오늘</button>
+    <span class="pill in" id="dow">-</span>
+  </div>
+</section>
+
+<div class="two">
+<section class="card">
+  <b style="font-size:13px">오늘의 기록</b>
+  <div class="muted" style="margin:8px 0 4px">매출 (원)</div>
+  <div class="fg">
+    <div><label for="f_card">카드</label><input id="f_card" data-fld="card" type="number" min="0" inputmode="numeric"></div>
+    <div><label for="f_cash">현금</label><input id="f_cash" data-fld="cash" type="number" min="0" inputmode="numeric"></div>
+    <div><label for="f_app">배달앱</label><input id="f_app" data-fld="app" type="number" min="0" inputmode="numeric"></div>
+    <div><label for="f_etc">기타(계좌이체 등)</label><input id="f_etc" data-fld="etc" type="number" min="0" inputmode="numeric"></div>
+  </div>
+  <div class="muted" style="margin:10px 0 4px">객수·지출</div>
+  <div class="fg">
+    <div><label for="f_guests">객수(명)</label><input id="f_guests" data-fld="guests" type="number" min="0" inputmode="numeric"></div>
+    <div><label for="f_food">재료비</label><input id="f_food" data-fld="food" type="number" min="0" inputmode="numeric"></div>
+    <div><label for="f_labor">인건비</label><input id="f_labor" data-fld="labor" type="number" min="0" inputmode="numeric"></div>
+    <div><label for="f_cost">기타 지출</label><input id="f_cost" data-fld="cost" type="number" min="0" inputmode="numeric"></div>
+  </div>
+  <div style="margin-top:10px"><label for="f_memo">메모</label><input id="f_memo" data-fld="memo" placeholder="예: 단체 예약, 비 와서 한산"></div>
+</section>
+
+<section class="card">
+  <div class="muted">총매출</div>
+  <div class="tot" id="sTotal">0원</div>
+  <div style="margin-top:8px">
+    <div class="kv"><span>객단가</span><b id="sPer">-</b></div>
+    <div class="kv"><span>지출 합계</span><b id="sCost">0원</b></div>
+    <div class="kv"><span>순이익(매출−지출)</span><b id="sNet">0원</b></div>
+    <div class="kv"><span>이익률</span><b id="sMargin">-</b></div>
+    <div class="kv"><span>어제 대비</span><b id="sYest">-</b></div>
+    <div class="kv"><span>지난주 같은 요일 대비</span><b id="sWeek">-</b></div>
+  </div>
+  <div class="row no-print" style="margin-top:10px"><button class="primary" id="copy">오늘 보고 복사</button></div>
+</section>
+</div>
+
+<section class="card">
+  <div class="row" style="justify-content:space-between;align-items:center"><b style="font-size:13px" id="mTitle">이번 달</b>
+    <div class="row no-print" style="align-items:flex-end"><div style="width:150px"><label for="goal">월 매출 목표(원)</label><input id="goal" type="number" min="0" inputmode="numeric"></div></div></div>
+  <div class="fg" style="margin-top:10px">
+    <div class="kv" style="display:block;border:0"><span class="muted">월 누계 매출</span><div><b id="mTotal" style="font-size:18px">0원</b></div></div>
+    <div class="kv" style="display:block;border:0"><span class="muted">영업일 평균</span><div><b id="mAvg" style="font-size:18px">-</b></div></div>
+    <div class="kv" style="display:block;border:0"><span class="muted">최고 매출일</span><div><b id="mBest" style="font-size:18px">-</b></div></div>
+    <div class="kv" style="display:block;border:0"><span class="muted">월말 예상</span><div><b id="mProj" style="font-size:18px">-</b></div></div>
+  </div>
+  <div class="row" style="align-items:center;margin-top:6px"><div class="bar grow"><i id="gBar" style="width:0"></i></div><b id="gPct" style="font-size:12px;min-width:150px;text-align:right">목표 -</b></div>
+  <div class="bars" id="bars" aria-label="최근 14일 매출"></div>
+  <div class="scroll" style="margin-top:10px;max-height:240px;overflow-y:auto"><table><thead><tr><th>날짜</th><th class="n">매출</th><th class="n">객수</th><th class="n">순이익</th><th>메모</th></tr></thead><tbody id="rows"></tbody></table></div>
+  <div class="row no-print" style="margin-top:10px"><button id="csv">이 달 CSV</button><button id="print">인쇄·PDF</button><button id="sample">예시로 되돌리기</button><button id="clear">전체 비우기</button></div>
+</section>
+
+<div class="usecases"><h2>이럴 때 좋아요</h2><ul>
+<li><b>사장님(가게)</b> · 하루 마감 때 3분 만에 매출을 적고 객단가와 순이익을 바로 확인할 때</li>
+<li><b>회계</b> · 월말에 일별 매출을 CSV로 내려받아 장부와 맞춰 볼 때</li>
+<li><b>총무·점장</b> · 어제·지난주 같은 요일과 비교해 한산한 요일을 찾을 때</li></ul></div>
+</div>
+
+<script>
+(function(){"use strict";
+var KEY="daily-sales-v1",DOW=["일","월","화","수","목","금","토"],FL=["card","cash","app","etc","guests","food","labor","cost"];
+function load(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function n(v){var x=parseFloat(v);return isNaN(x)?0:x}
+function ymd(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function today(){return ymd(new Date())}
+function addDays(s,k){var d=new Date(s+"T00:00:00");d.setDate(d.getDate()+k);return ymd(d)}
+function dowOf(s){return new Date(s+"T00:00:00").getDay()}
+function won(v){return Math.round(v).toLocaleString("ko-KR")+"원"}
+function tot(r){return r?n(r.card)+n(r.cash)+n(r.app)+n(r.etc):0}
+function costs(r){return r?n(r.food)+n(r.labor)+n(r.cost):0}
+function has(r){return !!r&&(tot(r)>0||n(r.guests)>0)}
+function seed(){var d={},sd=11,t=today();function rnd(){sd=(sd*1664525+1013904223)%4294967296;return sd/4294967296}
+ function r1(v){return Math.round(v/1000)*1000}
+ for(var i=0;i<42;i++){var ds=addDays(t,-i),w=dowOf(ds);if(i>0&&w===1)continue;
+  var base=(w===0||w===6)?1050000:w===5?900000:700000,total=r1(base*(0.85+rnd()*0.3));if(i===0)total=r1(total*0.62);
+  var card=r1(total*0.55),app=r1(total*0.27),cash=r1(total*0.15);
+  d[ds]={card:card,cash:cash,app:app,etc:Math.max(0,total-card-app-cash),guests:Math.round(total/(11000+rnd()*3000)),food:r1(total*0.31),labor:(w===0||w===6)?190000:150000,cost:r1(total*0.04),memo:""}}
+ var x=addDays(t,-2);if(d[x])d[x].memo="단체 예약 12명";return d}
+var S=load(KEY,null);if(!S||!S.days)S={days:seed(),goal:30000000};S.sel=today();if(S.goal==null)S.goal=30000000;
+function cur(){return S.days[S.sel]}
+function ensure(){if(!S.days[S.sel])S.days[S.sel]={card:0,cash:0,app:0,etc:0,guests:0,food:0,labor:0,cost:0,memo:""};return S.days[S.sel]}
+function cmp(a,b,label){if(!b||!a)return "-";var d=(a-b)/b*100;return label+" "+(d>=0?"▲ ":"▼ ")+Math.abs(d).toFixed(1)+"%"}
+function fillForm(){var r=cur()||{};FL.forEach(function(k){$("f_"+k).value=r[k]!=null&&r[k]!==0?r[k]:""});$("f_memo").value=r.memo||"";$("date").value=S.sel;$("dow").textContent=DOW[dowOf(S.sel)]+"요일"}
+function daySummary(){var r=cur(),t=tot(r),c=costs(r),g=n(r&&r.guests);
+ $("sTotal").textContent=won(t);$("sPer").textContent=g>0&&t>0?won(t/g):"-";$("sCost").textContent=won(c);
+ var net=t-c;$("sNet").textContent=(net<0?"−":"")+won(Math.abs(net));$("sNet").style.color=net<0?"#be123c":"#047857";
+ $("sMargin").textContent=t>0?(net/t*100).toFixed(1)+"%":"-";
+ var y=S.days[addDays(S.sel,-1)],w=S.days[addDays(S.sel,-7)];
+ $("sYest").textContent=has(y)&&t>0?cmp(t,tot(y),"").trim():"-";$("sWeek").textContent=has(w)&&t>0?cmp(t,tot(w),"").trim():"-"}
+function monthDays(m){var l=new Date(+m.slice(0,4),+m.slice(5,7),0).getDate(),a=[];for(var i=1;i<=l;i++)a.push(m+"-"+String(i).padStart(2,"0"));return a}
+function shortWon(v){return v>=1e8?(v/1e8).toFixed(1)+"억":v>=1e4?Math.round(v/1e4).toLocaleString("ko-KR")+"만":String(Math.round(v))}
+function monthPanel(){var m=S.sel.slice(0,7),days=monthDays(m),rows=days.filter(function(d){return has(S.days[d])}),sum=0,best=null;
+ rows.forEach(function(d){var t=tot(S.days[d]);sum+=t;if(!best||t>best.t)best={d:d,t:t}});
+ $("mTitle").textContent=m.slice(0,4)+"년 "+Number(m.slice(5,7))+"월 현황";
+ $("mTotal").textContent=won(sum);$("mAvg").textContent=rows.length?won(sum/rows.length):"-";$("mBest").textContent=best?Number(best.d.slice(8))+"일 "+shortWon(best.t):"-";
+ var isCur=m===today().slice(0,7),de=isCur?Number(today().slice(8)):days.length;$("mProj").textContent=rows.length&&isCur?won(sum/de*days.length):"-";
+ var goal=n(S.goal),pct=goal>0?sum/goal*100:0;$("gBar").style.width=Math.min(100,pct)+"%";$("gPct").textContent=goal>0?"목표 "+pct.toFixed(0)+"% 달성":"목표를 입력해 보세요";
+ var h="";rows.slice().reverse().forEach(function(d){var r=S.days[d];h+='<tr data-d="'+d+'"'+(d===S.sel?' class="sel"':'')+'><td>'+d.slice(5)+' ('+DOW[dowOf(d)]+')</td><td class="n">'+won(tot(r))+'</td><td class="n">'+n(r.guests)+'</td><td class="n" style="color:'+(tot(r)-costs(r)<0?"#be123c":"inherit")+'">'+won(tot(r)-costs(r))+'</td><td>'+esc(r.memo||"")+'</td></tr>'});
+ $("rows").innerHTML=h||'<tr><td colspan="5" class="muted">이 달에는 기록이 없어요.</td></tr>';
+ var b="",last=[];for(var i=13;i>=0;i--)last.push(addDays(S.sel,-i));var mx=Math.max.apply(null,last.map(function(d){return tot(S.days[d])}).concat([1]));
+ last.forEach(function(d){var t=tot(S.days[d]);b+='<div class="bw'+(d===S.sel?' sel':'')+'" data-d="'+d+'" title="'+d+' '+won(t)+'"><i style="height:'+Math.max(2,Math.round(t/mx*60))+'px"></i><span>'+Number(d.slice(8))+'</span></div>'});
+ $("bars").innerHTML=b;$("goal").value=S.goal||""}
+function all(){daySummary();monthPanel();save(KEY,{days:S.days,goal:S.goal})}
+function setDate(d){if(!/^\d{4}-\d{2}-\d{2}$/.test(d))return;S.sel=d;fillForm();all()}
+document.querySelectorAll("[data-fld]").forEach(function(el){el.addEventListener("input",function(){var k=el.getAttribute("data-fld"),r=ensure();r[k]=k==="memo"?el.value:n(el.value);all()})});
+$("goal").addEventListener("input",function(){S.goal=n(this.value);all()});
+$("date").addEventListener("change",function(){setDate(this.value)});
+$("prev").onclick=function(){setDate(addDays(S.sel,-1))};$("next").onclick=function(){setDate(addDays(S.sel,1))};$("todayBtn").onclick=function(){setDate(today())};
+function pick(e){var t=e.target.closest("[data-d]");if(t)setDate(t.getAttribute("data-d"))}
+$("rows").addEventListener("click",pick);$("bars").addEventListener("click",pick);
+$("sample").onclick=function(){S.days=seed();S.goal=30000000;S.sel=today();fillForm();all()};
+$("clear").onclick=function(){if(!confirm("모든 매출 기록을 지울까요?"))return;S.days={};fillForm();all()};
+$("print").onclick=function(){window.print()};
+function csvCell(c){c=String(c==null?"":c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c}
+$("csv").onclick=function(){var m=S.sel.slice(0,7),rows=[["날짜","요일","카드","현금","배달앱","기타","총매출","객수","객단가","재료비","인건비","기타지출","순이익","메모"]];
+ monthDays(m).forEach(function(d){var r=S.days[d];if(!has(r))return;var t=tot(r),g=n(r.guests);rows.push([d,DOW[dowOf(d)],n(r.card),n(r.cash),n(r.app),n(r.etc),t,g,g?Math.round(t/g):"",n(r.food),n(r.labor),n(r.cost),t-costs(r),r.memo||""])});
+ var tx="\uFEFF"+rows.map(function(r){return r.map(csvCell).join(",")}).join("\r\n"),b=new Blob([tx],{type:"text/csv;charset=utf-8"});
+ if(window.URL&&URL.createObjectURL){var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="sales-"+m+".csv";document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500)}};
+$("copy").onclick=function(){var r=cur()||{},t=tot(r),g=n(r.guests),c=costs(r),b=this,
+ text="[매출 일보] "+S.sel+" ("+DOW[dowOf(S.sel)]+")\n총매출 "+won(t)+" (카드 "+won(n(r.card))+" / 현금 "+won(n(r.cash))+" / 배달앱 "+won(n(r.app))+" / 기타 "+won(n(r.etc))+")\n객수 "+g+"명"+(g?" · 객단가 "+won(t/g):"")+"\n지출 "+won(c)+" (재료비 "+won(n(r.food))+" / 인건비 "+won(n(r.labor))+" / 기타 "+won(n(r.cost))+")\n순이익 "+won(t-c)+(t>0?" (이익률 "+((t-c)/t*100).toFixed(1)+"%)":"")+(r.memo?"\n메모: "+r.memo:""),
+ done=function(){b.textContent="복사됐어요 ✓";setTimeout(function(){b.textContent="오늘 보고 복사"},1400)};
+ var fb=function(){var ta=document.createElement("textarea");ta.value=text;ta.style.cssText="position:fixed;opacity:0";document.body.appendChild(ta);ta.select();var ok=false;try{ok=document.execCommand("copy")}catch(e){}ta.remove();if(ok)done();else window.prompt("복사가 막혀 있어요. 아래 글을 직접 복사해 주세요.",text)};
+ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done,fb)}else fb()};
+fillForm();all();
+})();
+</script>
+</body>
+</html>

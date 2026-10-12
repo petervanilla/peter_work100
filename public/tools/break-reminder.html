@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>휴식 알림</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#d97706;--bad:#e11d48;--r:14px}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+.wrap{max-width:600px;margin:0 auto}
+h1{font-size:18px;font-weight:800;letter-spacing:-.02em}
+.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04)}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:8px 12px;font-weight:600;font-size:13px;transition:.12s}
+button:hover{border-color:#c7cddb;background:#fafafa}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}
+button.primary:hover{filter:brightness(1.07)}
+button.on{background:var(--brand);color:#fff;border-color:transparent}
+input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:13px}
+input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:12px;font-weight:700;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.muted{color:var(--sub);font-size:12px}
+.stage{text-align:center;padding:30px 14px;border-radius:var(--r);border:2px solid var(--line);background:#fff;margin-top:12px;transition:.3s}
+.stage.alert{border-color:#fbbf24;background:#fffbeb;animation:pulse 1.2s infinite}
+@keyframes pulse{50%{background:#fef3c7}}
+#clock{font-size:60px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1.05}
+.tips{display:grid;gap:8px;margin-top:10px}
+.tip{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff}
+.tip b{font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.stat b{display:block;font-size:20px}
+.usecases{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+.usecases h2{font-size:12px;font-weight:800;color:var(--sub);margin-bottom:6px}
+.usecases li{font-size:12px;color:var(--sub);margin-left:14px;margin-bottom:2px}
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;place-items:center;padding:20px;z-index:50}
+.overlay.show{display:grid}
+.overlay .box{background:#fff;border-radius:20px;padding:26px;max-width:420px;width:100%;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🧘 휴식 알림</h1>
+  <p class="sub">정한 간격마다 「쉴 시간이에요」라고 알려 주고, 스트레칭·눈 쉬기·물 마시기를 차례로 권해 줘요.</p>
+
+  <div class="stage" id="stage">
+    <div id="phase" style="font-size:14px;font-weight:800">간격을 고르고 시작하세요</div>
+    <div id="clock">--:--</div>
+    <div class="muted" id="sub">다음 쉴 시간까지 남은 시간이에요</div>
+  </div>
+
+  <div class="row" style="margin-top:12px">
+    <button class="primary" id="btnStart">▶ 시작</button>
+    <button id="btnLater">5분 더</button>
+    <button id="btnTookRested">쉬었어요 ✓</button>
+    <button id="btnReset">처음으로</button>
+  </div>
+
+  <div class="card">
+    <b style="font-size:13px">알림 간격</b>
+    <div class="row" style="margin-top:8px" id="intervals"></div>
+    <div class="row" style="margin-top:10px">
+      <button id="btnSound" class="on">🔔 소리 켜짐</button>
+    </div>
+  </div>
+
+  <div class="tips" id="tips"></div>
+
+  <div class="stats">
+    <div class="stat"><b id="stRested">0</b><span class="muted">오늘 쉰 횟수</span></div>
+    <div class="stat"><b id="stLater">0</b><span class="muted">미룬 횟수</span></div>
+    <div class="stat"><b id="stNext">-</b><span class="muted">다음 알림</span></div>
+  </div>
+
+  <div class="usecases">
+    <h2>이럴 때 좋아요</h2>
+    <ul>
+      <li><b>모든 직장인</b> · 몰입하다 보면 3시간이 한 번에 지나갈 때 — 정한 간격마다 쉴 시간을 알려 줘서 몸을 한 번씩 깨울 수 있어요.</li>
+      <li><b>눈이 피로한 직장인</b> · 오후만 되면 눈이 뻑뻑할 때 — 눈 쉬기를 차례로 권해 줘서 의자에 앉은 채로도 눈을 쉴 수 있어요.</li>
+      <li><b>건강을 챙기는 사람</b> · 물도 제대로 못 마시고 하루가 끝날 때 — 물 마시기 알림이 오면 겸사겸사 일어나 스트레칭까지 하게 돼요.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="box">
+    <div style="font-size:44px">☕</div>
+    <h2 style="font-size:20px;font-weight:900;margin-top:8px">쉴 시간이에요</h2>
+    <p class="muted" style="margin-top:6px" id="overlayTip">스트레칭 · 눈 쉬기 · 물 마시기</p>
+    <div class="row" style="margin-top:16px;justify-content:center">
+      <button class="primary" id="btnOvRested">쉬었어요 ✓</button>
+      <button id="btnOvLater">5분 더</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var KEY="break-reminder-v1";
+var INTERVALS=[15,30,45,60,90];
+var TIPS=[
+  {t:"스트레칭",d:"목·어깨를 천천히 돌리고, 허리를 펴서 30초간 기지개를 켜세요."},
+  {t:"눈 쉬기",d:"창문 너머 6m 이상을 20초간 바라보세요. 20-20-20 규칙이에요."},
+  {t:"물 마시기",d:"물 한 컵을 천천히 마시며 자리에서 일어나 주세요."},
+  {t:"호흡",d:"코로 4초 들이마시고, 입으로 6초 내쉬는 것을 5번 반복하세요."},
+  {t:"손목·손가락",d:"손목을 돌리고, 주먹을 폈다 쥐었다를 10번 반복하세요."}
+];
+var cfg={interval:45};
+var state={running:false,endAt:0,sound:true,tipIdx:0};
+function todayStr(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function log(){try{var l=JSON.parse(localStorage.getItem(KEY)||"{}");if(!l[todayStr()])l[todayStr()]={rested:0,later:0};return l}catch(e){return{}}}
+function saveLog(l){try{localStorage.setItem(KEY,JSON.stringify(l))}catch(e){}}
+function addLog(k){var l=log();l[todayStr()][k]++;saveLog(l);renderStats()}
+function fmt(ms){if(ms<0)ms=0;var s=Math.ceil(ms/1000);var m=Math.floor(s/60);s%=60;return (m<10?"0":"")+m+":"+(s<10?"0":"")+s}
+function renderIntervals(){
+  var box=document.getElementById("intervals");box.innerHTML="";
+  INTERVALS.forEach(function(v){
+    var b=document.createElement("button");
+    b.textContent=v+"분"+(v===cfg.interval?" ✓":"");
+    if(v===cfg.interval)b.className="on";
+    b.onclick=function(){cfg.interval=v;state.running=false;state.endAt=Date.now()+v*60000;save();renderIntervals();render()};
+    box.appendChild(b);
+  });
+}
+function renderTips(){
+  var box=document.getElementById("tips");box.innerHTML="";
+  TIPS.forEach(function(tip){
+    var d=document.createElement("div");d.className="tip";
+    d.innerHTML="<b>"+tip.t+"</b><p class='muted' style='margin-top:2px'>"+tip.d+"</p>";
+    box.appendChild(d);
+  });
+}
+function renderStats(){
+  var l=log()[todayStr()];
+  document.getElementById("stRested").textContent=l.rested;
+  document.getElementById("stLater").textContent=l.later;
+}
+function render(){
+  var stage=document.getElementById("stage");
+  if(state.running){
+    stage.className="stage";
+    document.getElementById("phase").textContent="⏳ 근무 중";
+    document.getElementById("clock").textContent=fmt(state.endAt-Date.now());
+    document.getElementById("sub").textContent=cfg.interval+"분마다 쉴 시간을 알려 줘요";
+  }else{
+    stage.className="stage";
+    document.getElementById("phase").textContent="⏸ 멈춤";
+    document.getElementById("clock").textContent=fmt(state.endAt-Date.now());
+    document.getElementById("sub").textContent="시작을 누르면 간격마다 알려 줘요";
+  }
+  document.getElementById("btnStart").textContent=state.running?"⏸ 멈춤":"▶ 시작";
+  var next=new Date(state.endAt);
+  document.getElementById("stNext").textContent=state.running?(next.getHours()<10?"0":"")+next.getHours()+":"+(next.getMinutes()<10?"0":"")+next.getMinutes():"-";
+}
+function alertUser(){
+  var l=log();
+  state.tipIdx=(state.tipIdx+1)%TIPS.length;
+  document.getElementById("overlayTip").textContent=TIPS[state.tipIdx].t+" — "+TIPS[state.tipIdx].d;
+  document.getElementById("overlay").classList.add("show");
+  document.getElementById("stage").className="stage alert";
+  beep(2);
+  state.endAt=Date.now()+cfg.interval*60000;
+  render();
+}
+function startPause(){
+  if(state.running){state.running=false}
+  else{state.running=true;state.endAt=Date.now()+Math.max(0,state.endAt-Date.now()||cfg.interval*60000)}
+  beep(1);save();render();
+}
+function later(){
+  addLog("later");
+  document.getElementById("overlay").classList.remove("show");
+  document.getElementById("stage").className="stage";
+  state.endAt=Date.now()+5*60000;
+  save();render();
+}
+function rested(){
+  addLog("rested");
+  document.getElementById("overlay").classList.remove("show");
+  document.getElementById("stage").className="stage";
+  state.endAt=Date.now()+cfg.interval*60000;
+  save();render();
+}
+var AC=null;
+function beep(n){if(!state.sound)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();for(var i=0;i<(n||1);i++){(function(i){var o=AC.createOscillator(),g=AC.createGain();o.connect(g);g.connect(AC.destination);o.frequency.value=n===2?520:740;g.gain.setValueAtTime(.0001,AC.currentTime+i*.18);g.gain.exponentialRampToValueAtTime(.25,AC.currentTime+i*.18+.02);g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+i*.18+.15);o.start(AC.currentTime+i*.18);o.stop(AC.currentTime+i*.18+.16)})(i)}}catch(e){}}
+function save(){try{localStorage.setItem("break-reminder-cfg",JSON.stringify({interval:cfg.interval,sound:state.sound}))}catch(e){}}
+function load(){try{var c=JSON.parse(localStorage.getItem("break-reminder-cfg")||"{}");if(c.interval)cfg.interval=c.interval;if(c.sound===false)state.sound=false}catch(e){}}
+
+document.getElementById("btnStart").onclick=startPause;
+document.getElementById("btnLater").onclick=later;
+document.getElementById("btnTookRested").onclick=rested;
+document.getElementById("btnReset").onclick=function(){state.running=false;state.endAt=Date.now()+cfg.interval*60000;document.getElementById("overlay").classList.remove("show");save();render()};
+document.getElementById("btnOvRested").onclick=rested;
+document.getElementById("btnOvLater").onclick=later;
+document.getElementById("btnSound").onclick=function(){
+  state.sound=!state.sound;this.textContent=state.sound?"🔔 소리 켜짐":"🔕 소리 꺼짐";this.className=state.sound?"on":"";save();
+};
+
+load();
+if(!state.sound){document.getElementById("btnSound").textContent="🔕 소리 꺼짐";document.getElementById("btnSound").className=""}
+state.endAt=Date.now()+cfg.interval*60000;
+renderIntervals();renderTips();renderStats();render();
+setInterval(function(){
+  if(state.running){
+    render();
+    if(Date.now()>=state.endAt)alertUser();
+  }
+},500);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OKR 작성기</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#b45309;--bad:#e11d48;--r:14px}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+[hidden]{display:none!important}
+.wrap{max-width:1000px;margin:0 auto}h1{font-size:18px;font-weight:800;letter-spacing:-.02em}.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04);min-width:0}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:7px 11px;font-weight:700;font-size:12px;transition:.12s}button:hover{border-color:#c7cddb;background:#fafafa}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}button.primary:hover{filter:brightness(1.07)}
+button.ghost{border-color:transparent;background:transparent;color:var(--sub)}
+input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:13px;min-width:0}
+input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:11px;font-weight:800;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}.grow{flex:1;min-width:110px}.muted{color:var(--sub);font-size:12px}
+.pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap}
+.ok{background:#ecfdf5;color:#047857}.wn{background:#fffbeb;color:#b45309}.bd{background:#fef2f2;color:#be123c}.in{background:#eef2ff;color:#4338ca}
+.bar{height:8px;background:#eef2f7;border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--brand),#8b5cf6)}
+.usecases{margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}.usecases h2{font-size:12px;font-weight:800;color:var(--sub);margin-bottom:6px}.usecases li{font-size:12px;color:var(--sub);margin-left:15px;margin-bottom:3px}
+.top{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.big{font-size:36px;font-weight:900;letter-spacing:-.04em;font-variant-numeric:tabular-nums;line-height:1}
+.obj{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px;background:#fff;min-width:0}
+.oh{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.oh input{flex:1;min-width:180px;font-weight:800;font-size:14px}
+.kr{padding-top:10px;border-top:1px dashed var(--line);margin-top:10px}
+.w1{width:130px}.w2{width:90px}.scw{margin-left:auto;min-width:130px;text-align:right}.scw .bar{margin-top:6px}
+@media print{body{background:#fff;padding:0}.no-print{display:none!important}.card{box-shadow:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>🎯 OKR 작성기</h1><p class="sub">목표(O) 하나에 측정할 수 있는 핵심결과(KR) 2~4개를 적고 현재값을 넣으면, 0~1점으로 자동 채점해요.</p></header>
+
+<section class="card">
+  <div class="top">
+    <div><label for="period">기간</label><input id="period" style="width:130px" placeholder="예: 2026 Q4"></div>
+    <div style="flex:1;min-width:220px">
+      <div class="muted">전체 점수</div>
+      <div class="row" style="align-items:center;gap:10px"><span class="big" id="overall">0.00</span><span id="overallLab" class="pill in">-</span></div>
+      <div class="bar" style="margin-top:8px;max-width:360px"><i id="overallBar" style="width:0"></i></div>
+    </div>
+    <p class="muted" style="max-width:290px">OKR은 0.7점이면 충분히 잘한 거예요. 늘 1.0이라면 목표가 너무 쉬웠다는 신호일 수 있어요.</p>
+  </div>
+</section>
+
+<div id="objs"></div>
+
+<div class="row no-print" style="margin-top:12px">
+  <button class="primary" id="addO">+ 목표(O) 추가</button>
+  <button id="copy">OKR 복사</button>
+  <button id="print">인쇄·PDF</button>
+  <button id="sample">예시로 되돌리기</button>
+  <button id="clear">비우기</button>
+</div>
+
+<div class="usecases"><h2>이럴 때 좋아요</h2><ul>
+<li><b>팀장</b> · 분기 목표를 팀원과 같은 틀로 정리하고, 진행 상황을 숫자로 함께 볼 때</li>
+<li><b>기획</b> · "열심히 한다" 대신 측정할 수 있는 결과로 목표를 바꾸고 싶을 때</li>
+<li><b>모든 직장인</b> · 개인 목표를 세우고 분기 말에 스스로 채점해 회고할 때</li></ul></div>
+</div>
+
+<script>
+(function(){"use strict";
+var KEY="okr-builder-v1";
+function load(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function num(v){var n=parseFloat(v);return isNaN(n)?0:n}
+function clamp(v){return Math.max(0,Math.min(1,v))}
+function quarter(){var d=new Date();return d.getFullYear()+" Q"+(Math.floor(d.getMonth()/3)+1)}
+function blankKr(){return{t:"",mode:"num",s:0,g:100,c:0,m:0.5}}
+function sample(){return{period:quarter(),objs:[
+ {t:"신규 고객이 첫 주에 서비스의 가치를 느끼게 한다",krs:[
+  {t:"온보딩 완료율(%)",mode:"num",s:40,g:70,c:58,m:0.5},
+  {t:"첫 주 이탈률(%)",mode:"num",s:35,g:20,c:27,m:0.5},
+  {t:"사용성 테스트 진행 횟수",mode:"num",s:0,g:5,c:3,m:0.5}]},
+ {t:"결제 경험을 빠르고 안정적으로 만든다",krs:[
+  {t:"결제 오류율(%)",mode:"num",s:2,g:0.5,c:1.1,m:0.5},
+  {t:"장애 대응 런북 작성·훈련",mode:"manual",s:0,g:1,c:0,m:0.8}]}]}}
+var S=load(KEY,null);if(!S||!S.objs)S=sample();
+function sc(k){if(k.mode==="manual")return clamp(num(k.m));var d=num(k.g)-num(k.s);if(!d)return 0;return clamp((num(k.c)-num(k.s))/d)}
+function cls(v){return v>=0.7?"ok":v>=0.4?"wn":"bd"}
+function lab(v){return v>=0.7?"목표권":v>=0.4?"진행 중":"점검 필요"}
+function ovs(o){if(!o.krs.length)return 0;var s=0;o.krs.forEach(function(k){s+=sc(k)});return s/o.krs.length}
+function krHtml(k,ki){var nm=k.mode!=="manual";
+ return '<div class="kr" data-k="'+ki+'"><div class="row"><div class="grow"><label>핵심결과 KR'+(ki+1)+'</label><input data-f="kt" placeholder="측정할 수 있는 결과를 적어요" value="'+esc(k.t)+'"></div><button class="ghost" data-act="delk" aria-label="KR 삭제">✕</button></div>'+
+ '<div class="row" style="margin-top:6px"><div class="w1"><label>측정 방식</label><select data-f="mode"><option value="num"'+(nm?" selected":"")+'>숫자로 측정</option><option value="manual"'+(nm?"":" selected")+'>직접 채점</option></select></div>'+
+ (nm?'<div class="w2"><label>시작값</label><input type="number" step="any" data-f="ks" value="'+esc(k.s)+'"></div><div class="w2"><label>목표값</label><input type="number" step="any" data-f="kg" value="'+esc(k.g)+'"></div><div class="w2"><label>현재값</label><input type="number" step="any" data-f="kc" value="'+esc(k.c)+'"></div>'
+  :'<div class="grow"><label>진행도 <b class="mv"></b></label><input type="range" min="0" max="1" step="0.1" data-f="km" value="'+esc(k.m)+'"></div>')+
+ '<div class="scw"><span class="sc pill in">0.00</span><div class="bar"><i style="width:0"></i></div></div></div></div>'}
+function render(){
+ $("period").value=S.period||"";var h="";
+ S.objs.forEach(function(o,oi){
+  h+='<section class="obj" data-o="'+oi+'"><div class="oh"><span class="pill in">O'+(oi+1)+'</span><input data-f="ot" aria-label="목표 O'+(oi+1)+'" placeholder="목표(Objective): 이루고 싶은 방향을 한 문장으로" value="'+esc(o.t)+'"><span class="osc pill in">-</span><button class="ghost" data-act="delo" aria-label="목표 삭제">삭제</button></div>';
+  o.krs.forEach(function(k,ki){h+=krHtml(k,ki)});
+  h+='<div class="row no-print" style="margin-top:10px"><button data-act="addk">+ 핵심결과(KR) 추가</button>'+(o.krs.length>4?'<span class="muted">KR은 3개 안팎이 가장 좋아요</span>':'')+'</div></section>'});
+ $("objs").innerHTML=h||'<p class="muted" style="margin-top:12px">목표가 없어요. 아래 버튼으로 추가해 보세요.</p>';
+ paint()}
+function paint(){var tot=0,n=0;
+ document.querySelectorAll(".obj").forEach(function(ob){var o=S.objs[+ob.getAttribute("data-o")];if(!o)return;
+  ob.querySelectorAll(".kr").forEach(function(el){var k=o.krs[+el.getAttribute("data-k")];if(!k)return;var v=sc(k),s=el.querySelector(".sc");
+   s.textContent=v.toFixed(2);s.className="sc pill "+cls(v);el.querySelector(".bar i").style.width=Math.round(v*100)+"%";
+   var mv=el.querySelector(".mv");if(mv)mv.textContent=num(k.m).toFixed(1)});
+  var ov=ovs(o),oe=ob.querySelector(".osc");oe.textContent=o.krs.length?"점수 "+ov.toFixed(2)+" · "+lab(ov):"KR을 추가해 주세요";oe.className="osc pill "+(o.krs.length?cls(ov):"in");
+  if(o.krs.length){tot+=ov;n++}});
+ var all=n?tot/n:0;$("overall").textContent=all.toFixed(2);$("overallLab").textContent=n?lab(all):"목표를 입력해 주세요";$("overallLab").className="pill "+(n?cls(all):"in");$("overallBar").style.width=Math.round(all*100)+"%";
+ save(KEY,S)}
+$("objs").addEventListener("input",function(e){var el=e.target,f=el.getAttribute("data-f");if(!f)return;var ob=el.closest(".obj"),o=S.objs[+ob.getAttribute("data-o")];if(!o)return;
+ if(f==="ot")o.t=el.value;else{var kr=el.closest(".kr"),k=o.krs[+kr.getAttribute("data-k")];if(!k)return;
+  if(f==="kt")k.t=el.value;else if(f==="ks")k.s=num(el.value);else if(f==="kg")k.g=num(el.value);else if(f==="kc")k.c=num(el.value);else if(f==="km")k.m=num(el.value)}
+ paint()});
+$("objs").addEventListener("change",function(e){var el=e.target;if(el.getAttribute("data-f")!=="mode")return;var o=S.objs[+el.closest(".obj").getAttribute("data-o")],k=o&&o.krs[+el.closest(".kr").getAttribute("data-k")];if(k){k.mode=el.value;render()}});
+$("objs").addEventListener("click",function(e){var b=e.target.closest("[data-act]");if(!b)return;var ob=b.closest(".obj"),oi=+ob.getAttribute("data-o"),o=S.objs[oi],a=b.getAttribute("data-act");if(!o)return;
+ if(a==="addk"){if(o.krs.length>=6)return;o.krs.push(blankKr());render()}
+ else if(a==="delk"){o.krs.splice(+b.closest(".kr").getAttribute("data-k"),1);render()}
+ else if(a==="delo"){S.objs.splice(oi,1);render()}});
+$("period").addEventListener("input",function(){S.period=this.value;save(KEY,S)});
+$("addO").onclick=function(){if(S.objs.length>=4)return;S.objs.push({t:"",krs:[blankKr(),blankKr(),blankKr()]});render()};
+$("sample").onclick=function(){S=sample();render()};
+$("clear").onclick=function(){if(!confirm("작성한 OKR을 모두 비울까요?"))return;S={period:quarter(),objs:[{t:"",krs:[blankKr(),blankKr(),blankKr()]}]};render()};
+$("print").onclick=function(){window.print()};
+function text(){var L=["[OKR] "+(S.period||"")];S.objs.forEach(function(o,i){L.push("","O"+(i+1)+". "+(o.t||"(목표를 입력하세요)")+" — 점수 "+ovs(o).toFixed(2));o.krs.forEach(function(k,j){L.push("  KR"+(j+1)+". "+(k.t||"(핵심결과를 입력하세요)")+" — "+(k.mode==="manual"?"직접 채점":num(k.s)+" → "+num(k.g)+" (현재 "+num(k.c)+")")+" ["+sc(k).toFixed(2)+"]")})});return L.join("\n")}
+$("copy").onclick=function(){var b=this,t=text(),done=function(){b.textContent="복사됐어요 ✓";setTimeout(function(){b.textContent="OKR 복사"},1400)};
+ var fb=function(){var ta=document.createElement("textarea");ta.value=t;ta.style.cssText="position:fixed;opacity:0";document.body.appendChild(ta);ta.select();var ok=false;try{ok=document.execCommand("copy")}catch(e){}ta.remove();if(ok)done();else window.prompt("복사가 막혀 있어요. 아래 글을 직접 복사해 주세요.",t)};
+ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,fb)}else fb()};
+render();
+})();
+</script>
+</body>
+</html>

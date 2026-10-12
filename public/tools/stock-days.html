@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>발주점·재고 소진일 계산기</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#d97706;--bad:#e11d48;--soft:#f8fafc}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+.wrap{max-width:1000px;margin:0 auto}h1{font-size:18px;font-weight:800;letter-spacing:-.02em}.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04)}
+.card h2{font-size:13px;font-weight:900;margin-bottom:9px;display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:7px 11px;font-weight:700;font-size:12px;transition:.12s}button:hover{border-color:var(--brand)}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border:0}
+input,select{font:inherit;width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);font-size:12px}
+input:focus,select:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:10px;font-weight:800;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:end}.muted{font-size:11px;color:var(--sub)}.grow{flex:1;min-width:130px}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.chip{flex:1;min-width:120px;padding:11px 13px;border-radius:13px;border:1px solid var(--line);background:var(--card)}
+.chip span{font-size:10px;font-weight:800;color:var(--sub);display:block}
+.chip b{font-size:20px;font-weight:950;display:block;margin-top:2px;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:760px}
+th,td{padding:7px 5px;border-bottom:1px solid var(--line);text-align:right;vertical-align:middle}
+th{font-size:10px;color:var(--sub);background:var(--soft);font-weight:800}
+th:first-child,td:first-child{text-align:left}
+input.n{width:74px;text-align:right}
+input.nm{font-weight:700}
+.status{display:inline-flex;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:900;white-space:nowrap}
+.ok{background:#ecfdf5;color:#047857}.soon{background:#fffbeb;color:#b45309}.now{background:#fef2f2;color:#be123c}
+.left{font-weight:900;font-variant-numeric:tabular-nums}
+.urgent{border-left:3px solid var(--bad);background:rgba(225,29,72,.05)}
+.bar{height:7px;background:var(--line);border-radius:99px;overflow:hidden;margin-top:5px;max-width:150px}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),var(--brand2));border-radius:99px}.bar i.low{background:linear-gradient(90deg,#fb7185,var(--bad))}
+.usecases{margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}.usecases h2{font-size:12px;font-weight:900;color:var(--sub);margin-bottom:5px}
+.usecases li{font-size:11px;color:var(--sub);margin-left:15px;margin-bottom:3px}
+@media(max-width:760px){th,td{padding:6px 4px}.stats{gap:6px}}
+@media print{body{background:#fff;padding:0}.no-print{display:none!important}.card{box-shadow:none}.tbl{overflow:visible}table{min-width:0}}
+</style></head><body><div class="wrap">
+<header><h1>📦 발주점·재고 소진일 계산기</h1><p class="sub">재고와 일평균 사용량을 넣으면 지금 몇 일 남았는지, 언제 발주해야 늦지 않는지 알려 줘요.</p></header>
+
+<section class="card no-print">
+<div class="row">
+<div class="grow" style="max-width:150px"><label for="todayDate">기준일</label><input id="todayDate" type="date"></div>
+<div style="max-width:180px"><label for="defaultLead">기본 리드타임(일)</label><input id="defaultLead" type="number" min="0" value="3"></div>
+<button id="applyLead" style="align-self:flex-end">전체에 적용</button>
+<button id="sampleBtn" style="align-self:flex-end">예시로 되돌리기</button>
+</div>
+<p class="muted" style="margin-top:7px">리드타임 = 발주해서 다시 받기까지 걸리는 날입니다. 「발주 시점」보다 이르면 안전해요.</p>
+</section>
+
+<div class="stats" id="stats"></div>
+
+<section class="card">
+<h2>품목별 소진일<span class="row no-print" style="gap:6px"><button id="addRow">＋ 품목 추가</button><button id="copyBtn">발주 목록 복사</button><button id="printBtn">인쇄 · PDF</button></span></h2>
+<div class="tbl"><table><thead><tr>
+<th>품목</th><th>현재 재고</th><th>단위</th><th>일평균 사용</th><th>리드타임(일)</th><th>남은 일수</th><th>발주 시점</th><th>상태</th><th style="text-align:left">막대</th><th></th>
+</tr></thead><tbody id="rows"></tbody></table></div>
+<p class="muted" style="margin-top:8px">남은 일수 = 재고 ÷ 일평균 사용 · 발주 시점 = 남은 일수 − 리드타임. 입력은 이 브라우저에 저장됩니다.</p>
+</section>
+
+<div class="usecases"><h2>이럴 때 좋아요</h2><ul>
+<li><b>사장님(가게)</b> · 재료가 바닥나기 전에 미리 주문해야 하는데 감이 없을 때 — 남은 일수와 발주 시점이 숫자로 나와요.</li>
+<li><b>총무</b> · 사무용품·소모품을 주기적으로 발주해야 할 때 — 일평균 사용량으로 필요 시점을 예측해 늦지 않게 주문해요.</li>
+<li><b>매장 관리자</b> · 여러 품목을 한 표에서 관리할 때 — 오늘이 발주 요일인 품목만 모아 목록을 복사할 수 있어요.</li>
+</ul></div>
+</div>
+<script>
+(function(){"use strict";
+var KEY="stock-days-v1";
+function uid(){return "s"+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}
+function ld(d){d=d||new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function plus(ds,n){var d=new Date(ds+"T00:00:00");d.setDate(d.getDate()+n);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function esc(s){return String(s==null?"":s).replace(/[&<>\"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'\"':"&quot;"}[c]})}
+function num(v){var n=parseFloat(v);return isFinite(n)&&n>=0?n:0}
+function sample(){return[
+{id:uid(),name:"원두 (5kg 봉)",stock:14,unit:"봉",rate:2.1,lead:4},
+{id:uid(),name:"우유 (1L)",stock:36,unit:"개",rate:12,lead:1},
+{id:uid(),name:"종이컵 (500개)",stock:2,unit:"박스",rate:1.4,lead:3},
+{id:uid(),name:"시럽 (1L)",stock:6,unit:"개",rate:0.4,lead:7},
+{id:uid(),name:"리드타임 긴 필터",stock:1,unit:"개",rate:0.5,lead:10}]}
+var rows=[];
+var leadDefault=3,today=ld();
+function save(){try{localStorage.setItem(KEY,JSON.stringify({rows:rows,leadDefault:leadDefault,today:today}))}catch(e){}}
+function load(){try{var s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&s.rows)rows=s.rows;if(s&&s.leadDefault!=null)leadDefault=s.leadDefault;if(s&&s.today)today=s.today}catch(e){}}
+function calc(r){
+var rate=num(r.rate),stock=num(r.stock);
+var left=rate>0?Math.floor(stock/rate):Infinity;
+var lead=num(r.lead);
+var buy=rate>0?left-lead:Infinity;
+var st=left<=lead?"now":left<=lead+3?"soon":"ok";
+return {left:left,buy:buy,st:st,rate:rate,lead:lead}}
+function render(){
+document.getElementById("todayDate").value=today;
+document.getElementById("defaultLead").value=leadDefault;
+var tb=document.getElementById("rows");tb.innerHTML="";
+var totalStock=0,urgent=[],days=[];
+rows.forEach(function(r,i){
+var c=calc(r);totalStock++;
+if(c.st==="now")urgent.push(r.name+" (이번 주 발주)");
+var tr=document.createElement("tr");if(c.st==="now")tr.className="urgent";
+tr.innerHTML='<td><input class="nm" value="'+esc(r.name)+'" placeholder="품목"></td>'+
+'<td><input class="n" type="number" step="any" value="'+esc(r.stock)+'" aria-label="재고"></td>'+
+'<td><input class="n" value="'+esc(r.unit)+'" style="width:56px;text-align:right" aria-label="단위"></td>'+
+'<td><input class="n" type="number" step="any" value="'+esc(r.rate)+'" aria-label="일평균"></td>'+
+'<td><input class="n" type="number" min="0" value="'+esc(r.lead)+'" aria-label="리드타임"></td>'+
+'<td class="left" style="color:'+(c.st==="now"?"var(--bad)":c.st==="soon"?"var(--warn)":"var(--ok)")+'">'+(isFinite(c.left)?c.left+"일":"—")+'</td>'+
+'<td>'+(isFinite(c.buy)&&c.buy>=0?plus(today,c.buy):'<span class="now status">즉시 발주</span>')+'</td>'+
+'<td><span class="status '+c.st+'">'+(c.st==="now"?"발주 필요":c.st==="soon"?"곧 소진":"정상")+'</span></td>'+
+'<td><div class="bar"><i class="'+(c.left<=c.lead?"low":"")+'" style="width:'+Math.min(100,isFinite(c.left)?c.left/Math.max(1,c.lead+7)*100:100)+'%"></i></div></td>'+
+'<td><button class="del" aria-label="삭제" style="border:0;background:transparent;color:#cbd5e1;padding:2px 5px">×</button></td>';
+var ins=tr.querySelectorAll("input");
+ins[0].oninput=function(){r.name=this.value;save()};
+ins[1].oninput=function(){r.stock=this.value;save();render()};
+ins[2].oninput=function(){r.unit=this.value;save()};
+ins[3].oninput=function(){r.rate=this.value;save();render()};
+ins[4].oninput=function(){r.lead=this.value;save();render()};
+tr.querySelector(".del").onclick=function(){rows.splice(i,1);save();render()};
+tb.appendChild(tr)});
+if(!rows.length)tb.innerHTML='<tr><td colspan="10" class="muted" style="text-align:center;padding:18px">「품목 추가」로 시작하세요.</td></tr>';
+rows.forEach(function(r){var c=calc(r);if(isFinite(c.left))days.push(c.left)});
+var soon=rows.filter(function(r){return calc(r).st==="soon"}).length;
+document.getElementById("stats").innerHTML=
+[["품목 수",totalStock+"개","var(--ink)"],["발주 필요","<span style='color:var(--bad)'>"+urgent.length+"</span>개",urgent.length?"var(--bad)":"var(--ok)"],["곧 소진(3일 내)",soon+"개",soon?"var(--warn)":"var(--ok)"],["가장 빨리 소진",days.length?Math.min.apply(null,days)+"일":"—",days.length&&Math.min.apply(null,days)<=leadDefault?"var(--bad)":"var(--sub)"]]
+.map(function(x){return '<div class="chip"><span>'+x[0]+'</span><b style="color:'+x[2]+'">'+x[1]+"</b></div>"}).join("");
+save()}
+function buildText(){
+var lines=["[발주·재고 점검] "+today];
+var now=rows.filter(function(r){return calc(r).st==="now"});
+var soon=rows.filter(function(r){return calc(r).st==="soon"});
+lines.push("발주 필요 "+now.length+"개 · 곧 소진 "+soon.length+"개","");
+if(now.length){lines.push("【오늘 발주】");now.forEach(function(r){var c=calc(r);lines.push("- "+r.name+" (재고 "+r.stock+r.unit+" · 남은 "+(isFinite(c.left)?c.left:"—")+"일)")})}
+lines.push("","【전체 품목】");
+rows.forEach(function(r){var c=calc(r);
+lines.push("- "+r.name+": 재고 "+num(r.stock)+" "+r.unit+" / 일평균 "+num(r.rate)+" → 남은 "+(isFinite(c.left)?c.left+"일":"수량 미입력")+" · 발주 리드타임 "+num(r.lead)+"일")});
+return lines.join("\n")}
+document.getElementById("todayDate").onchange=function(){today=this.value||ld();save();render()};
+document.getElementById("defaultLead").oninput=function(){leadDefault=Math.max(0,Number(this.value)||0);save()};
+document.getElementById("applyLead").onclick=function(){rows.forEach(function(r){r.lead=leadDefault});save();render();alert("모든 품목의 리드타임을 "+leadDefault+"일로 바꿨어요.")};
+document.getElementById("addRow").onclick=function(){rows.push({id:uid(),name:"새 품목",stock:0,unit:"개",rate:1,lead:leadDefault});save();render()};
+document.getElementById("copyBtn").onclick=function(){var t=buildText(),b=this;
+var ok=function(){b.textContent="복사됐어요 ✓";setTimeout(function(){b.textContent="발주 목록 복사"},1400)};
+if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(ok,function(){prompt("복사하세요",t)});else prompt("복사하세요",t)};
+document.getElementById("printBtn").onclick=function(){window.print()};
+document.getElementById("sampleBtn").onclick=function(){if(confirm("예시 품목으로 되돌릴까요?")){rows=sample();save();render()}};
+load();if(!rows.length)rows=sample();render();
+})();
+</script></body></html>

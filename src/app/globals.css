@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+/*
+ * 다크 모드: <html class="dark"> 일 때만 dark: 스타일이 적용돼요.
+ * 어떤 모드로 열지는 layout.tsx 의 스크립트(저장한 선택 → 없으면 시스템 설정)가 정하고,
+ * 오른쪽 위 아이콘(ThemeToggle)이 바꿔요.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans:
+    "Pretendard", ui-sans-serif, system-ui, -apple-system,
+    "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", sans-serif;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+}
+
+/* 입력창·스크롤바 같은 기본 부품도 모드에 맞게 */
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  font-family: var(--font-sans);
+  word-break: keep-all;
+}
+
+/* 스크롤바 */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+  background-clip: content-box;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+  background-clip: content-box;
+}
+
+/* date input 아이콘 */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.5;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/*
+ * 도구 화면(iframe)은 복사해서 쓰는 독립 HTML 파일이라 안쪽 코드를 건드리지 않고,
+ * 다크 모드에서는 바깥에서 색을 뒤집어 보여 줘요. (밝은 화면의 밝기만 반전, 색상은 유지)
+ */
+.dark .tool-iframe {
+  filter: invert(0.92) hue-rotate(180deg);
+}
+
+/* 인쇄 (주간 보고 PDF 저장용) */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #ffffff;
+  }
+  main {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+  .print-break-inside {
+    break-inside: avoid;
+  }
+}

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>한 장 보고 틀</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#d97706;--bad:#e11d48;--r:14px}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+.wrap{max-width:1080px;margin:0 auto}h1{font-size:18px;font-weight:800;letter-spacing:-.02em}.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;box-shadow:0 1px 2px rgba(17,24,39,.04)}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:8px 12px;font-weight:700;font-size:12px;transition:.12s}button:hover{border-color:#c7cddb;background:#fafafa}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}button.primary:hover{filter:brightness(1.07)}
+input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:13px;font-family:inherit}input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}textarea{resize:vertical;min-height:75px;line-height:1.55}
+label{font-size:11px;font-weight:800;color:var(--sub);display:block;margin:0 0 5px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field.full{grid-column:1/-1}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.muted{font-size:11px;color:var(--sub)}
+.layout{display:grid;grid-template-columns:minmax(0,1.04fr) minmax(360px,.96fr);gap:14px;margin-top:13px}.form-card{align-self:start}.form-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.form-head b{font-size:13px}.status{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:4px 9px;font-size:10px;font-weight:800}.status.green{background:#ecfdf5;color:#047857}.status.amber{background:#fffbeb;color:#b45309}.status.red{background:#fef2f2;color:#be123c}
+.preview{padding:0;overflow:hidden}.report-head{padding:17px 18px;background:linear-gradient(125deg,#111827,#312e81);color:#fff}.eyebrow{font-size:9px;font-weight:800;letter-spacing:.17em;text-transform:uppercase;color:#c7d2fe}.report-head h2{font-size:20px;letter-spacing:-.03em;margin-top:4px}.report-head p{font-size:10px;color:#cbd5e1;margin-top:4px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 14px 0}.stat{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:9px}.stat span{font-size:9px;font-weight:800;color:var(--sub);display:block}.stat b{font-size:15px;display:block;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.report-body{padding:12px 14px 15px;display:grid;gap:9px}.report-section{border:1px solid var(--line);border-radius:11px;padding:10px 11px}.report-section h3{font-size:10px;font-weight:900;color:var(--brand);margin-bottom:5px}.report-section p{font-size:11px;line-height:1.55;color:#334155;white-space:pre-wrap;overflow-wrap:anywhere;min-height:18px}.report-section.risk{background:#fffafa;border-color:#fecaca}.report-section.risk h3{color:var(--bad)}.report-section.ask{background:#f5f3ff;border-color:#ddd6fe}.report-section.ask h3{color:#6d28d9}.report-foot{padding:9px 14px;border-top:1px solid var(--line);background:#f8fafc;color:var(--sub);font-size:9px;display:flex;justify-content:space-between;gap:8px}
+.note{margin-top:9px;font-size:10px;color:var(--sub)}.usecases{margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}.usecases h2{font-size:12px;font-weight:900;color:var(--sub);margin-bottom:5px}.usecases li{font-size:11px;color:var(--sub);margin-left:15px;margin-bottom:3px}
+@media(max-width:800px){.layout{grid-template-columns:1fr}.preview{grid-row:1}.grid{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.grid{grid-template-columns:1fr}.field.full{grid-column:auto}.stats{gap:5px;padding:9px 10px 0}.stat{padding:7px}.stat b{font-size:13px}.report-head h2{font-size:17px}}
+@media print{body{background:#fff;padding:0}.wrap>header,.form-card,.usecases,.no-print{display:none!important}.layout{display:block;margin:0}.preview{box-shadow:none;border:1px solid #ddd;break-inside:avoid}.report-head{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>📄 한 장 보고 틀</h1><p class="sub">목표·성과·이슈·다음 계획을 한 장에 정리해 상위 보고와 팀 공유에 바로 쓰세요.</p></header>
+<div class="layout">
+<section class="card form-card">
+<div class="form-head"><b>보고 내용 입력</b><span id="saveState" class="status green">● 이 브라우저에 자동 저장</span></div>
+<div class="grid">
+<div class="field full"><label for="title">보고 제목</label><input id="title" placeholder="예: 10월 1주차 서비스 운영 보고"></div>
+<div class="field"><label for="period">보고 기간</label><input id="period" placeholder="예: 10/1~10/7"></div>
+<div class="field"><label for="owner">작성자 · 팀</label><input id="owner" placeholder="예: 김보고 · 프로덕트 1팀"></div>
+<div class="field"><label for="status">전체 진행 상태</label><select id="status"><option value="green">순조로움</option><option value="amber">주의 필요</option><option value="red">지원 필요</option></select></div>
+<div class="field"><label for="progress">목표 달성률 (%)</label><input id="progress" type="number" min="0" max="100" placeholder="예: 72"></div>
+<div class="field full"><label for="goal">이번 주 목표</label><textarea id="goal" rows="2" placeholder="이번 주에 이루려던 핵심 목표 한두 가지"></textarea></div>
+<div class="field full"><label for="done">완료한 일 · 주요 성과</label><textarea id="done" rows="3" placeholder="예:\n- 온보딩 화면 1차 시안 확정\n- 결제 API 응답 속도 35% 개선"></textarea></div>
+<div class="field full"><label for="next">다음 주 계획</label><textarea id="next" rows="2" placeholder="다음 주에 집중할 일과 예상 완료일"></textarea></div>
+<div class="field full"><label for="risk">이슈 · 위험 요소</label><textarea id="risk" rows="2" placeholder="예: 디자인 리소스 부족으로 출시 일정 2일 지연 가능"></textarea></div>
+<div class="field full"><label for="ask">의사결정 · 도움이 필요한 것</label><textarea id="ask" rows="2" placeholder="예: 추가 디자이너 투입 여부를 금요일까지 결정해 주세요"></textarea></div>
+</div>
+<div class="row no-print" style="margin-top:12px">
+<button class="primary" id="copyBtn">보고 내용 복사</button><button id="printBtn">인쇄 · PDF</button><button id="sampleBtn">예시로 채우기</button><button id="clearBtn">비우기</button>
+</div>
+<p class="note">입력한 내용은 이 브라우저에만 저장됩니다. 회사·팀 용어에 맞게 항목 이름을 바꿔 써도 좋아요.</p>
+</section>
+<section class="card preview" aria-label="한 장 보고 미리보기">
+<div class="report-head"><div class="eyebrow">WEEKLY BUSINESS UPDATE</div><h2 id="pTitle">10월 1주차 서비스 운영 보고</h2><p><span id="pPeriod">10/1~10/7</span>　·　<span id="pOwner">김보고 · 프로덕트 1팀</span></p></div>
+<div class="stats"><div class="stat"><span>진행 상태</span><b id="pStatus">순조로움</b></div><div class="stat"><span>목표 달성</span><b id="pProgress">72%</b></div><div class="stat"><span>보고 형식</span><b>한 장 요약</b></div></div>
+<div class="report-body">
+<div class="report-section"><h3>🎯 이번 주 목표</h3><p id="pGoal">온보딩 플로우를 확정하고 결제 안정성을 높입니다.</p></div>
+<div class="report-section"><h3>✅ 완료한 일 · 주요 성과</h3><p id="pDone">- 온보딩 화면 1차 시안 확정
+- 결제 API 응답 속도 35% 개선</p></div>
+<div class="report-section"><h3>➡️ 다음 주 계획</h3><p id="pNext">- 사용성 테스트 5명 진행
+- 개발 핸드오프 및 일정 확정</p></div>
+<div class="report-section risk"><h3>⚠️ 이슈 · 위험 요소</h3><p id="pRisk">디자인 리소스 부족으로 출시 일정이 2일 지연될 수 있습니다.</p></div>
+<div class="report-section ask"><h3>🙋 의사결정 · 도움 요청</h3><p id="pAsk">추가 디자이너 투입 여부를 금요일까지 결정해 주세요.</p></div>
+</div><div class="report-foot"><span>업무앱 · 한 장 보고</span><span id="pDate"></span></div>
+</section>
+</div>
+<div class="usecases"><h2>이럴 때 좋아요</h2><ul><li><b>팀장</b> · 상위 보고 때 흩어진 진행 상황을 목표·성과·위험으로 한 장에 요약할 때</li><li><b>모든 직장인</b> · 주간 회의를 앞두고 무엇을 했고 다음에 무엇을 할지 정리할 때</li><li><b>기획·운영</b> · 지연이나 결정 요청을 숨기지 않고 근거와 함께 공유할 때</li></ul></div>
+</div>
+<script>
+(function(){
+"use strict";
+var KEY="one-page-report-v1";
+var FIELDS=["title","period","owner","status","progress","goal","done","next","risk","ask"];
+var defaults={title:"10월 1주차 서비스 운영 보고",period:"10/1~10/7",owner:"김보고 · 프로덕트 1팀",status:"green",progress:"72",goal:"온보딩 플로우를 확정하고 결제 안정성을 높입니다.",done:"- 온보딩 화면 1차 시안 확정\n- 결제 API 응답 속도 35% 개선",next:"- 사용성 테스트 5명 진행\n- 개발 핸드오프 및 일정 확정",risk:"디자인 리소스 부족으로 출시 일정이 2일 지연될 수 있습니다.",ask:"추가 디자이너 투입 여부를 금요일까지 결정해 주세요."};
+function read(){var o={};FIELDS.forEach(function(k){var e=document.getElementById(k);o[k]=e.value});return o}
+function write(o){FIELDS.forEach(function(k){if(o[k]!==undefined)document.getElementById(k).value=o[k]});render()}
+function safeLoad(){try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){return null}}
+function render(){var d=read();
+ document.getElementById("pTitle").textContent=d.title||"보고 제목을 입력하세요";
+ document.getElementById("pPeriod").textContent=d.period||"보고 기간";
+ document.getElementById("pOwner").textContent=d.owner||"작성자 · 팀";
+ document.getElementById("pGoal").textContent=d.goal||"이번 주 목표를 입력해 주세요.";
+ document.getElementById("pDone").textContent=d.done||"완료한 일과 주요 성과를 입력해 주세요.";
+ document.getElementById("pNext").textContent=d.next||"다음 주 계획을 입력해 주세요.";
+ document.getElementById("pRisk").textContent=d.risk||"등록된 이슈가 없습니다.";
+ document.getElementById("pAsk").textContent=d.ask||"별도 의사결정 요청이 없습니다.";
+ document.getElementById("pProgress").textContent=Math.max(0,Math.min(100,Number(d.progress)||0))+"%";
+ var labels={green:"순조로움",amber:"주의 필요",red:"지원 필요"};
+ var status=document.getElementById("pStatus"),badge=document.getElementById("saveState");status.textContent=labels[d.status]||labels.green;
+ status.style.color=d.status==="red"?"#be123c":d.status==="amber"?"#b45309":"#047857";
+ status.style.background=d.status==="red"?"#fef2f2":d.status==="amber"?"#fffbeb":"#ecfdf5";
+ var today=new Date();document.getElementById("pDate").textContent="작성일 "+today.getFullYear()+"."+String(today.getMonth()+1).padStart(2,"0")+"."+String(today.getDate()).padStart(2,"0");
+ try{localStorage.setItem(KEY,JSON.stringify(d));badge.textContent="● 이 브라우저에 자동 저장";badge.className="status green"}catch(e){badge.textContent="브라우저 저장을 사용할 수 없어요";badge.className="status amber"}
+}
+function buildText(){var d=read(),labels={green:"순조로움",amber:"주의 필요",red:"지원 필요"};return ["[주간 업무 보고] "+(d.title||"(제목 없음)"),"기간: "+(d.period||"-")+" · 작성: "+(d.owner||"-"),"진행 상태: "+(labels[d.status]||"순조로움")+" · 목표 달성률: "+(d.progress||"0")+"%","","【이번 주 목표】\n"+(d.goal||"-"),"","【완료한 일 · 주요 성과】\n"+(d.done||"-"),"","【다음 주 계획】\n"+(d.next||"-"),"","【이슈 · 위험 요소】\n"+(d.risk||"없음"),"","【의사결정 · 도움 요청】\n"+(d.ask||"없음")].join("\n")}
+function copy(text){if(navigator.clipboard&&navigator.clipboard.writeText)return navigator.clipboard.writeText(text);var e=document.createElement("textarea");e.value=text;document.body.appendChild(e);e.select();document.execCommand("copy");e.remove();return Promise.resolve()}
+FIELDS.forEach(function(k){document.getElementById(k).addEventListener("input",render);document.getElementById(k).addEventListener("change",render)});
+document.getElementById("copyBtn").onclick=function(){var b=this;copy(buildText()).then(function(){b.textContent="복사됐어요 ✓";setTimeout(function(){b.textContent="보고 내용 복사"},1400)}).catch(function(){alert(buildText())})};
+document.getElementById("printBtn").onclick=function(){window.print()};
+document.getElementById("sampleBtn").onclick=function(){write(defaults)};
+document.getElementById("clearBtn").onclick=function(){if(!confirm("입력한 내용을 모두 비울까요?"))return;FIELDS.forEach(function(k){document.getElementById(k).value=""});render()};
+var saved=safeLoad();if(saved)write(saved);else write(defaults);
+})();
+</script>
+</body>
+</html>

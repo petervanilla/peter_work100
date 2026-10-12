@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>반복 업무 체크리스트</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#d97706;--bad:#e11d48;--r:14px}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+.wrap{max-width:680px;margin:0 auto}
+h1{font-size:18px;font-weight:800;letter-spacing:-.02em}
+.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04)}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:8px 12px;font-weight:600;font-size:13px;transition:.12s}
+button:hover{border-color:#c7cddb;background:#fafafa}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}
+button.primary:hover{filter:brightness(1.07)}
+button.on{background:var(--brand);color:#fff;border-color:transparent}
+input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:13px}
+input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:12px;font-weight:700;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grow{flex:1;min-width:110px}
+.muted{color:var(--sub);font-size:12px}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700}
+.good{background:#ecfdf5;color:#047857}.warn{background:#fffbeb;color:#b45309}.bad{background:#fef2f2;color:#be123c}.info{background:#eef2ff;color:#4338ca}
+.item{display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:12px;margin-top:8px;background:#fff}
+.item.late{border-color:#fecaca;background:#fef2f2}
+.item.today{border-color:#c7d2fe;background:#eef2ff}
+.chk{width:22px;height:22px;accent-color:var(--ok);cursor:pointer;flex-shrink:0}
+.nm{flex:1;min-width:0}
+.nm b{font-size:14px;display:block}
+.sec-title{font-size:13px;font-weight:800;margin-top:14px}
+.usecases{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+.usecases h2{font-size:12px;font-weight:800;color:var(--sub);margin-bottom:6px}
+.usecases li{font-size:12px;color:var(--sub);margin-left:14px;margin-bottom:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🔁 반복 업무 체크리스트</h1>
+  <p class="sub">매일·매주·매월 하는 일을 한 번만 등록하면 오늘 할 것만 골라 보여 줘요. 놓친 일은 「밀림」으로 며칠째인지 알려 줘요.</p>
+
+  <div class="card">
+    <div class="row">
+      <div class="grow"><label for="rName">반복 업무</label><input id="rName" placeholder="예: 사무실 소독·청소 점검"></div>
+      <div style="width:110px"><label for="rCycle">주기</label><select id="rCycle"><option value="daily">매일</option><option value="weekly" selected>매주</option><option value="monthly">매월</option></select></div>
+      <div style="width:130px"><label for="rWhen">요일 / 날짜</label><select id="rWhen"></select></div>
+      <button id="btnAdd" class="primary" style="align-self:flex-end">+ 등록</button>
+    </div>
+    <p class="muted" style="margin-top:6px">매주는 요일, 매월은 날짜를 골라 주세요.</p>
+  </div>
+
+  <div class="sec-title">⏰ 오늘 할 일</div>
+  <div id="todayList"></div>
+
+  <div class="sec-title">🚨 밀린 일</div>
+  <div id="lateList"></div>
+
+  <div class="sec-title">📋 전체 반복 업무</div>
+  <div id="allList"></div>
+
+  <div class="row" style="margin-top:12px">
+    <button id="btnSample">예시로 되돌리기</button>
+    <button id="btnCopy">오늘 체크 현황 복사</button>
+  </div>
+
+  <div class="usecases">
+    <h2>이럴 때 좋아요</h2>
+    <ul>
+      <li><b>총무</b> · 매주 하는 점검·발주를 깜빡할 때 — 한 번만 등록하면 오늘 할 것만 골라 보여 주고, 놓치면 밀림으로 알려 줘요.</li>
+      <li><b>회계</b> · 월초·월말 작업을 매번 캘린더에 다시 적을 때 — 주기만 정해 두면 알아서 반복되어 캘린더를 단정하게 유지할 수 있어요.</li>
+      <li><b>사장님(가게)</b> · 직원이 바뀌어도 매일 할 일이 그대로여야 할 때 — 오늘 할 일 목록을 화면에 띄워 두면 누가 봐도 같은 일을 하게 돼요.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var KEY="routine-checklist-v1";
+var WEEK=["월","화","수","목","금","토","일"];
+function todayStr(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){return[]}}
+function save(o){try{localStorage.setItem(KEY,JSON.stringify(o))}catch(e){}}
+var items=load();
+function addDays(n){var d=new Date();d.setDate(d.getDate()+n);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+var SAMPLE=[
+  {name:"사무실 소독·청재 점검",cycle:"weekly",when:1,last:null},
+  {name:"주간 업무 보고 취합",cycle:"weekly",when:5,last:null},
+  {name:"비품 재고 확인",cycle:"weekly",when:3,last:null},
+  {name:"세금계산서 발행 준비",cycle:"monthly",when:1,last:null},
+  {name:"출근 체크·환기",cycle:"daily",when:0,last:null}
+];
+function whenOptions(){
+  var sel=document.getElementById("rWhen");sel.innerHTML="";
+  var cycle=document.getElementById("rCycle").value;
+  if(cycle==="weekly"){WEEK.forEach(function(w,i){sel.innerHTML+='<option value="'+i+'">매주 '+w+'요일</option>'})}
+  else if(cycle==="monthly"){for(var d=1;d<=28;d++){sel.innerHTML+='<option value="'+d+'">매월 '+d+'일</option>'}}
+  else{sel.innerHTML='<option value="0">매일</option>'}
+}
+function isDue(it,dateStr){
+  var d=new Date(dateStr+"T00:00:00");
+  var dow=d.getDay()===0?7:d.getDay();
+  var dom=d.getDate();
+  if(it.cycle==="daily")return true;
+  if(it.cycle==="weekly")return it.when===dow;
+  if(it.cycle==="monthly")return it.when===dom;
+  return false;
+}
+function dueDates(it){
+  // 이번 주기 안에서 마감이 지난 날짜들(밀림 계산용)
+  var out=[];var d=new Date();
+  for(var i=0;i<40;i++){
+    var ds=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+    if(isDue(it,ds))out.push(ds);
+    d.setDate(d.getDate()-1);
+  }
+  return out;
+}
+function lateDays(it){
+  if(!it.last)return null;
+  var dues=dueDates(it).filter(function(ds){return ds>it.last&&ds<todayStr()});
+  return dues.length?dues.length:null;
+}
+function todayDone(it){return it.last===todayStr()}
+function render(){
+  var todayBox=document.getElementById("todayList");todayBox.innerHTML="";
+  var lateBox=document.getElementById("lateList");lateBox.innerHTML="";
+  var allBox=document.getElementById("allList");allBox.innerHTML="";
+  var dueToday=items.filter(function(it){return isDue(it,todayStr())});
+  if(!dueToday.length){todayBox.innerHTML='<div class="card" style="text-align:center;color:var(--sub);font-size:13px">오늘 예정된 반복 업무가 없어요.</div>'}
+  dueToday.forEach(function(it){
+    var done=todayDone(it);
+    var el=document.createElement("div");el.className="item"+(done?"":"today");
+    el.innerHTML='<input type="checkbox" class="chk" '+(done?"checked":"")+'>'+
+      '<span class="nm"><b>'+it.name.replace(/</g,"&lt;")+'</b><span class="muted">'+(it.cycle==="daily"?"매일":it.cycle==="weekly"?"매주 "+WEEK[it.when-1]+"요일":"매월 "+it.when+"일")+'</span></span>'+
+      '<button class="del" title="삭제" style="color:#d1d5db">✕</button>';
+    el.querySelector(".chk").onchange=function(){it.last=this.checked?todayStr():null;save(items);render()};
+    el.querySelector(".del").onclick=function(){items=items.filter(function(x){return x!==it});save(items);render()};
+    todayBox.appendChild(el);
+  });
+  var lates=items.filter(function(it){return lateDays(it)});
+  if(!lates.length){lateBox.innerHTML='<p class="muted" style="margin-top:6px">밀린 일이 없어요. 👏</p>'}
+  lates.forEach(function(it){
+    var n=lateDays(it);
+    var el=document.createElement("div");el.className="item late";
+    el.innerHTML='<span class="pill bad">밀림 '+n+'일째</span><span class="nm"><b>'+it.name.replace(/</g,"&lt;")+'</b></span>';
+    var b=document.createElement("button");b.textContent="오늘 했어요";
+    b.onclick=function(){it.last=todayStr();save(items);render()};
+    el.appendChild(b);lateBox.appendChild(el);
+  });
+  if(!items.length){allBox.innerHTML='<p class="muted" style="margin-top:6px">등록된 반복 업무가 없어요.</p>'}
+  items.forEach(function(it){
+    var done=todayDone(it);
+    var el=document.createElement("div");el.className="item";
+    el.innerHTML='<span class="nm"><b>'+it.name.replace(/</g,"&lt;")+'</b><span class="muted">'+(it.cycle==="daily"?"매일":it.cycle==="weekly"?"매주 "+WEEK[it.when-1]+"요일":"매월 "+it.when+"일")+' · 마지막 체크 '+(it.last||"없음")+'</span></span>'+
+      '<button class="del" title="삭제" style="color:#d1d5db">✕</button>';
+    el.querySelector(".del").onclick=function(){items=items.filter(function(x){return x!==it});save(items);render()};
+    allBox.appendChild(el);
+  });
+}
+document.getElementById("rCycle").onchange=whenOptions;
+document.getElementById("btnAdd").onclick=function(){
+  var n=document.getElementById("rName").value.trim();
+  if(!n)return;
+  items.push({name:n,cycle:document.getElementById("rCycle").value,when:parseInt(document.getElementById("rWhen").value)||0,last:null});
+  document.getElementById("rName").value="";save(items);render();
+};
+document.getElementById("rName").addEventListener("keydown",function(e){if(e.key==="Enter")document.getElementById("btnAdd").click()});
+document.getElementById("btnSample").onclick=function(){items=SAMPLE.map(function(s){return{name:s.name,cycle:s.cycle,when:s.when,last:null}});save(items);render()};
+document.getElementById("btnCopy").onclick=function(){
+  var lines=["[오늘의 반복 업무] "+todayStr()];
+  var due=items.filter(function(it){return isDue(it,todayStr())});
+  if(!due.length)lines.push("(오늘 예정 없음)");
+  due.forEach(function(it){lines.push((todayDone(it)?"✓ ":"□ ")+it.name)});
+  var lates=items.filter(function(it){return lateDays(it)});
+  if(lates.length){lines.push("밀린 일:");lates.forEach(function(it){lines.push("- "+it.name+" ("+lateDays(it)+"일째)")})}
+  copyText(lines.join("\n"),this);
+};
+function copyText(t,btn){
+  function ok(){btn.textContent="복사됐어요 ✓";setTimeout(function(){btn.textContent="오늘 체크 현황 복사"},1500)}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fb)}else fb();
+  function fb(){var ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");ok()}catch(e){alert(t)}ta.remove()}
+}
+whenOptions();
+if(!items.length)items=SAMPLE.map(function(s){return{name:s.name,cycle:s.cycle,when:s.when,last:null}});
+render();
+})();
+</script>
+</body>
+</html>

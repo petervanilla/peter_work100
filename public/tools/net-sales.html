@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>배달·카드 수수료 순매출 계산기</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#d97706;--bad:#e11d48;--soft:#f8fafc}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+.wrap{max-width:900px;margin:0 auto}h1{font-size:18px;font-weight:800;letter-spacing:-.02em}.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04)}
+.card h2{font-size:13px;font-weight:900;margin-bottom:9px}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:7px 11px;font-weight:700;font-size:12px;transition:.12s}button:hover{border-color:var(--brand)}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border:0}
+input,select{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font-size:13px}
+input:focus,select:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:10px;font-weight:800;color:var(--sub);display:block;margin-bottom:4px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:640px){.grid2{grid-template-columns:1fr}}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:end}.muted{font-size:11px;color:var(--sub)}.grow{flex:1;min-width:130px}
+.hero{background:linear-gradient(135deg,#0f172a,#312e81);color:#fff;border-radius:14px;padding:16px;margin-top:12px}
+.hero .lbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#c7d2fe;font-weight:800}
+.hero .big{font-size:34px;font-weight:950;letter-spacing:-.04em;margin-top:3px;font-variant-numeric:tabular-nums}
+.hero .row2{display:flex;gap:14px;margin-top:11px;flex-wrap:wrap}
+.hero .row2 div{flex:1;min-width:110px}
+.hero .row2 span{font-size:10px;color:#cbd5e1;display:block}
+.hero .row2 b{font-size:15px;font-variant-numeric:tabular-nums}
+.line{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:12px}
+.line:last-child{border:0}.line b{font-variant-numeric:tabular-nums;font-size:13px}
+.tbl{margin-top:6px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:right}
+th{font-size:10px;color:var(--sub);background:var(--soft);font-weight:800}
+th:first-child,td:first-child{text-align:left}
+.note{padding:10px 12px;border-radius:11px;background:#fffbeb;border:1px solid #fde68a;font-size:11.5px;margin-top:10px;color:#92400e}
+.usecases{margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}.usecases h2{font-size:12px;font-weight:900;color:var(--sub);margin-bottom:5px}
+.usecases li{font-size:11px;color:var(--sub);margin-left:15px;margin-bottom:3px}
+@media print{body{background:#fff;padding:0}.no-print{display:none!important}.hero{-webkit-print-color-adjust:exact;print-color-adjust:exact}.card{break-inside:avoid}}
+</style></head><body><div class="wrap">
+<header><h1>💳 배달·카드 수수료 순매출 계산기</h1><p class="sub">결제 경로별 매출과 수수료·할인·환불을 넣으면 실제로 내 통장에 남는 돈을 경로별로 계산해요.</p></header>
+
+<section class="card no-print">
+<h2>기간 · 기준</h2>
+<div class="row">
+<div class="grow" style="max-width:220px"><label for="period">기간</label><input id="period" placeholder="예: 2026년 10월 1주차"></div>
+<div style="max-width:170px"><label for="days">기간 일수(환산용)</label><input id="days" type="number" min="1" value="7"></div>
+<button id="sampleBtn" style="align-self:flex-end">예시로 채우기</button>
+</div>
+</section>
+
+<section class="card">
+<h2>결제 경로별 매출 (금액)</h2>
+<div class="grid2">
+<div><label for="cardAmt">카드 결제</label><input id="cardAmt" type="number" min="0" value="0"></div>
+<div><label for="appAmt">배달앱 결제</label><input id="appAmt" type="number" min="0" value="0"></div>
+<div><label for="cashAmt">현금 · 계좌이체</label><input id="cashAmt" type="number" min="0" value="0"></div>
+<div><label for="etcAmt">기타(상품권·포인트)</label><input id="etcAmt" type="number" min="0" value="0"></div>
+</div>
+<h2 style="margin-top:13px">수수료 · 손실</h2>
+<div class="grid2">
+<div><label for="cardRate">카드 수수료율 (%)</label><input id="cardRate" type="number" step="0.01" min="0" value="1.5"></div>
+<div><label for="appRate">배달앱 수수료율 (%)</label><input id="appRate" type="number" step="0.01" min="0" value="9.8"></div>
+<div><label for="discount">쿠폰·할인 총액</label><input id="discount" type="number" min="0" value="0"></div>
+<div><label for="refund">환불·취소 금액</label><input id="refund" type="number" min="0" value="0"></div>
+</div>
+<p class="muted" style="margin-top:8px">현금은 수수료가 없다고 보고 계산해요. 카드 취소 건은 환불 금액에 넣으세요.</p>
+</section>
+
+<div class="hero">
+<div class="lbl">최종 순매출 (실수령 예상)</div>
+<div class="big" id="netOut">0원</div>
+<div class="row2">
+<div><span>총매출(합계)</span><b id="grossOut">0원</b></div>
+<div><span>수수료 합계</span><b id="feeOut">0원</b></div>
+<div><span>할인+환불</span><b id="lossOut">0원</b></div>
+<div><span>손실률</span><b id="lossRateOut">—</b></div>
+<div><span>일 평균 순매출</span><b id="perDayOut">0원</b></div>
+</div>
+</div>
+
+<section class="card">
+<h2>경로별 상세</h2>
+<div class="tbl"><table><thead><tr><th>경로</th><th>매출</th><th>수수료율</th><th>수수료</th><th>실수령</th><th>실수령률</th></tr></thead><tbody id="detail"></tbody></table></div>
+<div class="note" id="note"></div>
+</section>
+
+<section class="card no-print">
+<div class="row"><button class="primary" id="copyBtn">계산 결과 복사</button><button id="printBtn">인쇄 · PDF</button><button id="clearBtn">비우기</button></div>
+</section>
+
+<div class="usecases"><h2>이럴 때 좋아요</h2><ul>
+<li><b>사장님(가게)</b> · 매출은 컸는데 왜 남는 돈이 적은지 알고 싶을 때 — 카드·배달앱 수수료를 빼면 실제 남는 돈이 즉시 나와요.</li>
+<li><b>자영업자</b> · 배달앱 비중을 늘려야 할지 판단해야 할 때 — 경로별 실수령률을 비교해 비중 결정 근거를 얻어요.</li>
+<li><b>회계</b> · 입금 예정액과 매출 장부를 맞춰야 할 때 — 수수료·환불까지 반영된 순매출로 대사해요.</li>
+</ul></div>
+</div>
+<script>
+(function(){"use strict";
+var KEY="net-sales-v1";
+function esc(s){return String(s==null?"":s).replace(/[&<>\"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'\"':"&quot;"}[c]})}
+function num(v){var n=parseFloat(v);return isFinite(n)&&n>0?n:0}
+function won(n){return Math.round(n||0).toLocaleString("ko-KR")+"원"}
+var FIELDS=["period","days","cardAmt","appAmt","cashAmt","etcAmt","cardRate","appRate","discount","refund"];
+function read(){var o={};FIELDS.forEach(function(k){o[k]=document.getElementById(k).value});return o}
+function render(){
+var d=read();
+var rows=[
+{name:"카드",amt:num(d.cardAmt),rate:num(d.cardRate)},
+{name:"배달앱",amt:num(d.appAmt),rate:num(d.appRate)},
+{name:"현금·계좌",amt:num(d.cashAmt),rate:0},
+{name:"기타",amt:num(d.etcAmt),rate:0}];
+var gross=rows.reduce(function(s,r){return s+r.amt},0);
+var fees=rows.reduce(function(s,r){return s+r.amt*r.rate/100},0);
+var loss=num(d.discount)+num(d.refund);
+var net=gross-fees-loss;
+var days=Math.max(1,Math.round(num(d.days))||1);
+document.getElementById("grossOut").textContent=won(gross);
+document.getElementById("feeOut").textContent=won(fees);
+document.getElementById("lossOut").textContent=won(loss);
+document.getElementById("netOut").textContent=(net<0?"-":"")+won(Math.abs(net));
+document.getElementById("lossRateOut").textContent=gross>0?((fees+loss)/gross*100).toFixed(1)+"%":"—";
+document.getElementById("perDayOut").textContent=won(net/days);
+var tb=document.getElementById("detail");tb.innerHTML="";
+rows.forEach(function(r){var fee=r.amt*r.rate/100,netR=r.amt-fee;
+var tr=document.createElement("tr");
+tr.innerHTML="<td>"+r.name+"</td><td>"+won(r.amt)+"</td><td>"+r.rate+"%</td><td>"+won(fee)+"</td><td><b>"+won(netR)+"</b></td><td>"+(r.amt>0?(100-r.rate).toFixed(2)+"%":"—")+"</td>";
+tb.appendChild(tr)});
+var appShare=gross>0?rows[1].amt/gross*100:0;
+var worst=rows.filter(function(r){return r.amt>0}).sort(function(a,b){return (b.rate-a.rate)})[0];
+document.getElementById("note").textContent=gross===0
+?"매출을 입력하면 경로별 실수령이 표시됩니다."
+:(worst&&worst.rate>0
+? "수수료 부담이 가장 큰 경로는 "+worst.name+" ("+worst.rate+"%)입니다"+(appShare>30?" · 배달앱 비중이 "+Math.round(appShare)+"%로 높아 비중을 조금만 바꿔도 순매출이 눈에 띄게 달라져요.":".")
+:"수수료가 들어가는 경로가 없습니다.");
+try{localStorage.setItem(KEY,JSON.stringify(d))}catch(e){}}
+FIELDS.forEach(function(k){document.getElementById(k).addEventListener("input",render)});
+document.getElementById("copyBtn").onclick=function(){
+var d=read(),rows=[["경로","매출","수수료율","실수령"]];
+[["카드",num(d.cardAmt),num(d.cardRate)],["배달앱",num(d.appAmt),num(d.appRate)],["현금·계좌",num(d.cashAmt),0],["기타",num(d.etcAmt),0]].forEach(function(r){rows.push([r[0],Math.round(r[1]),r[2]+"%",Math.round(r[1]*(100-r[2])/100)])});
+var gross=rows.slice(1).reduce(function(s,r){return s+r[1]},0);
+var fees=num(d.cardAmt)*num(d.cardRate)/100+num(d.appAmt)*num(d.appRate)/100;
+var net=gross-fees-num(d.discount)-num(d.refund);
+var lines=["[순매출 계산] "+(d.period||"기간 미입력"),"총매출 "+won(gross)+" · 수수료 "+won(fees)+" · 할인·환불 "+won(num(d.discount)+num(d.refund)),"최종 순매출 "+won(net)];
+rows.slice(1).forEach(function(r){if(r[1]>0)lines.push("- "+r[0]+": "+won(r[1])+" → 실수령 "+won(r[3]))});
+var text=lines.join("\n"),b=this;
+var ok=function(){b.textContent="복사됐어요 ✓";setTimeout(function(){b.textContent="계산 결과 복사"},1400)};
+if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(ok,function(){prompt("복사하세요",text)});else prompt("복사하세요",text)};
+document.getElementById("printBtn").onclick=function(){window.print()};
+document.getElementById("clearBtn").onclick=function(){if(!confirm("입력한 값을 비울까요?"))return;
+["cardAmt","appAmt","cashAmt","etcAmt","discount","refund"].forEach(function(k){document.getElementById(k).value=0});render()};
+document.getElementById("sampleBtn").onclick=function(){
+document.getElementById("period").value="2026년 10월 1주차";
+document.getElementById("days").value=7;
+document.getElementById("cardAmt").value=4210000;
+document.getElementById("appAmt").value=1830000;
+document.getElementById("cashAmt").value=640000;
+document.getElementById("etcAmt").value=120000;
+document.getElementById("discount").value=184000;
+document.getElementById("refund").value=62000;
+render()};
+try{var s=JSON.parse(localStorage.getItem(KEY)||"null");if(s)FIELDS.forEach(function(k){if(s[k]!==undefined)document.getElementById(k).value=s[k]})}catch(e){}
+render();
+})();
+</script></body></html>

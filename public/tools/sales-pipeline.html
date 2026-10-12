@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>영업 단계판</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#b45309;--bad:#e11d48;--r:14px}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+[hidden]{display:none!important}
+.wrap{max-width:1100px;margin:0 auto}h1{font-size:18px;font-weight:800;letter-spacing:-.02em}.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04);min-width:0}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:7px 11px;font-weight:700;font-size:12px;transition:.12s}button:hover{border-color:#c7cddb;background:#fafafa}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}button.primary:hover{filter:brightness(1.07)}
+button.ghost{border-color:transparent;background:transparent;color:var(--sub);padding:4px 7px}
+input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:13px;min-width:0}
+input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:11px;font-weight:800;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}.grow{flex:1;min-width:100px}.muted{color:var(--sub);font-size:12px}
+.pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap}
+.ok{background:#ecfdf5;color:#047857}.wn{background:#fffbeb;color:#b45309}.bd{background:#fef2f2;color:#be123c}.in{background:#eef2ff;color:#4338ca}
+.usecases{margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}.usecases h2{font-size:12px;font-weight:800;color:var(--sub);margin-bottom:6px}.usecases li{font-size:12px;color:var(--sub);margin-left:15px;margin-bottom:3px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}.stat{border:1px solid var(--line);border-radius:12px;padding:10px;background:#f8fafc}.stat span{font-size:10px;font-weight:800;color:var(--sub);display:block}.stat b{font-size:19px;font-weight:900;display:block;margin-top:2px;font-variant-numeric:tabular-nums}
+.board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(170px,1fr);gap:10px;overflow-x:auto;padding-bottom:6px;margin-top:12px}
+.col{background:#eef0f6;border-radius:12px;padding:8px;min-width:0;min-height:120px}.col.over{outline:2px dashed var(--brand);background:#e7e9fb}
+.ch{display:flex;justify-content:space-between;align-items:baseline;gap:4px;padding:2px 4px 8px}.ch b{font-size:13px}.ch span{font-size:11px;color:var(--sub);font-variant-numeric:tabular-nums}
+.deal{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:8px;cursor:grab}.deal:active{cursor:grabbing}.deal .co{font-size:13px;font-weight:800;overflow-wrap:anywhere}.deal .amt{font-size:12px;font-weight:800;color:#3730a3;margin-top:2px}
+.deal .nx{font-size:11px;color:var(--sub);margin-top:4px;overflow-wrap:anywhere}.dt{display:flex;gap:2px;margin-top:6px;align-items:center}.dt .sp{flex:1}
+@media print{body{background:#fff;padding:0}.no-print{display:none!important}.card{box-shadow:none}.board{overflow:visible}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>🧭 영업 단계판</h1><p class="sub">거래를 리드→연락→제안→협상→성사까지 칸반 보드로 관리해요. 카드를 끌어 옮기거나 ◀ ▶ 버튼으로 단계를 바꾸면 예상 매출이 자동 계산돼요.</p></header>
+
+<section class="card">
+  <div class="stats">
+    <div class="stat"><span>진행 중 거래</span><b id="sOpen">0건</b></div>
+    <div class="stat"><span>진행 중 금액</span><b id="sAmt">0</b></div>
+    <div class="stat"><span>가중 예상 매출</span><b id="sFc">0</b></div>
+    <div class="stat"><span>성사 금액</span><b id="sWon" style="color:#047857">0</b></div>
+    <div class="stat"><span>성사율</span><b id="sRate">-</b></div>
+    <div class="stat"><span>오늘·지연된 후속 행동</span><b id="sDue" style="color:#be123c">0건</b></div>
+  </div>
+  <details class="no-print" style="margin-top:10px"><summary class="muted" style="cursor:pointer">단계별 성사 확률 설정</summary>
+    <div class="row" style="margin-top:8px"><div style="width:90px"><label for="p0">리드(%)</label><input id="p0" type="number" min="0" max="100"></div><div style="width:90px"><label for="p1">연락(%)</label><input id="p1" type="number" min="0" max="100"></div><div style="width:90px"><label for="p2">제안(%)</label><input id="p2" type="number" min="0" max="100"></div><div style="width:90px"><label for="p3">협상(%)</label><input id="p3" type="number" min="0" max="100"></div></div>
+  </details>
+</section>
+
+<section class="card no-print">
+  <b style="font-size:13px" id="formTitle">+ 새 거래</b>
+  <div class="row" style="margin-top:8px">
+    <div class="grow"><label for="dCo">회사·거래처</label><input id="dCo" placeholder="예: 한빛솔루션"></div>
+    <div class="grow"><label for="dCt">담당자</label><input id="dCt" placeholder="예: 김 팀장"></div>
+    <div style="width:130px"><label for="dAmt">금액(만원)</label><input id="dAmt" type="number" min="0"></div>
+    <div style="width:110px"><label for="dSt">단계</label><select id="dSt"></select></div>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <div style="width:150px"><label for="dClose">예상 계약일</label><input id="dClose" type="date"></div>
+    <div class="grow" style="min-width:160px"><label for="dNext">다음 행동</label><input id="dNext" placeholder="예: 견적서 보내기"></div>
+    <div style="width:150px"><label for="dNd">행동 예정일</label><input id="dNd" type="date"></div>
+    <button class="primary" id="save">거래 추가</button><button id="cancel" hidden>수정 취소</button>
+  </div>
+</section>
+
+<div class="board" id="board"></div>
+
+<div class="row no-print" style="margin-top:12px"><button id="copy">현황 복사</button><button id="csv">CSV 내려받기</button><button id="print">인쇄·PDF</button><button id="sample">예시로 되돌리기</button><button id="clear">모두 비우기</button></div>
+
+<div class="usecases"><h2>이럴 때 좋아요</h2><ul>
+<li><b>영업</b> · 진행 중인 거래가 어느 단계에서 멈췄는지, 오늘 연락할 곳이 어디인지 볼 때</li>
+<li><b>팀장</b> · 주간 영업 회의에서 예상 매출과 성사율을 같이 점검할 때</li>
+<li><b>사장님(가게)</b> · 단체 주문·납품 문의를 놓치지 않고 단계별로 관리할 때</li></ul></div>
+</div>
+
+<script>
+(function(){"use strict";
+var KEY="sales-pipeline-v1",ST=["리드","연락","제안","협상","성사","실패"];
+function load(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function num(v){var x=parseFloat(v);return isNaN(x)?0:x}
+function ymd(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function today(){return ymd(new Date())}
+function addDays(s,k){var d=new Date(s+"T00:00:00");d.setDate(d.getDate()+k);return ymd(d)}
+function diff(a,b){return Math.round((new Date(b+"T00:00:00")-new Date(a+"T00:00:00"))/864e5)}
+function uid(){return "d"+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}
+function man(v){v=num(v);return v>=10000?(v/10000).toFixed(v%10000?1:0)+"억":v.toLocaleString("ko-KR")+"만"}
+function sample(){var t=today();return{probs:[10,25,50,75],deals:[
+ {id:"d1",co:"한빛솔루션",ct:"김 팀장",amt:1200,st:3,close:addDays(t,10),next:"최종 견적 조율",nd:addDays(t,1)},
+ {id:"d2",co:"모아푸드",ct:"박 대표",amt:450,st:2,close:addDays(t,21),next:"제안서 발송",nd:t},
+ {id:"d3",co:"새봄학원",ct:"이 원장",amt:300,st:1,close:addDays(t,30),next:"방문 일정 잡기",nd:addDays(t,-2)},
+ {id:"d4",co:"그린카페 3호점",ct:"최 점장",amt:180,st:0,close:addDays(t,45),next:"소개 자료 전달",nd:addDays(t,3)},
+ {id:"d5",co:"다온병원",ct:"정 실장",amt:2200,st:2,close:addDays(t,28),next:"데모 시연",nd:addDays(t,2)},
+ {id:"d6",co:"청춘물류",ct:"한 과장",amt:800,st:4,close:addDays(t,-5),next:"",nd:""},
+ {id:"d7",co:"별빛출판",ct:"오 편집장",amt:150,st:5,close:addDays(t,-9),next:"",nd:""},
+ {id:"d8",co:"누리건설",ct:"윤 부장",amt:3500,st:1,close:addDays(t,60),next:"담당자 재확인",nd:addDays(t,5)}]}}
+var S=load(KEY,null);if(!S||!Array.isArray(S.deals))S=sample();if(!Array.isArray(S.probs)||S.probs.length<4)S.probs=[10,25,50,75];
+var editId=null;
+function find(id){for(var i=0;i<S.deals.length;i++)if(S.deals[i].id===id)return S.deals[i];return null}
+function due(d){if(!d.nd||d.st>=4)return null;return diff(today(),d.nd)}
+function card(d){var df=due(d),b="";if(df!==null)b='<span class="pill '+(df<0?"bd":df===0?"wn":"in")+'">'+(df<0?"지연 "+(-df)+"일":df===0?"오늘":"D-"+df)+'</span>';
+ return '<div class="deal" draggable="true" data-id="'+esc(d.id)+'"><div class="co">'+esc(d.co||"(이름 없음)")+'</div><div class="muted">'+esc(d.ct)+'</div><div class="amt">'+man(d.amt)+'원</div>'+
+ (d.next?'<div class="nx">▸ '+esc(d.next)+' '+b+'</div>':'')+
+ '<div class="dt no-print"><button class="ghost" data-act="back" aria-label="이전 단계로"'+(d.st===0?' disabled':'')+'>◀</button><button class="ghost" data-act="fwd" aria-label="다음 단계로"'+(d.st===5?' disabled':'')+'>▶</button><span class="sp"></span><button class="ghost" data-act="edit" aria-label="수정">✎</button><button class="ghost" data-act="del" aria-label="삭제">✕</button></div></div>'}
+function render(){
+ var h="";ST.forEach(function(name,si){var ds=S.deals.filter(function(d){return d.st===si}),sum=ds.reduce(function(a,d){return a+num(d.amt)},0);
+  h+='<div class="col" data-st="'+si+'"><div class="ch"><b>'+name+'</b><span>'+ds.length+'건 · '+man(sum)+'</span></div>'+ds.map(card).join("")+'</div>'});
+ $("board").innerHTML=h;for(var i=0;i<4;i++)$("p"+i).value=S.probs[i];stats()}
+function stats(){var open=S.deals.filter(function(d){return d.st<4}),won=S.deals.filter(function(d){return d.st===4}),lost=S.deals.filter(function(d){return d.st===5});
+ var amt=open.reduce(function(a,d){return a+num(d.amt)},0),fc=open.reduce(function(a,d){return a+num(d.amt)*num(S.probs[d.st])/100},0),wa=won.reduce(function(a,d){return a+num(d.amt)},0);
+ $("sOpen").textContent=open.length+"건";$("sAmt").textContent=man(amt)+"원";$("sFc").textContent=man(Math.round(fc))+"원";$("sWon").textContent=man(wa)+"원";
+ $("sRate").textContent=won.length+lost.length?Math.round(won.length/(won.length+lost.length)*100)+"%":"-";
+ $("sDue").textContent=S.deals.filter(function(d){var x=due(d);return x!==null&&x<=0}).length+"건";save(KEY,S)}
+function fillForm(){var d=editId?find(editId):null;if(editId&&!d)editId=null;
+ $("formTitle").textContent=d?"✎ 거래 수정":"+ 새 거래";$("save").textContent=d?"수정 저장":"거래 추가";$("cancel").hidden=!d;
+ $("dCo").value=d?d.co:"";$("dCt").value=d?d.ct:"";$("dAmt").value=d?d.amt:"";$("dSt").value=d?d.st:0;$("dClose").value=d?d.close:"";$("dNext").value=d?d.next:"";$("dNd").value=d?d.nd:""}
+$("save").onclick=function(){var co=$("dCo").value.trim();if(!co){$("dCo").focus();return}
+ var o={co:co,ct:$("dCt").value.trim(),amt:num($("dAmt").value),st:+$("dSt").value||0,close:$("dClose").value,next:$("dNext").value.trim(),nd:$("dNd").value},d=editId?find(editId):null;
+ if(d){for(var k in o)d[k]=o[k]}else{o.id=uid();S.deals.push(o)}editId=null;render();fillForm()};
+$("cancel").onclick=function(){editId=null;fillForm()};
+$("board").addEventListener("click",function(e){var b=e.target.closest("[data-act]");if(!b)return;var d=find(b.closest(".deal").getAttribute("data-id"));if(!d)return;var a=b.getAttribute("data-act");
+ if(a==="fwd"&&d.st<5)d.st++;else if(a==="back"&&d.st>0)d.st--;else if(a==="del"){S.deals=S.deals.filter(function(x){return x!==d});if(editId===d.id){editId=null;render();fillForm();return}}else if(a==="edit"){editId=d.id;render();fillForm();$("dCo").focus();return}
+ render()});
+$("board").addEventListener("dragstart",function(e){var c=e.target.closest(".deal");if(!c)return;e.dataTransfer.setData("text/plain",c.getAttribute("data-id"));e.dataTransfer.effectAllowed="move"});
+$("board").addEventListener("dragover",function(e){var c=e.target.closest(".col");if(!c)return;e.preventDefault();c.classList.add("over")});
+$("board").addEventListener("dragleave",function(e){var c=e.target.closest(".col");if(c)c.classList.remove("over")});
+$("board").addEventListener("drop",function(e){var c=e.target.closest(".col");if(!c)return;e.preventDefault();var d=find(e.dataTransfer.getData("text/plain"));if(d){d.st=+c.getAttribute("data-st");render()}});
+for(var i=0;i<4;i++)(function(i){$("p"+i).addEventListener("input",function(){S.probs[i]=Math.max(0,Math.min(100,num(this.value)));stats()})})(i);
+$("sample").onclick=function(){S=sample();editId=null;render();fillForm()};
+$("clear").onclick=function(){if(!confirm("모든 거래를 지울까요?"))return;S.deals=[];editId=null;render();fillForm()};
+$("print").onclick=function(){window.print()};
+function csvCell(c){c=String(c==null?"":c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c}
+$("csv").onclick=function(){var rows=[["회사","담당자","금액(만원)","단계","예상계약일","다음행동","행동예정일"]];S.deals.forEach(function(d){rows.push([d.co,d.ct,d.amt,ST[d.st],d.close,d.next,d.nd])});
+ var t="\uFEFF"+rows.map(function(r){return r.map(csvCell).join(",")}).join("\r\n"),b=new Blob([t],{type:"text/csv;charset=utf-8"});
+ if(window.URL&&URL.createObjectURL){var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="pipeline.csv";document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500)}};
+$("copy").onclick=function(){var L=["[영업 현황] 진행 "+$("sOpen").textContent+" · 가중 예상 "+$("sFc").textContent+" · 성사율 "+$("sRate").textContent];
+ ST.forEach(function(n,si){var ds=S.deals.filter(function(d){return d.st===si});if(ds.length)L.push("■ "+n+" ("+ds.length+"건)");ds.forEach(function(d){L.push("  - "+d.co+" "+man(d.amt)+"원"+(d.next?" / "+d.next+(d.nd?" ("+d.nd+")":""):""))})});
+ var t=L.join("\n"),b=this,done=function(){b.textContent="복사됐어요 ✓";setTimeout(function(){b.textContent="현황 복사"},1400)};
+ var fb=function(){var ta=document.createElement("textarea");ta.value=t;ta.style.cssText="position:fixed;opacity:0";document.body.appendChild(ta);ta.select();var ok=false;try{ok=document.execCommand("copy")}catch(e){}ta.remove();if(ok)done();else window.prompt("복사가 막혀 있어요. 아래 글을 직접 복사해 주세요.",t)};
+ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,fb)}else fb()};
+$("dSt").innerHTML=ST.map(function(s,i){return '<option value="'+i+'">'+s+'</option>'}).join("");
+render();fillForm();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>청소 구역 체크표</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#d97706;--bad:#e11d48;--soft:#f8fafc}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+.wrap{max-width:980px;margin:0 auto}h1{font-size:18px;font-weight:800;letter-spacing:-.02em}.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04)}
+.card h2{font-size:13px;font-weight:900;margin-bottom:9px;display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:7px 11px;font-weight:700;font-size:12px;transition:.12s}button:hover{border-color:var(--brand)}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border:0}
+input,select{font:inherit;width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);font-size:12px}
+input:focus,select:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:10px;font-weight:800;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:end}.muted{font-size:11px;color:var(--sub)}.grow{flex:1;min-width:130px}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.chip{flex:1;min-width:120px;padding:11px 13px;border-radius:13px;border:1px solid var(--line);background:var(--card)}
+.chip span{font-size:10px;font-weight:800;color:var(--sub);display:block}
+.chip b{font-size:20px;font-weight:950;display:block;margin-top:2px;font-variant-numeric:tabular-nums}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:720px}
+th,td{padding:6px 4px;border-bottom:1px solid var(--line);text-align:center;vertical-align:middle}
+th{font-size:10px;color:var(--sub);background:var(--soft);font-weight:800}
+th.today{color:var(--brand)}
+td.zone{text-align:left;min-width:150px}
+td.zone input{font-weight:700}
+.cell{width:34px;height:34px;border-radius:9px;border:1.5px dashed var(--line);background:var(--card);font-size:15px;padding:0;color:#fff}
+.cell.on{background:var(--ok);border:1.5px solid var(--ok)}
+.cell.today{border-color:var(--brand)}
+.rate{font-weight:900;font-variant-numeric:tabular-nums}
+.usecases{margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}.usecases h2{font-size:12px;font-weight:900;color:var(--sub);margin-bottom:5px}
+.usecases li{font-size:11px;color:var(--sub);margin-left:15px;margin-bottom:3px}
+@media print{body{background:#fff;padding:0}.no-print{display:none!important}.tbl{overflow:visible}table{min-width:0}.cell.on{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style></head><body><div class="wrap">
+<header><h1>🧽 청소 구역 체크표</h1><p class="sub">구역마다 담당자와 청소 주기를 정하고, 요일 칸을 눌러 체크해요. 주간 목표 대비 몇 번 했는지가 자동으로 계산돼요.</p></header>
+
+<section class="card no-print">
+<div class="row">
+<button id="prevW">← 지난주</button><button id="thisW">이번 주</button><button id="nextW">다음 주 →</button>
+<span class="muted" id="weekLabel" style="font-weight:800;margin-left:6px"></span>
+</div>
+</section>
+
+<div class="stats" id="stats"></div>
+
+<section class="card">
+<h2>주간 체크표<span class="row no-print" style="gap:6px"><button id="addZone">＋ 구역 추가</button><button id="copyBtn">이번 주 결과 복사</button><button id="printBtn">인쇄</button><button id="sampleBtn">예시로 되돌리기</button></span></h2>
+<div class="tbl"><table><thead id="thead"></thead><tbody id="rows"></tbody></table></div>
+<p class="muted" style="margin-top:8px">칸을 누르면 ✓ 표시가 켜지고 꺼져요. 달성률 = 이번 주 체크 수 ÷ 주간 목표 횟수. 기록은 이 브라우저에 저장됩니다.</p>
+</section>
+
+<div class="usecases"><h2>이럴 때 좋아요</h2><ul>
+<li><b>알바·직원</b> · 오늘 내가 어디를 청소해야 하는지 헷갈릴 때 — 구역별 담당과 오늘 칸이 바로 보여요.</li>
+<li><b>총무</b> · 화장실·탕비실처럼 주기가 다른 청소를 관리해야 할 때 — 매일·주3회·주1회 목표를 구역마다 따로 정해요.</li>
+<li><b>사장님(가게)</b> · 청소가 실제로 몇 번 됐는지 주말에 확인하고 싶을 때 — 구역별 달성률과 빠진 구역이 자동으로 정리돼요.</li>
+</ul></div>
+</div>
+<script>
+(function(){"use strict";
+var KEY="cleaning-zones-v1";
+var WD=["월","화","수","목","금","토","일"];
+var FREQ={7:"매일",5:"주 5회",3:"주 3회",2:"주 2회",1:"주 1회"};
+function uid(){return "z"+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}
+function ld(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function mondayOf(d){var m=new Date(d);var w=m.getDay();m.setDate(m.getDate()-(w===0?6:w-1));m.setHours(0,0,0,0);return m}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function sample(){return[
+{id:uid(),name:"홀 바닥",who:"박서준",freq:7},
+{id:uid(),name:"화장실",who:"이하늘",freq:3},
+{id:uid(),name:"주방 후드·기름때",who:"최민지",freq:1},
+{id:uid(),name:"유리·출입문",who:"정우진",freq:2},
+{id:uid(),name:"냉장고 내부 정리",who:"박서준",freq:1}]}
+var state={zones:sample(),checks:{}};
+var weekStart=mondayOf(new Date());
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+function load(){try{var s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&s.zones)state=s}catch(e){}}
+function days(){var a=[];for(var i=0;i<7;i++){var d=new Date(weekStart);d.setDate(d.getDate()+i);a.push(ld(d))}return a}
+function ck(z,d){return !!state.checks[z.id+"|"+d]}
+function doneCount(z){return days().filter(function(d){return ck(z,d)}).length}
+function render(){
+var ds=days(),today=ld(new Date());
+document.getElementById("weekLabel").textContent=ds[0].slice(5).replace("-","/")+" ~ "+ds[6].slice(5).replace("-","/");
+document.getElementById("thead").innerHTML="<tr><th style='text-align:left'>구역</th><th>담당</th><th>주기</th>"+
+ds.map(function(d,i){return "<th class='"+(d===today?"today":"")+"'>"+WD[i]+"<br>"+d.slice(8)+"</th>"}).join("")+"<th>달성률</th><th></th></tr>";
+var tb=document.getElementById("rows");tb.innerHTML="";
+state.zones.forEach(function(z,zi){
+var n=doneCount(z),goal=Number(z.freq)||1,rate=Math.min(100,Math.round(n/goal*100));
+var tr=document.createElement("tr");
+tr.innerHTML="<td class='zone'><input value='"+esc(z.name)+"' aria-label='구역 이름'></td>"+
+"<td><input value='"+esc(z.who)+"' style='width:84px' aria-label='담당자'></td>"+
+"<td><select aria-label='청소 주기'>"+Object.keys(FREQ).sort(function(a,b){return b-a}).map(function(k){return "<option value='"+k+"' "+(Number(k)===goal?"selected":"")+">"+FREQ[k]+"</option>"}).join("")+"</select></td>"+
+ds.map(function(d){return "<td><button class='cell"+(ck(z,d)?" on":"")+(d===today?" today":"")+"' data-d='"+d+"' aria-label='"+esc(z.name)+" "+d+" 청소'>"+(ck(z,d)?"✓":"")+"</button></td>"}).join("")+
+"<td class='rate' style='color:"+(rate>=100?"var(--ok)":rate>=50?"var(--warn)":"var(--bad)")+"'>"+n+"/"+goal+" ("+rate+"%)</td>"+
+"<td><button class='rm no-print' aria-label='구역 삭제' style='border:0;background:transparent;color:#cbd5e1'>×</button></td>";
+var ins=tr.querySelectorAll("input");
+ins[0].oninput=function(){z.name=this.value;save()};
+ins[1].oninput=function(){z.who=this.value;save()};
+tr.querySelector("select").onchange=function(){z.freq=Number(this.value);save();render()};
+tr.querySelectorAll(".cell").forEach(function(b){b.onclick=function(){var k=z.id+"|"+b.getAttribute("data-d");
+if(state.checks[k])delete state.checks[k];else state.checks[k]=1;save();render()}});
+tr.querySelector(".rm").onclick=function(){if(confirm("「"+z.name+"」 구역을 삭제할까요?")){state.zones.splice(zi,1);save();render()}};
+tb.appendChild(tr)});
+if(!state.zones.length)tb.innerHTML="<tr><td colspan='12' class='muted' style='padding:18px'>「구역 추가」로 시작하세요.</td></tr>";
+var totalGoal=state.zones.reduce(function(s,z){return s+(Number(z.freq)||1)},0);
+var totalDone=state.zones.reduce(function(s,z){return s+Math.min(doneCount(z),Number(z.freq)||1)},0);
+var behind=state.zones.filter(function(z){return doneCount(z)<(Number(z.freq)||1)});
+var todayDone=state.zones.filter(function(z){return ck(z,today)}).length;
+document.getElementById("stats").innerHTML=[
+["구역 수",state.zones.length+"곳","var(--ink)"],
+["주간 달성률",(totalGoal?Math.round(totalDone/totalGoal*100):0)+"%","var(--brand)"],
+["목표 미달 구역",behind.length+"곳",behind.length?"var(--bad)":"var(--ok)"],
+["오늘 청소한 구역",ds.indexOf(today)>=0?todayDone+"곳":"—","var(--ok)"]]
+.map(function(x){return "<div class='chip'><span>"+x[0]+"</span><b style='color:"+x[2]+"'>"+x[1]+"</b></div>"}).join("");
+save()}
+function shiftWeek(n){weekStart.setDate(weekStart.getDate()+n*7);render()}
+document.getElementById("prevW").onclick=function(){shiftWeek(-1)};
+document.getElementById("nextW").onclick=function(){shiftWeek(1)};
+document.getElementById("thisW").onclick=function(){weekStart=mondayOf(new Date());render()};
+document.getElementById("addZone").onclick=function(){state.zones.push({id:uid(),name:"새 구역",who:"",freq:1});save();render()};
+document.getElementById("copyBtn").onclick=function(){
+var ds=days(),lines=["[청소 구역 체크] "+ds[0]+" ~ "+ds[6]];
+state.zones.forEach(function(z){var n=doneCount(z),g=Number(z.freq)||1;
+lines.push("- "+z.name+" ("+(z.who||"담당 미정")+", "+FREQ[g]+"): "+n+"/"+g+(n<g?" ⚠ 부족":" ✓"))});
+var text=lines.join("\n"),b=this;
+var ok=function(){b.textContent="복사됐어요 ✓";setTimeout(function(){b.textContent="이번 주 결과 복사"},1400)};
+if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(ok,function(){prompt("복사하세요",text)});else prompt("복사하세요",text)};
+document.getElementById("printBtn").onclick=function(){window.print()};
+document.getElementById("sampleBtn").onclick=function(){if(confirm("예시 구역으로 되돌릴까요? 체크 기록도 지워져요.")){state={zones:sample(),checks:{}};save();render()}};
+load();
+if(!Object.keys(state.checks).length){var ds=days(),t=ld(new Date());state.zones.forEach(function(z,i){ds.forEach(function(d,j){if(d<t&&(z.freq>=5||j%Math.max(1,Math.round(7/z.freq))===i%2))state.checks[z.id+"|"+d]=1})})}
+render();
+})();
+</script></body></html>

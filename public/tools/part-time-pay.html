@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>알바 급여·주휴수당 계산기</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#d97706;--bad:#e11d48;--soft:#f8fafc}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+.wrap{max-width:900px;margin:0 auto}h1{font-size:18px;font-weight:800;letter-spacing:-.02em}.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04)}
+.card h2{font-size:13px;font-weight:900;margin-bottom:9px}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:7px 11px;font-weight:700;font-size:12px;transition:.12s}button:hover{border-color:var(--brand)}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border:0}
+input,select{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font-size:13px}
+input:focus,select:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:10px;font-weight:800;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:end}.muted{font-size:11px;color:var(--sub)}.grow{flex:1;min-width:130px}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.days div{text-align:center}
+.days label{text-align:center}
+.days input{text-align:center;padding:8px 4px}
+.hero{background:linear-gradient(135deg,#0f172a,#312e81);color:#fff;border-radius:14px;padding:16px;margin-top:12px}
+.hero .lbl{font-size:10px;letter-spacing:.14em;color:#c7d2fe;font-weight:800}
+.hero .big{font-size:34px;font-weight:950;letter-spacing:-.04em;margin-top:3px;font-variant-numeric:tabular-nums}
+.hero .row2{display:flex;gap:14px;margin-top:11px;flex-wrap:wrap}
+.hero .row2 div{flex:1;min-width:110px}
+.hero .row2 span{font-size:10px;color:#cbd5e1;display:block}
+.hero .row2 b{font-size:15px;font-variant-numeric:tabular-nums}
+.line{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:12.5px}
+.line:last-child{border:0}.line b{font-variant-numeric:tabular-nums}
+.note{padding:10px 12px;border-radius:11px;background:#fffbeb;border:1px solid #fde68a;font-size:11.5px;color:#92400e;margin-top:10px}
+.tag{display:inline-flex;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:900}
+.yes{background:#ecfdf5;color:#047857}.no{background:var(--soft);color:var(--sub)}
+.usecases{margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}.usecases h2{font-size:12px;font-weight:900;color:var(--sub);margin-bottom:5px}
+.usecases li{font-size:11px;color:var(--sub);margin-left:15px;margin-bottom:3px}
+@media(max-width:560px){.days{grid-template-columns:repeat(4,1fr)}}
+@media print{body{background:#fff;padding:0}.no-print{display:none!important}.hero{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style></head><body><div class="wrap">
+<header><h1>💵 알바 급여·주휴수당 계산기</h1><p class="sub">시급과 요일별 근무시간을 넣으면 기본급·주휴수당·가산수당·공제 후 예상 수령액을 주급·월급으로 계산해요.</p></header>
+
+<section class="card">
+<h2>기본 정보</h2>
+<div class="row">
+<div class="grow"><label for="name">알바생 이름</label><input id="name" placeholder="예: 박서준"></div>
+<div style="max-width:150px"><label for="wage">시급 (원)</label><input id="wage" type="number" min="0" step="10" value="10320"></div>
+<div style="max-width:180px"><label for="deduct">공제</label><select id="deduct"><option value="0">공제 없음</option><option value="3.3">사업소득 3.3%</option><option value="custom">직접 입력(%)</option></select></div>
+<div style="max-width:120px;display:none" id="customBox"><label for="customRate">공제율 (%)</label><input id="customRate" type="number" step="0.1" min="0" value="9"></div>
+</div>
+<p class="muted" style="margin-top:7px">기본값은 2026년 최저시급 10,320원이에요. 실제 계약 시급으로 바꿔 쓰세요.</p>
+</section>
+
+<section class="card">
+<h2>요일별 근무시간 (휴게시간 뺀 실제 근무)</h2>
+<div class="days" id="days"></div>
+<div class="row" style="margin-top:11px">
+<div style="max-width:180px"><label for="night">이번 주 야간 근무시간 (22시~6시)</label><input id="night" type="number" min="0" step="0.5" value="0"></div>
+<label style="display:flex;align-items:center;gap:7px;margin-bottom:9px;font-size:12px;font-weight:700;cursor:pointer"><input id="five" type="checkbox" style="width:17px;height:17px;accent-color:var(--brand)"> 상시 근로자 5인 이상 사업장 (연장·야간 가산 적용)</label>
+</div>
+<div class="row no-print" style="margin-top:6px"><button data-p="weekday4">평일 4시간</button><button data-p="weekend8">주말 8시간</button><button data-p="full">주 5일 8시간</button><button data-p="clear">모두 0</button></div>
+</section>
+
+<div class="hero">
+<div class="lbl">이번 달 예상 실수령액</div>
+<div class="big" id="monthNet">0원</div>
+<div class="row2">
+<div><span>주간 근무시간</span><b id="hoursOut">0시간</b></div>
+<div><span>주급(공제 전)</span><b id="weekGross">0원</b></div>
+<div><span>주휴수당</span><b id="holidayOut">0원</b></div>
+<div><span>월 환산(공제 전)</span><b id="monthGross">0원</b></div>
+</div>
+</div>
+
+<section class="card">
+<h2>계산 내역 (1주 기준)</h2>
+<div id="detail"></div>
+<div class="note" id="note"></div>
+<div class="row no-print" style="margin-top:11px"><button class="primary" id="copyBtn">급여 명세 복사</button><button id="printBtn">인쇄</button></div>
+</section>
+
+<div class="usecases"><h2>이럴 때 좋아요</h2><ul>
+<li><b>사장님(가게)</b> · 알바 근무표를 짜면서 이번 달 인건비가 얼마나 나올지 미리 알고 싶을 때 — 요일별 시간만 넣으면 주휴수당까지 포함해 계산돼요.</li>
+<li><b>알바·직원</b> · 내 월급이 맞게 나왔는지 확인하고 싶을 때 — 기본급·주휴수당·공제를 항목별로 나눠 보여 줘요.</li>
+<li><b>매장 관리자</b> · 주 15시간을 넘길지 말지 근무 배치를 정할 때 — 주휴수당 발생 여부가 바로 표시돼요.</li>
+</ul></div>
+</div>
+<script>
+(function(){"use strict";
+var KEY="part-time-pay-v1";
+var WD=["월","화","수","목","금","토","일"];
+var WEEKS=365/7/12;
+function num(v){var n=parseFloat(v);return isFinite(n)&&n>0?n:0}
+function won(n){return Math.round(n||0).toLocaleString("ko-KR")+"원"}
+var hours=[4,4,0,4,4,6,0];
+var box=document.getElementById("days");
+WD.forEach(function(d,i){var el=document.createElement("div");
+el.innerHTML="<label for='h"+i+"'>"+d+"</label><input id='h"+i+"' type='number' min='0' max='24' step='0.5' value='"+hours[i]+"'>";
+box.appendChild(el)});
+function readHours(){return WD.map(function(_,i){return Math.min(24,num(document.getElementById("h"+i).value))})}
+function deductRate(){var v=document.getElementById("deduct").value;return v==="custom"?num(document.getElementById("customRate").value):Number(v)}
+function calc(){
+var wage=num(document.getElementById("wage").value),hs=readHours();
+var week=hs.reduce(function(a,b){return a+b},0);
+var base=week*wage;
+var holidayH=week>=15?Math.min(week,40)/40*8:0;
+var holiday=holidayH*wage;
+var five=document.getElementById("five").checked;
+var dailyOver=hs.reduce(function(s,h){return s+Math.max(0,h-8)},0);
+var weekOver=Math.max(0,week-40);
+var overH=five?Math.max(dailyOver,weekOver):0;
+var nightH=five?num(document.getElementById("night").value):0;
+var overPay=overH*wage*0.5,nightPay=nightH*wage*0.5;
+var gross=base+holiday+overPay+nightPay;
+var rate=deductRate(),ded=gross*rate/100;
+return{wage:wage,week:week,base:base,holidayH:holidayH,holiday:holiday,overH:overH,overPay:overPay,nightH:nightH,nightPay:nightPay,gross:gross,rate:rate,ded:ded,net:gross-ded,five:five}}
+function render(){
+document.getElementById("customBox").style.display=document.getElementById("deduct").value==="custom"?"block":"none";
+var c=calc();
+document.getElementById("hoursOut").textContent=c.week+"시간";
+document.getElementById("weekGross").textContent=won(c.gross);
+document.getElementById("holidayOut").textContent=won(c.holiday);
+document.getElementById("monthGross").textContent=won(c.gross*WEEKS);
+document.getElementById("monthNet").textContent=won(c.net*WEEKS);
+var rows=[
+["기본급 ("+c.week+"시간 × "+won(c.wage)+")",won(c.base)],
+["주휴수당 "+(c.week>=15?"<span class='tag yes'>발생</span>":"<span class='tag no'>주 15시간 미만 · 없음</span>")+(c.holidayH?" ("+c.holidayH.toFixed(1)+"시간분)":""),won(c.holiday)],
+["연장 가산 (×0.5)"+(c.five?" · "+c.overH+"시간":" · 5인 미만 미적용"),won(c.overPay)],
+["야간 가산 (×0.5)"+(c.five?" · "+c.nightH+"시간":" · 5인 미만 미적용"),won(c.nightPay)],
+["<b>주급 합계(공제 전)</b>","<b>"+won(c.gross)+"</b>"],
+["공제 ("+c.rate+"%)","−"+won(c.ded)],
+["<b>주급 실수령</b>","<b>"+won(c.net)+"</b>"],
+["<b>월 환산 실수령 (×"+WEEKS.toFixed(3)+"주)</b>","<b style='color:var(--brand)'>"+won(c.net*WEEKS)+"</b>"]];
+document.getElementById("detail").innerHTML=rows.map(function(r){return "<div class='line'><span>"+r[0]+"</span><span>"+r[1]+"</span></div>"}).join("");
+var tips=[];
+if(c.week>=15&&c.week<16)tips.push("주 15시간 경계예요. 15시간 미만으로 줄면 주휴수당이 사라지니 근무표를 확인하세요.");
+if(c.week>40)tips.push("주 40시간을 넘었어요. 5인 이상 사업장이면 연장 가산이 붙어요.");
+tips.push("참고용 계산이에요. 결근이 있는 주는 주휴수당이 발생하지 않을 수 있고, 실제 노무 판단은 고용노동부(국번 없이 1350)나 노무사에게 확인하세요.");
+document.getElementById("note").innerHTML=tips.map(function(t){return "· "+t}).join("<br>");
+try{localStorage.setItem(KEY,JSON.stringify({name:document.getElementById("name").value,wage:document.getElementById("wage").value,deduct:document.getElementById("deduct").value,customRate:document.getElementById("customRate").value,night:document.getElementById("night").value,five:c.five,hours:readHours()}))}catch(e){}}
+document.querySelectorAll("input,select").forEach(function(el){el.addEventListener("input",render);el.addEventListener("change",render)});
+document.querySelectorAll("[data-p]").forEach(function(b){b.onclick=function(){
+var p=b.getAttribute("data-p"),v=p==="weekday4"?[4,4,4,4,4,0,0]:p==="weekend8"?[0,0,0,0,0,8,8]:p==="full"?[8,8,8,8,8,0,0]:[0,0,0,0,0,0,0];
+v.forEach(function(h,i){document.getElementById("h"+i).value=h});render()}});
+document.getElementById("copyBtn").onclick=function(){var c=calc(),n=document.getElementById("name").value||"알바생";
+var text=["[급여 계산] "+n+" · 시급 "+won(c.wage),"주 "+c.week+"시간 · 주휴수당 "+won(c.holiday)+(c.week>=15?"":" (주 15시간 미만)"),
+"주급(공제 전) "+won(c.gross)+" · 공제 "+c.rate+"% · 주급 실수령 "+won(c.net),"월 환산 실수령 "+won(c.net*WEEKS)].join("\n"),b=this;
+var ok=function(){b.textContent="복사됐어요 ✓";setTimeout(function(){b.textContent="급여 명세 복사"},1400)};
+if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(ok,function(){prompt("복사하세요",text)});else prompt("복사하세요",text)};
+document.getElementById("printBtn").onclick=function(){window.print()};
+try{var s=JSON.parse(localStorage.getItem(KEY)||"null");if(s){["name","wage","deduct","customRate","night"].forEach(function(k){if(s[k]!=null)document.getElementById(k).value=s[k]});
+document.getElementById("five").checked=!!s.five;if(s.hours)s.hours.forEach(function(h,i){document.getElementById("h"+i).value=h})}}catch(e){}
+render();
+})();
+</script></body></html>

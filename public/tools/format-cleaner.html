@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>전화번호·날짜 형식 통일</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#b45309;--bad:#e11d48;--r:14px}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+[hidden]{display:none!important}
+.wrap{max-width:1000px;margin:0 auto}h1{font-size:18px;font-weight:800;letter-spacing:-.02em}.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04);min-width:0}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:7px 11px;font-weight:700;font-size:12px;transition:.12s}button:hover{border-color:#c7cddb;background:#fafafa}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}button.primary:hover{filter:brightness(1.07)}
+input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:13px;min-width:0}
+textarea{resize:vertical;min-height:210px;line-height:1.6;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--brand);cursor:pointer}
+input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:11px;font-weight:800;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}.grow{flex:1;min-width:110px}.muted{color:var(--sub);font-size:12px}.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{border-bottom:1px solid var(--line);padding:6px;text-align:left}th{font-size:11px;color:var(--sub);background:#f8fafc;position:sticky;top:0}td.c{font-weight:800;font-variant-numeric:tabular-nums}
+.pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap}
+.ok{background:#ecfdf5;color:#047857}.wn{background:#fffbeb;color:#b45309}.bd{background:#fef2f2;color:#be123c}.in{background:#eef2ff;color:#4338ca}
+.usecases{margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}.usecases h2{font-size:12px;font-weight:800;color:var(--sub);margin-bottom:6px}.usecases li{font-size:12px;color:var(--sub);margin-left:15px;margin-bottom:3px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:12px}@media(max-width:780px){.two{grid-template-columns:minmax(0,1fr)}}
+.stats{display:flex;gap:6px;flex-wrap:wrap}
+@media print{body{background:#fff;padding:0}.no-print{display:none!important}.card{box-shadow:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>🧹 전화번호·날짜 형식 통일</h1><p class="sub">엑셀에서 복사한 전화번호나 날짜 열을 붙여 넣으면 한 가지 형식으로 정리해 줘요. 고칠 수 없는 값은 따로 표시해 줘요. 입력한 내용은 이 브라우저 밖으로 나가지 않아요.</p></header>
+
+<div class="two">
+<section class="card">
+  <label for="src">여기에 한 줄에 하나씩 붙여 넣기</label>
+  <textarea id="src" spellcheck="false" placeholder="예)&#10;01012345678&#10;010 1234 5678&#10;+82 10-1234-5678"></textarea>
+  <div class="row" style="margin-top:10px">
+    <div><label for="mode">무엇을 정리할까요?</label><select id="mode"><option value="phone">전화번호</option><option value="date">날짜</option></select></div>
+    <div id="phoneOpt"><label for="sep">구분 기호</label><select id="sep"><option value="-">하이픈(010-1234-5678)</option><option value=".">점(010.1234.5678)</option><option value=" ">공백(010 1234 5678)</option><option value="">없음(01012345678)</option></select></div>
+    <div id="dateOpt1"><label for="fmt">날짜 형식</label><select id="fmt"><option value="iso">2026-01-05</option><option value="dot">2026.01.05</option><option value="slash">2026/01/05</option><option value="short">26.01.05</option><option value="ko">2026년 1월 5일</option></select></div>
+    <div id="dateOpt2"><label for="ord">05/01/2026처럼 애매하면</label><select id="ord"><option value="mdy">월/일/연</option><option value="dmy">일/월/연</option></select></div>
+  </div>
+  <div class="row no-print" style="margin-top:12px"><button id="sample" class="primary">예시 넣기</button><button id="clear">비우기</button></div>
+</section>
+
+<section class="card">
+  <div class="row" style="justify-content:space-between;align-items:center"><b style="font-size:13px">정리 결과</b><div class="stats"><span class="pill in" id="cAll">0줄</span><span class="pill ok" id="cOk">정상 0</span><span class="pill wn" id="cFix">변환 0</span><span class="pill bd" id="cBad">확인 필요 0</span></div></div>
+  <label style="display:flex;gap:8px;align-items:center;margin-top:8px;cursor:pointer"><input id="onlyBad" type="checkbox"> 확인이 필요한 줄만 보기</label>
+  <div class="scroll" style="max-height:330px;overflow-y:auto;margin-top:6px"><table><thead><tr><th>#</th><th>원본</th><th>변환 결과</th><th>상태</th></tr></thead><tbody id="rows"></tbody></table></div>
+  <p class="muted" id="more"></p>
+  <div class="row no-print" style="margin-top:10px"><button class="primary" id="copyCol">변환 결과 열 복사</button><button id="copyPair">원본+결과 복사</button><button id="csv">CSV 내려받기</button></div>
+  <p class="muted" style="margin-top:6px">「변환 결과 열 복사」를 누른 뒤 엑셀 칸을 선택하고 붙여 넣으면 그대로 들어가요.</p>
+</section>
+</div>
+
+<div class="usecases"><h2>이럴 때 좋아요</h2><ul>
+<li><b>총무</b> · 명단·연락처 파일의 전화번호 형식이 제각각일 때 한 번에 맞추기</li>
+<li><b>모든 직장인</b> · 여러 사람이 입력한 날짜(2026.1.5 / 1/5/26 / 20260105)를 하나로 통일하기</li>
+<li><b>사장님(가게)</b> · 단골·예약 명단의 번호를 문자 발송용으로 정리하기</li></ul></div>
+</div>
+
+<script>
+(function(){"use strict";
+var KEY="format-cleaner-v1";
+function load(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+var PH="01012345678\n010 1234 5678\n010.2345.6789\n(010) 3456-7890\n+82 10-4567-8901\n+82-2-123-4567\n02)123-4567\n031 555 1212\n1588-1234\n1012345678\n010-12\n문의 바람";
+var DT="2026.1.5\n2026-01-06\n2026/1/7\n20260108\n260109\n2026년 1월 12일\n1/13/2026\n13/01/2026\n46034\nJan 15, 2026\n2026-02-31\n내일";
+var S=load(KEY,null);if(!S||typeof S.text!=="string")S={text:PH,mode:"phone",sep:"-",fmt:"iso",ord:"mdy",only:false};
+function fmtPhone(digits,sep){var m,a,b,c;
+ if(/^1[5-8]\d{6}$/.test(digits))return digits.slice(0,4)+sep+digits.slice(4);
+ if(/^02\d{7,8}$/.test(digits)){a="02";b=digits.slice(2,digits.length-4);c=digits.slice(-4);return a+sep+b+sep+c}
+ if(/^(01[016-9]|0[3-6]\d|070|080|050\d?)\d{7,8}$/.test(digits)){var pre=digits.match(/^(01[016-9]|0[3-6]\d|070|080)/);if(!pre)return null;a=pre[1];var rest=digits.slice(a.length);if(rest.length<7||rest.length>8)return null;b=rest.slice(0,rest.length-4);c=rest.slice(-4);return a+sep+b+sep+c}
+ return null}
+function phone(raw){var s=raw.trim(),d=s.replace(/\D/g,"");if(!d)return null;
+ if(d.indexOf("82")===0&&d.charAt(0)!=="0"&&d.length>=10){var r=d.slice(2);d=r.charAt(0)==="0"?r:"0"+r}
+ else if(d.charAt(0)!=="0"&&!/^1[5-8]\d{6}$/.test(d)&&d.length>=9)d="0"+d;
+ return fmtPhone(d,S.sep)}
+var MON={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+function valid(y,m,d){if(m<1||m>12||d<1)return false;var l=new Date(y,m,0).getDate();return d<=l&&y>=1900&&y<=2200}
+function p2(n){return String(n).padStart(2,"0")}
+function fullYear(y){return y>=100?y:(y<70?2000+y:1900+y)}
+function parseDate(raw){var s=raw.trim(),m,y,mo,d;
+ if(/^\d{5}$/.test(s)&&+s>20000&&+s<80000){var dt=new Date(Date.UTC(1899,11,30)+ +s*864e5);return[dt.getUTCFullYear(),dt.getUTCMonth()+1,dt.getUTCDate()]}
+ if((m=s.match(/^(\d{4})(\d{2})(\d{2})$/)))return[+m[1],+m[2],+m[3]];
+ if((m=s.match(/^(\d{2})(\d{2})(\d{2})$/)))return[fullYear(+m[1]),+m[2],+m[3]];
+ if((m=s.match(/(\d{2,4})\s*년\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일?/)))return[fullYear(+m[1]),+m[2],+m[3]];
+ if((m=s.match(/^([A-Za-z]{3,9})\.?\s+(\d{1,2}),?\s+(\d{4})$/))&&MON[m[1].slice(0,3).toLowerCase()])return[+m[3],MON[m[1].slice(0,3).toLowerCase()],+m[2]];
+ if((m=s.match(/^(\d{1,4})\s*[.\-\/]\s*(\d{1,2})\s*[.\-\/]\s*(\d{1,4})\.?$/))){var a=+m[1],b=+m[2],c=+m[3];
+  if(m[1].length===4)return[a,b,c];
+  if(m[3].length===4){if(a>12)return[c,b,a];if(b>12)return[c,a,b];return S.ord==="dmy"?[c,b,a]:[c,a,b]}
+  return[fullYear(a),b,c]}
+ return null}
+function fmtDate(y,m,d){switch(S.fmt){case"dot":return y+"."+p2(m)+"."+p2(d);case"slash":return y+"/"+p2(m)+"/"+p2(d);case"short":return p2(y%100)+"."+p2(m)+"."+p2(d);case"ko":return y+"년 "+m+"월 "+d+"일";default:return y+"-"+p2(m)+"-"+p2(d)}}
+function date(raw){var p=parseDate(raw);if(!p||!valid(p[0],p[1],p[2]))return null;return fmtDate(p[0],p[1],p[2])}
+function results(){var out=[];S.text.split(/\r?\n/).forEach(function(l){var raw=l.replace(/\t.*$/,"").trim();if(!raw)return;var v=S.mode==="phone"?phone(raw):date(raw);out.push({raw:raw,v:v,st:v===null?"bad":(v===raw?"ok":"fix")})});return out}
+function render(){$("src").value=S.text;$("mode").value=S.mode;$("sep").value=S.sep;$("fmt").value=S.fmt;$("ord").value=S.ord;$("onlyBad").checked=!!S.only;
+ var ph=S.mode==="phone";$("phoneOpt").hidden=!ph;$("dateOpt1").hidden=ph;$("dateOpt2").hidden=ph;
+ var r=results(),c={ok:0,fix:0,bad:0};r.forEach(function(x){c[x.st]++});$("cAll").textContent=r.length+"줄";$("cOk").textContent="정상 "+c.ok;$("cFix").textContent="변환 "+c.fix;$("cBad").textContent="확인 필요 "+c.bad;
+ var shown=r.map(function(x,i){x.i=i+1;return x}).filter(function(x){return !S.only||x.st==="bad"}),cut=shown.slice(0,300);
+ $("rows").innerHTML=cut.map(function(x){return '<tr><td class="muted">'+x.i+'</td><td>'+esc(x.raw)+'</td><td class="c">'+(x.v===null?'<span class="muted">—</span>':esc(x.v))+'</td><td><span class="pill '+(x.st==="bad"?"bd":x.st==="fix"?"wn":"ok")+'">'+(x.st==="bad"?"확인 필요":x.st==="fix"?"변환됨":"정상")+'</span></td></tr>'}).join("")||'<tr><td colspan="4" class="muted">'+(r.length?"표시할 줄이 없어요.":"왼쪽에 값을 붙여 넣어 주세요.")+'</td></tr>';
+ $("more").textContent=shown.length>300?"화면에는 300줄까지만 보여 드려요. 복사·CSV에는 "+shown.length+"줄이 모두 들어가요.":"";save(KEY,S);return r}
+function pasteText(r,pair){return r.map(function(x){var v=x.v===null?x.raw:x.v;return pair?x.raw+"\t"+(x.v===null?"(확인 필요)":x.v):v}).join("\n")}
+function copy(t,b,label){var done=function(){b.textContent="복사됐어요 ✓";setTimeout(function(){b.textContent=label},1400)};
+ var fb=function(){var ta=document.createElement("textarea");ta.value=t;ta.style.cssText="position:fixed;opacity:0";document.body.appendChild(ta);ta.select();var ok=false;try{ok=document.execCommand("copy")}catch(e){}ta.remove();if(ok)done();else window.prompt("복사가 막혀 있어요. 아래 글을 직접 복사해 주세요.",t)};
+ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,fb)}else fb()}
+$("src").addEventListener("input",function(){S.text=this.value;render()});
+$("mode").addEventListener("change",function(){S.mode=this.value;if(!S.text.trim()||S.text===PH||S.text===DT)S.text=S.mode==="phone"?PH:DT;render()});
+["sep","fmt","ord"].forEach(function(k){$(k).addEventListener("change",function(){S[k]=this.value;render()})});
+$("onlyBad").addEventListener("change",function(){S.only=this.checked;render()});
+$("sample").onclick=function(){S.text=S.mode==="phone"?PH:DT;render()};
+$("clear").onclick=function(){S.text="";render()};
+$("copyCol").onclick=function(){copy(pasteText(render(),false),this,"변환 결과 열 복사")};
+$("copyPair").onclick=function(){copy(pasteText(render(),true),this,"원본+결과 복사")};
+function csvCell(c){c=String(c==null?"":c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c}
+$("csv").onclick=function(){var rows=[["원본","변환 결과","상태"]];render().forEach(function(x){rows.push([x.raw,x.v===null?"":x.v,x.st==="bad"?"확인 필요":x.st==="fix"?"변환됨":"정상"])});
+ var t="\uFEFF"+rows.map(function(r){return r.map(csvCell).join(",")}).join("\r\n"),b=new Blob([t],{type:"text/csv;charset=utf-8"});
+ if(window.URL&&URL.createObjectURL){var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="cleaned.csv";document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500)}};
+render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>해외 시간 변환기</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#d97706;--bad:#e11d48;--r:14px}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:18px;font-weight:800;letter-spacing:-.02em}
+.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04)}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:8px 12px;font-weight:600;font-size:13px;transition:.12s}
+button:hover{border-color:#c7cddb;background:#fafafa}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}
+button.primary:hover{filter:brightness(1.07)}
+button.on{background:var(--brand);color:#fff;border-color:transparent}
+input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:13px}
+input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:12px;font-weight:700;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grow{flex:1;min-width:110px}
+.muted{color:var(--sub);font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+th,td{border-bottom:1px solid var(--line);padding:9px 6px;text-align:center}
+th{font-size:11px;color:var(--sub);background:#f8fafc}
+td.nm{text-align:left;font-weight:700}
+td.t{font-variant-numeric:tabular-nums;font-weight:800;font-size:15px}
+td.t.work{color:var(--ok)}
+td.t.off{color:#9ca3af}
+td.t.now{color:var(--brand)}
+.bar-wrap{display:grid;grid-template-columns:92px 1fr 84px;gap:8px;align-items:center;margin-top:6px;font-size:12px}
+.track{height:16px;background:#f1f5f9;border-radius:6px;position:relative;overflow:hidden}
+.work-area{position:absolute;top:0;bottom:0;background:#d1fae5}
+.night{position:absolute;top:0;bottom:0;background:#e5e7eb}
+.cursor{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--brand)}
+.usecases{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+.usecases h2{font-size:12px;font-weight:800;color:var(--sub);margin-bottom:6px}
+.usecases li{font-size:12px;color:var(--sub);margin-left:14px;margin-bottom:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🌐 해외 시간 변환기</h1>
+  <p class="sub">「서울 오후 3시」를 고르면 모든 도시 시각이 같이 바뀌어요. 근무 시간이 겹치는 때와 서머타임도 알아서 맞춰 보여 줘요.</p>
+
+  <div class="card">
+    <div class="row">
+      <div class="grow"><label for="citySel">도시 추가</label><select id="citySel"></select></div>
+      <button id="btnAdd" class="primary" style="align-self:flex-end">+ 추가</button>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <div class="grow"><label for="baseHour">기준 시각 (서울)</label><input id="baseHour" type="time" step="1800"></div>
+      <button id="btnNow" class="on" style="align-self:flex-end">지금으로</button>
+    </div>
+    <p class="muted" style="margin-top:6px">근무 시간은 오전 9시~오후 6시로 봐요. 초록색이 근무 시간이 겹치는 구간이에요.</p>
+  </div>
+
+  <div class="card">
+    <b style="font-size:13px">도시별 시각</b>
+    <div style="overflow-x:auto"><table id="clockTable"></table></div>
+  </div>
+
+  <div class="card">
+    <b style="font-size:13px">24시간 막대</b>
+    <div id="bars"></div>
+    <div class="row" style="margin-top:8px;justify-content:space-between">
+      <span class="muted">0시</span><span class="muted">6시</span><span class="muted">12시</span><span class="muted">18시</span><span class="muted">24시</span>
+    </div>
+  </div>
+
+  <div class="row" style="margin-top:12px">
+    <button id="btnCopy">회의 후보 시간을 글로 복사</button>
+  </div>
+
+  <div class="usecases">
+    <h2>이럴 때 좋아요</h2>
+    <ul>
+      <li><b>영업</b> · 해외 거래처에 전화할 시간을 맞춰야 할 때 — 서울 오후 3시를 고르면 상대방 도시의 시각이 같이 보여 눈치 보지 않고 전화할 수 있어요.</li>
+      <li><b>기획</b> · 여러 나라 팀과 화상회의 시간을 잡을 때 — 근무 시간이 겹치는 때가 보여 모두가 깨어 있는 시간을 고를 수 있어요.</li>
+      <li><b>해외 출장자</b> · 현지 시간에 맞춰 일정을 짜야 할 때 — 서머타임도 알아서 반영되어 계절이 바뀌어도 시간이 어긋나지 않아요.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var KEY="world-clock-v1";
+var PRESETS=[
+  {name:"서울",tz:"Asia/Seoul",flag:"🇰🇷"},
+  {name:"도쿄",tz:"Asia/Tokyo",flag:"🇯🇵"},
+  {name:"베이징",tz:"Asia/Shanghai",flag:"🇨🇳"},
+  {name:"싱가포르",tz:"Asia/Singapore",flag:"🇸🇬"},
+  {name:"뭄바이",tz:"Asia/Kolkata",flag:"🇮🇳"},
+  {name:"두바이",tz:"Asia/Dubai",flag:"🇦🇪"},
+  {name:"베를린",tz:"Europe/Berlin",flag:"🇩🇪"},
+  {name:"파리",tz:"Europe/Paris",flag:"🇫🇷"},
+  {name:"런던",tz:"Europe/London",flag:"🇬🇧"},
+  {name:"뉴욕",tz:"America/New_York",flag:"🇺🇸"},
+  {name:"시카고",tz:"America/Chicago",flag:"🇺🇸"},
+  {name:"로스앤젤레스",tz:"America/Los_Angeles",flag:"🇺🇸"},
+  {name:"시드니",tz:"Australia/Sydney",flag:"🇦🇺"},
+  {name:"상파울루",tz:"America/Sao_Paulo",flag:"🇧🇷"}
+];
+var cities=[];
+var live=true;
+function save(){try{localStorage.setItem(KEY,JSON.stringify(cities))}catch(e){}}
+function load(){try{var s=localStorage.getItem(KEY);if(s)cities=JSON.parse(s)}catch(e){}}
+
+function baseDate(){
+  var v=document.getElementById("baseHour").value||"09:00";
+  var p=v.split(":");
+  var now=new Date();
+  return new Date(now.getFullYear(),now.getMonth(),now.getDate(),parseInt(p[0]),parseInt(p[1]));
+}
+function cityDate(city,base){
+  // 서울 기준 시각을 해당 도시 시각으로 변환
+  var seoulStr=base.toLocaleString("sv-SE",{timeZone:"Asia/Seoul"}).replace(" ","T");
+  var utcMs=Date.parse(seoulStr+"Z")-(-new Date(seoulStr+"Z").getTimezoneOffset())*0;
+  var asUtc=new Date(Date.parse(seoulStr+"+00:00"));
+  // 서울 로컴 시각을 UTC로 취급한 뒤 도시 시간대로 포맷
+  var shifted=new Date(asUtc.getTime());
+  return shifted;
+}
+function cityTime(city,base){
+  var seoulLocal=new Date(base.getTime());
+  var asUtc=Date.UTC(seoulLocal.getFullYear(),seoulLocal.getMonth(),seoulLocal.getDate(),seoulLocal.getHours(),seoulLocal.getMinutes());
+  var d=new Date(asUtc);
+  var fmt=new Intl.DateTimeFormat("ko-KR",{timeZone:city.tz,hour:"2-digit",minute:"2-digit",hour12:false,weekday:"short",month:"numeric",day:"numeric"});
+  var parts=fmt.formatToParts(d);
+  var o={};parts.forEach(function(p){o[p.type]=p.value});
+  var hour=parseInt(o.hour);if(hour===24)hour=0;
+  return {hour:hour,minute:parseInt(o.minute),weekday:o.weekday,label:(hour<10?"0":"")+hour+":"+(o.minute<10?"0":"")+o.minute,month:o.month,day:o.day};
+}
+function isWork(h){return h>=9&&h<18}
+
+function renderCitySelect(){
+  var sel=document.getElementById("citySel");sel.innerHTML="";
+  PRESETS.forEach(function(p,i){
+    if(cities.some(function(c){return c.tz===p.tz}))return;
+    sel.innerHTML+='<option value="'+i+'">'+p.flag+" "+p.name+"</option>";
+  });
+  if(!sel.innerHTML)sel.innerHTML='<option value="">추가할 도시가 없어요</option>';
+}
+function render(){
+  renderCitySelect();
+  var base=baseDate();
+  var tb=document.getElementById("clockTable");
+  var nowReal=new Date();
+  var nowHour=parseInt(nowReal.toLocaleString("ko-KR",{timeZone:"Asia/Seoul",hour:"2-digit",hour12:false}));
+  var html="<tr><th style='text-align:left'>도시</th><th>시각</th><th>요일</th><th>근무</th><th></th></tr>";
+  cities.forEach(function(c,idx){
+    var t=cityTime(c,base);
+    var cls=isWork(t.hour)?"work":"off";
+    var dayDiff="";
+    var real=new Intl.DateTimeFormat("en-CA",{timeZone:c.tz,year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
+    var seoulDay=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Seoul",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
+    if(real>seoulDay)dayDiff="<span class='muted'> (내일)</span>";
+    if(real<seoulDay)dayDiff="<span class='muted'> (어제)</span>";
+    html+="<tr><td class='nm'>"+c.flag+" "+c.name+"</td><td class='t "+cls+"'>"+t.label+"</td><td>"+t.weekday+dayDiff+"</td><td>"+(isWork(t.hour)?"<span class='pill good'>근무 중</span>":"<span class='pill' style='background:#f3f4f6;color:#6b7280'>근무 외</span>")+"</td><td><button data-del='"+idx+"' style='color:#d1d5db;padding:2px 8px'>✕</button></td></tr>";
+  });
+  tb.innerHTML=html;
+  tb.querySelectorAll("[data-del]").forEach(function(b){
+    b.onclick=function(){cities.splice(parseInt(b.getAttribute("data-del")),1);save();render()};
+  });
+  // 막대
+  var bars=document.getElementById("bars");bars.innerHTML="";
+  cities.forEach(function(c){
+    var t=cityTime(c,base);
+    var row=document.createElement("div");row.className="bar-wrap";
+    var left=(t.hour+t.minute/60)/24*100;
+    row.innerHTML="<span>"+c.flag+" "+c.name+"</span>";
+    var track=document.createElement("div");track.className="track";
+    var work=document.createElement("div");work.className="work-area";
+    work.style.left=(9/24*100)+"%";work.style.width=(9/24*100)+"%";
+    track.appendChild(work);
+    var cur=document.createElement("div");cur.className="cursor";
+    cur.style.left=left+"%";
+    track.appendChild(cur);
+    row.appendChild(track);
+    row.appendChild(document.createTextNode(t.label));
+    bars.appendChild(row);
+  });
+}
+document.getElementById("btnAdd").onclick=function(){
+  var sel=document.getElementById("citySel");
+  var i=parseInt(sel.value);
+  if(isNaN(i))return;
+  cities.push(PRESETS[i]);save();render();
+};
+document.getElementById("btnNow").onclick=function(){
+  var now=new Date();
+  var seoul=now.toLocaleString("ko-KR",{timeZone:"Asia/Seoul",hour:"2-digit",minute:"2-digit",hour12:false}).split(":");
+  document.getElementById("baseHour").value=seoul[0]+":"+seoul[1];
+  render();
+};
+document.getElementById("baseHour").onchange=render;
+document.getElementById("btnCopy").onclick=function(){
+  var base=baseDate();
+  var lines=["[회의 후보 시간 비교] 서울 기준 "+document.getElementById("baseHour").value];
+  cities.forEach(function(c){var t=cityTime(c,base);lines.push("- "+c.name+": "+t.label+" ("+t.weekday+")")});
+  copyText(lines.join("\n"),this);
+};
+function copyText(t,btn){
+  function ok(){btn.textContent="복사됐어요 ✓";setTimeout(function(){btn.textContent="회의 후보 시간을 글로 복사"},1500)}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fb)}else fb();
+  function fb(){var ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");ok()}catch(e){alert(t)}ta.remove()}
+}
+load();
+if(!cities.length)cities=[PRESETS[0],PRESETS[6],PRESETS[9]];
+var now=new Date();
+var seoul=now.toLocaleString("ko-KR",{timeZone:"Asia/Seoul",hour:"2-digit",minute:"2-digit",hour12:false}).split(":");
+document.getElementById("baseHour").value=seoul[0]+":"+seoul[1];
+render();
+setInterval(function(){
+  if(live){
+    var n=new Date();
+    var s=n.toLocaleString("ko-KR",{timeZone:"Asia/Seoul",hour:"2-digit",minute:"2-digit",hour12:false}).split(":");
+    document.getElementById("baseHour").value=s[0]+":"+s[1];
+    render();
+  }
+},30000);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>집중 타이머</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#d97706;--bad:#e11d48;--r:14px}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+.wrap{max-width:640px;margin:0 auto}
+h1{font-size:18px;font-weight:800;letter-spacing:-.02em}
+.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04)}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:8px 12px;font-weight:600;font-size:13px;transition:.12s}
+button:hover{border-color:#c7cddb;background:#fafafa}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}
+button.primary:hover{filter:brightness(1.07)}
+button.on{background:var(--brand);color:#fff;border-color:transparent}
+input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:13px}
+input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:12px;font-weight:700;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grow{flex:1;min-width:110px}
+.muted{color:var(--sub);font-size:12px}
+.pill{display:inline-flex;items:center;gap:4px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700}
+.good{background:#ecfdf5;color:#047857}.warn{background:#fffbeb;color:#b45309}.bad{background:#fef2f2;color:#be123c}.info{background:#eef2ff;color:#4338ca}
+.stage{text-align:center;padding:26px 14px;border-radius:var(--r);border:2px solid var(--line);background:#fff;margin-top:12px;transition:.3s}
+.stage.focus{border-color:#c7d2fe;background:#eef2ff}
+.stage.rest{border-color:#a7f3d0;background:#ecfdf5}
+.stage.done{animation:pop .6s}
+@keyframes pop{40%{transform:scale(1.04)}}
+#clock{font-size:64px;font-weight:900;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.05}
+#phase{font-size:14px;font-weight:800;margin-top:2px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.stat b{display:block;font-size:20px;font-variant-numeric:tabular-nums}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:8px}
+.day{background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px 2px;text-align:center;font-size:11px}
+.day b{display:block;font-size:13px}
+.day.today{border-color:var(--brand);background:#eef2ff}
+.usecases{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+.usecases h2{font-size:12px;font-weight:800;color:var(--sub);margin-bottom:6px}
+.usecases li{font-size:12px;color:var(--sub);margin-left:14px;margin-bottom:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🍅 집중 타이머</h1>
+  <p class="sub">25분 집중하고 5분 쉬는 「뽀모도로」. 끝나면 화면과 소리로 알려 주고, 오늘 몇 번·몇 분 집중했는지 쌓아 줘요.</p>
+
+  <div class="stage" id="stage">
+    <div id="phase">집중할 일을 적고 시작하세요</div>
+    <div id="clock">25:00</div>
+    <div class="muted" id="cycleInfo">집중 25분 · 휴식 5분 · 4번마다 긴 휴식 15분</div>
+  </div>
+
+  <div class="row" style="margin-top:12px">
+    <button class="primary" id="btnStart">▶ 시작</button>
+    <button id="btnReset">처음으로</button>
+    <button id="btnSkip">넘기기 →</button>
+    <button id="btnSound" class="on">🔔 소리 켜짐</button>
+  </div>
+
+  <div class="card">
+    <label for="taskInput">지금 집중할 일</label>
+    <input id="taskInput" placeholder="예: 3분기 기획서 초안 쓰기">
+  </div>
+
+  <div class="card">
+    <b style="font-size:13px">길이 고르기</b>
+    <div class="row" style="margin-top:8px" id="presets"></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b id="stCount">0</b><span class="muted">오늘 집중 횟수</span></div>
+    <div class="stat"><b id="stMin">0</b><span class="muted">오늘 집종 분</span></div>
+    <div class="stat"><b id="stRound">0</b><span class="muted">연속 집중</span></div>
+  </div>
+
+  <div class="card">
+    <b style="font-size:13px">이번 주 집중 기록</b>
+    <div class="week" id="week"></div>
+    <p class="muted" style="margin-top:8px">기록은 이 브라우저에만 저장돼요. 날짜가 바뀌면 어제 기록은 그대로 남아요.</p>
+  </div>
+
+  <div class="usecases">
+    <h2>이럴 때 좋아요</h2>
+    <ul>
+      <li><b>모든 직장인</b> · 일하면서 자꾸 휴대폰을 보게 될 때 — 25분만 집중하기로 약속하고 시작하면 한 가지 일에 머물 수 있어요.</li>
+      <li><b>재택근무자</b> · 집에서는 쉬는 시간도 일하는 시간도 흐려질 때 — 집중-휴식을 번갈아 리듬을 만들면 하루가 선명해져요.</li>
+      <li><b>학생·공시생</b> · 공부 시간을 눈에 보이게 기록하고 싶을 때 — 오늘 몇 번·몇 분 집중했는지 쌓여 확인할 수 있어요.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var KEY="focus-timer-v1";
+var PRESETS=[{f:15,r:3},{f:25,r:5},{f:50,r:10},{f:90,r:20}];
+var cfg={focus:25,rest:5,long:15,longEvery:4};
+var state={phase:"focus",left:cfg.focus*60000,running:false,endAt:0,task:"",round:0,sound:true};
+var today=new Date().toISOString().slice(0,10);
+
+function todayKey(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function log(){try{return JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){return{}}}
+function saveLog(o){try{localStorage.setItem(KEY,JSON.stringify(o))}catch(e){}}
+function todayLog(){var l=log();var k=todayKey();if(!l[k])l[k]={count:0,min:0};return{all:l,day:l[k]}}
+function addLog(min){
+  var t=todayLog();t.day.count++;t.day.min+=Math.round(min);saveLog(t.all);
+  document.getElementById("stCount").textContent=t.day.count;
+  document.getElementById("stMin").textContent=t.day.min;
+  renderWeek();
+}
+
+function fmt(ms){if(ms<0)ms=0;var s=Math.ceil(ms/1000);var m=Math.floor(s/60);s%=60;return (m<10?"0":"")+m+":"+(s<10?"0":"")+s;}
+function phaseMs(){return state.phase==="focus"?cfg.focus*60000:(state.round%cfg.longEvery===0&&state.phase==="rest"?cfg.long*60000:cfg.rest*60000)}
+
+function render(){
+  var stage=document.getElementById("stage");
+  stage.className="stage "+(state.phase==="focus"?"focus":"rest");
+  document.getElementById("phase").textContent=state.phase==="focus"?"🎯 집중 중":"☕ 휴식 중";
+  document.getElementById("clock").textContent=fmt(state.left);
+  document.getElementById("cycleInfo").textContent=state.phase==="focus"
+    ? ("집중 "+cfg.focus+"분 · 다음 휴식 "+cfg.rest+"분"+(state.round%cfg.longEvery===cfg.longEvery-1?" (긴 휴식 "+cfg.long+"분)":""))
+    : ("휴식 "+((state.round%cfg.longEvery===0&&state.round>0)?cfg.long:cfg.rest)+"분 · 쉬었다가 다시 시작해요");
+  document.getElementById("btnStart").textContent=state.running?"⏸ 일시정지":"▶ 시작";
+  var t=todayLog();
+  document.getElementById("stCount").textContent=t.day.count;
+  document.getElementById("stMin").textContent=t.day.min;
+  document.getElementById("stRound").textContent=state.round;
+}
+function renderWeek(){
+  var box=document.getElementById("week");box.innerHTML="";
+  var l=log();
+  var d=new Date();var day=d.getDay();var monday=new Date(d);monday.setDate(d.getDate()-(day===0?6:day-1));
+  var labels=["월","화","수","목","금","토","일"];
+  for(var i=0;i<7;i++){
+    var dt=new Date(monday);dt.setDate(monday.getDate()+i);
+    var k=dt.getFullYear()+"-"+String(dt.getMonth()+1).padStart(2,"0")+"-"+String(dt.getDate()).padStart(2,"0");
+    var rec=l[k]||{count:0,min:0};
+    var el=document.createElement("div");
+    el.className="day"+(k===todayKey()?" today":"");
+    el.innerHTML="<span>"+labels[i]+"</span><b>"+rec.count+"</b><span class='muted'>"+rec.min+"분</span>";
+    box.appendChild(el);
+  }
+}
+function tick(){
+  if(!state.running)return;
+  state.left=state.endAt-Date.now();
+  if(state.left<=0){
+    state.left=0;state.running=false;beep(2);
+    document.getElementById("stage").classList.add("done");
+    setTimeout(function(){document.getElementById("stage").classList.remove("done")},700);
+    if(state.phase==="focus"){addLog(cfg.focus);state.round++;}
+    render();
+    return;
+  }
+  render();
+}
+function startPause(){
+  if(state.running){state.left=state.endAt-Date.now();state.running=false;}
+  else{state.endAt=Date.now()+state.left;state.running=true;}
+  beep(1);render();
+}
+function reset(){state.left=phaseMs();state.running=false;render()}
+function skip(){
+  if(state.phase==="focus"){state.round++;}
+  state.phase=state.phase==="focus"?"rest":"focus";
+  state.left=phaseMs();state.running=false;beep(1);render();
+}
+var AC=null;
+function beep(n){if(!state.sound)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();for(var i=0;i<(n||1);i++){(function(i){var o=AC.createOscillator(),g=AC.createGain();o.connect(g);g.connect(AC.destination);o.frequency.value=n===2?520:740;g.gain.setValueAtTime(.0001,AC.currentTime+i*.18);g.gain.exponentialRampToValueAtTime(.25,AC.currentTime+i*.18+.02);g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+i*.18+.15);o.start(AC.currentTime+i*.18);o.stop(AC.currentTime+i*.18+.16)})(i)}}catch(e){}}
+
+document.getElementById("btnStart").onclick=startPause;
+document.getElementById("btnReset").onclick=reset;
+document.getElementById("btnSkip").onclick=skip;
+document.getElementById("btnSound").onclick=function(){
+  state.sound=!state.sound;this.textContent=state.sound?"🔔 소리 켜짐":"🔕 소리 꺼짐";this.className=state.sound?"on":"";
+};
+(function(){var k="focus-timer-task-v1",el=document.getElementById("taskInput");try{el.value=localStorage.getItem(k)||""}catch(e){}state.task=el.value;el.addEventListener("input",function(){state.task=this.value;try{localStorage.setItem(k,this.value)}catch(e){}})})();
+var pb=document.getElementById("presets");
+PRESETS.forEach(function(p){
+  var b=document.createElement("button");
+  b.textContent="집중 "+p.f+" / 휴식 "+p.r+(p.f===cfg.focus?" ✓":"");
+  if(p.f===cfg.focus)b.className="on";
+  b.onclick=function(){
+    cfg.focus=p.f;cfg.rest=p.r;
+    pb.querySelectorAll("button").forEach(function(x){x.className="";x.textContent=x.textContent.replace(" ✓","")});
+    b.className="on";b.textContent+=" ✓";
+    state.left=phaseMs();state.running=false;render();
+  };
+  pb.appendChild(b);
+});
+document.addEventListener("keydown",function(e){
+  if(e.target.tagName==="INPUT")return;
+  if(e.code==="Space"){e.preventDefault();startPause()}
+});
+
+render();renderWeek();
+setInterval(tick,250);
+})();
+</script>
+</body>
+</html>

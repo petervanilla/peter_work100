@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>업무 시간 기록기</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#d97706;--bad:#e11d48;--r:14px}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:18px;font-weight:800;letter-spacing:-.02em}
+.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04)}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:8px 12px;font-weight:600;font-size:13px;transition:.12s}
+button:hover{border-color:#c7cddb;background:#fafafa}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}
+button.primary:hover{filter:brightness(1.07)}
+button.act.on{background:var(--brand);color:#fff;border-color:transparent}
+input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:13px}
+input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:12px;font-weight:700;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grow{flex:1;min-width:110px}
+.muted{color:var(--sub);font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px;margin-top:8px}
+.now{padding:14px;border-radius:12px;background:#eef2ff;border:1px solid #c7d2fe;text-align:center;margin-top:10px}
+.now b{font-size:22px;font-variant-numeric:tabular-nums}
+table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+th,td{border:1px solid var(--line);padding:7px 6px;text-align:center}
+th{background:#f8fafc;font-size:11px;color:var(--sub)}
+td.name{text-align:left;font-weight:600}
+tr.total td{background:#f8fafc;font-weight:800}
+.usecases{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+.usecases h2{font-size:12px;font-weight:800;color:var(--sub);margin-bottom:6px}
+.usecases li{font-size:12px;color:var(--sub);margin-left:14px;margin-bottom:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>⏲️ 업무 시간 기록기</h1>
+  <p class="sub">지금 하는 일의 버튼만 누르면 시간이 그 일로 쌓여요. 주간 보고에 바로 쓸 수 있어요.</p>
+
+  <div class="now" id="nowBox">
+    <div class="muted" id="nowLabel">아래에서 지금 하는 일을 눌러 주세요</div>
+    <b id="nowTime">00:00</b>
+    <div class="muted" id="nowHint">다른 일을 누르면 그 일로 바뀌어요</div>
+  </div>
+
+  <div class="row" style="margin-top:10px">
+    <button id="btnStop" class="primary">■ 그만하기 (기록 확정)</button>
+    <button id="btnCsv">엑셀(CSV) 내보내기</button>
+    <button id="btnCopyWeek">주간 요약 복사</button>
+  </div>
+
+  <div class="card">
+    <b style="font-size:13px">업무 버튼</b>
+    <div class="grid" id="acts"></div>
+    <div class="row" style="margin-top:10px">
+      <input class="grow" id="newAct" placeholder="우리 팀 업무 추가 (예: 발송 검수)">
+      <button id="btnAddAct">+ 추가</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <b style="font-size:13px">오늘 업무별 시간</b>
+    <div id="todayList" style="margin-top:8px"></div>
+  </div>
+
+  <div class="card">
+    <b style="font-size:13px">이번 주 표</b>
+    <div style="overflow-x:auto"><table id="weekTable"></table></div>
+  </div>
+
+  <div class="usecases">
+    <h2>이럴 때 좋아요</h2>
+    <ul>
+      <li><b>모든 직장인</b> · 주간 보고에 「이번 주에 뭘 했지?」 하고 고민할 때 — 그날그날 버튼만 눌러 두면 주간 보고가 저절로 쌓여 있어요.</li>
+      <li><b>기획</b> · 내 시간이 어디로 새는지 알고 싶을 때 — 업무별로 쌓인 시간을 보면 회의가 생각보다 많다는 걸 알게 돼요.</li>
+      <li><b>팀장</b> · 팀원의 업무량을 눈으로 보여주고 싶을 때 — 함께 기록하면 누가 과하다·비어 있다를 숫자로 얘기할 수 있어요.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var KEY="work-log-v1";
+var DEFAULT=["메일","회의","보고서","기획","개발","행정","고객 응대","교육","이동","잡일"];
+function todayStr(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function mondayStr(){
+  var d=new Date();var day=d.getDay();var m=new Date(d);m.setDate(d.getDate()-(day===0?6:day-1));
+  return m.getFullYear()+"-"+String(m.getMonth()+1).padStart(2,"0")+"-"+String(m.getDate()).padStart(2,"0");
+}
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){return{}}}
+function save(o){try{localStorage.setItem(KEY,JSON.stringify(o))}catch(e){}}
+var data=load();
+if(!data.acts||!data.acts.length)data.acts=DEFAULT.slice();
+if(!data.days)data.days={};
+if(!data.days[todayStr()])data.days[todayStr()]={};
+var current=null,startedAt=0;
+
+function fmt(ms){var s=Math.floor(ms/1000);var h=Math.floor(s/3600);s%=3600;var m=Math.floor(s/60);s%=60;
+  return (h>0?h+":":"")+(m<10?"0":"")+m+":"+(s<10?"0":"")+s}
+function accrue(){
+  if(!current)return;
+  var t=todayStr();
+  if(!data.days[t])data.days[t]={};
+  data.days[t][current]=(data.days[t][current]||0)+(Date.now()-startedAt);
+  startedAt=Date.now();
+  save(data);
+}
+function renderActs(){
+  var box=document.getElementById("acts");box.innerHTML="";
+  data.acts.forEach(function(a){
+    var b=document.createElement("button");
+    b.className="act"+(current===a?" on":"");
+    b.textContent=a;
+    b.onclick=function(){
+      if(current===a){accrue();current=null;startedAt=0;}
+      else{accrue();current=a;startedAt=Date.now();}
+      renderActs();renderNow();renderToday();
+    };
+    box.appendChild(b);
+  });
+}
+function renderNow(){
+  var box=document.getElementById("nowBox");
+  if(current){
+    document.getElementById("nowLabel").textContent="🔴 기록 중 — "+current;
+    document.getElementById("nowTime").textContent=fmt(Date.now()-startedAt);
+    document.getElementById("nowHint").textContent="다른 업무를 누르면 여기까지의 시간이 저장돼요";
+    box.style.background="#eef2ff";
+  }else{
+    document.getElementById("nowLabel").textContent="대기 중";
+    document.getElementById("nowTime").textContent="--:--";
+    document.getElementById("nowHint").textContent="아래에서 지금 하는 일을 눌러 주세요";
+    box.style.background="#fff";
+  }
+}
+function renderToday(){
+  var box=document.getElementById("todayList");box.innerHTML="";
+  var day=data.days[todayStr()]||{};
+  var keys=data.acts.filter(function(a){return day[a]}).concat(Object.keys(day).filter(function(k){return data.acts.indexOf(k)<0}));
+  if(!keys.length){box.innerHTML='<p class="muted">아직 기록이 없어요.</p>';return}
+  var total=0;
+  keys.forEach(function(k){
+    var ms=day[k]||0;total+=ms;
+    var el=document.createElement("div");el.className="row";el.style.justifyContent="space-between";
+    el.style.padding="6px 2px";el.style.borderBottom="1px dashed var(--line)";
+    el.innerHTML="<b style='font-size:13px'>"+k+"</b><span style='font-variant-numeric:tabular-nums;font-size:13px'>"+fmt(ms)+"</span>";
+    box.appendChild(el);
+  });
+  var t=document.createElement("div");t.className="row";t.style.justifyContent="space-between";t.style.marginTop="8px";
+  t.innerHTML="<b>오늘 합계</b><b style='font-variant-numeric:tabular-nums'>"+fmt(total)+"</b>";
+  box.appendChild(t);
+}
+function weekDates(){
+  var m=mondayStr();var d=new Date(m+"T00:00:00");var out=[];
+  for(var i=0;i<7;i++){out.push(d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"));d.setDate(d.getDate()+1)}
+  return out;
+}
+function renderWeek(){
+  var dates=weekDates();
+  var labels=["월","화","수","목","금","토","일"];
+  var html="<tr><th style='text-align:left'>업무</th>"+dates.map(function(d,i){return "<th>"+labels[i]+"<br>"+d.slice(5).replace("-","/")+"</th>"}).join("")+"<th>합계</th></tr>";
+  var grand=0;
+  data.acts.forEach(function(a){
+    var row=0;
+    var cells=dates.map(function(d){
+      var ms=(data.days[d]||{})[a]||0;row+=ms;
+      return "<td>"+(ms?fmt(ms):"-")+"</td>";
+    }).join("");
+    if(row){grand+=row;html+="<tr><td class='name'>"+a+"</td>"+cells+"<td><b>"+fmt(row)+"</b></td></tr>"}
+  });
+  html+="<tr class='total'><td class='name'>합계</td>"+dates.map(function(d){
+    var s=0;Object.keys(data.days[d]||{}).forEach(function(k){s+=data.days[d][k]});return "<td>"+(s?fmt(s):"-")+"</td>";
+  }).join("")+"<td>"+fmt(grand)+"</td></tr>";
+  document.getElementById("weekTable").innerHTML=html;
+}
+function csvEsc(s){return '"'+String(s).replace(/"/g,'""')+'"'}
+document.getElementById("btnStop").onclick=function(){
+  accrue();current=null;startedAt=0;renderActs();renderNow();renderToday();renderWeek();
+};
+document.getElementById("btnAddAct").onclick=function(){
+  var v=document.getElementById("newAct").value.trim();
+  if(!v||data.acts.indexOf(v)>=0)return;
+  data.acts.push(v);document.getElementById("newAct").value="";save(data);renderActs();
+};
+document.getElementById("btnCsv").onclick=function(){
+  var dates=weekDates();
+  var rows=[["날짜"].concat(data.acts,["합계"])];
+  dates.forEach(function(d){
+    var day=data.days[d]||{};var sum=0;
+    var row=[d].concat(data.acts.map(function(a){var ms=day[a]||0;sum+=ms;return (ms/60000).toFixed(1)}));
+    row.push((sum/60000).toFixed(1));rows.push(row);
+  });
+  var csv="\uFEFF"+rows.map(function(r){return r.map(csvEsc).join(",")}).join("\r\n");
+  var blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+  var a=document.createElement("a");
+  if(window.URL&&window.URL.createObjectURL){
+    a.href=URL.createObjectURL(blob);
+    a.download="work-log-"+mondayStr()+".csv";a.click();
+    setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
+  }else{
+    a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(csv);
+    a.download="work-log-"+mondayStr()+".csv";a.click();
+  }
+};
+document.getElementById("btnCopyWeek").onclick=function(){
+  var dates=weekDates();
+  var lines=["[이번 주 업무 시간] "+mondayStr()+" ~ "+dates[6]];
+  var any=false;
+  data.acts.forEach(function(a){
+    var sum=0;dates.forEach(function(d){sum+=(data.days[d]||{})[a]||0});
+    if(sum){any=true;lines.push("- "+a+": "+(sum/3600000).toFixed(1)+"시간")}
+  });
+  if(!any)lines.push("(기록 없음)");
+  copyText(lines.join("\n"),this);
+};
+function copyText(t,btn){
+  function ok(){btn.textContent="복사됐어요 ✓";setTimeout(function(){btn.textContent="주간 요약 복사"},1500)}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fb)}else fb();
+  function fb(){var ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");ok()}catch(e){alert(t)}ta.remove()}
+}
+renderActs();renderNow();renderToday();renderWeek();
+setInterval(function(){if(current){renderNow();renderToday()}},1000);
+})();
+</script>
+</body>
+</html>

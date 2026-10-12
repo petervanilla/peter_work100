@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>거래처 연락 기록장</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#b45309;--bad:#e11d48;--r:14px}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+[hidden]{display:none!important}
+.wrap{max-width:1000px;margin:0 auto}h1{font-size:18px;font-weight:800;letter-spacing:-.02em}.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04);min-width:0}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:7px 11px;font-weight:700;font-size:12px;transition:.12s}button:hover{border-color:#c7cddb;background:#fafafa}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}button.primary:hover{filter:brightness(1.07)}
+button.ghost{border-color:transparent;background:transparent;color:var(--sub);padding:4px 7px}
+input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:13px;min-width:0}
+input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:11px;font-weight:800;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}.grow{flex:1;min-width:100px}.muted{color:var(--sub);font-size:12px}
+.pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap}
+.ok{background:#ecfdf5;color:#047857}.wn{background:#fffbeb;color:#b45309}.bd{background:#fef2f2;color:#be123c}.in{background:#eef2ff;color:#4338ca}.mu{background:#f1f5f9;color:#64748b}
+.notice{margin-top:10px;padding:8px 10px;border-radius:10px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;font-size:11px}
+.usecases{margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}.usecases h2{font-size:12px;font-weight:800;color:var(--sub);margin-bottom:6px}.usecases li{font-size:12px;color:var(--sub);margin-left:15px;margin-bottom:3px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}.stat{border:1px solid var(--line);border-radius:12px;padding:10px;background:#f8fafc}.stat span{font-size:10px;font-weight:800;color:var(--sub);display:block}.stat b{font-size:22px;font-weight:900;display:block;margin-top:2px}
+.two{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:12px}@media(max-width:780px){.two{grid-template-columns:minmax(0,1fr)}}
+.cl{max-height:420px;overflow-y:auto;margin-top:8px}.ci{display:block;width:100%;text-align:left;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:6px;background:#fff}.ci.sel{border-color:var(--brand);background:#eef2ff}.ci .n{font-size:13px;font-weight:800;overflow-wrap:anywhere}.ci .m{display:flex;gap:6px;align-items:center;margin-top:3px;flex-wrap:wrap}
+.log{border-left:3px solid #c7d2fe;padding:2px 0 2px 10px;margin-top:10px}.log b{font-size:12px}.log p{font-size:13px;margin-top:2px;overflow-wrap:anywhere}
+@media print{body{background:#fff;padding:0}.no-print{display:none!important}.card{box-shadow:none}.cl{max-height:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>📒 거래처 연락 기록장</h1><p class="sub">거래처별 연락 내용과 다음 연락 예정일을 남겨요. 오늘 연락할 곳과 연락이 늦어진 곳이 맨 위에 모여요.</p></header>
+<div class="notice">업무용 연락처(회사 전화·메일)만 입력해 주세요. 주민번호·계좌번호 같은 민감한 정보는 적지 않는 것이 안전해요. 기록은 이 브라우저에만 저장돼요.</div>
+
+<section class="card">
+  <div class="stats">
+    <div class="stat"><span>전체 거래처</span><b id="sAll">0</b></div>
+    <div class="stat"><span>오늘 연락</span><b id="sToday" style="color:#b45309">0</b></div>
+    <div class="stat"><span>연락 지연</span><b id="sLate" style="color:#be123c">0</b></div>
+    <div class="stat"><span>이번 주 예정</span><b id="sWeek" style="color:#4338ca">0</b></div>
+  </div>
+</section>
+
+<div class="two">
+<section class="card">
+  <div class="row"><div class="grow"><label for="q">거래처 검색</label><input id="q" type="search" placeholder="회사·담당자 이름"></div></div>
+  <div class="cl" id="list"></div>
+  <div class="row no-print" style="margin-top:8px"><div class="grow"><label for="newN">새 거래처</label><input id="newN" placeholder="회사 이름"></div><button class="primary" id="addC">+ 추가</button></div>
+</section>
+
+<section class="card" id="detail"></section>
+</div>
+
+<div class="row no-print" style="margin-top:12px"><button id="csv">거래처 CSV</button><button id="print">인쇄·PDF</button><button id="sample">예시로 되돌리기</button><button id="clear">모두 비우기</button></div>
+
+<div class="usecases"><h2>이럴 때 좋아요</h2><ul>
+<li><b>영업</b> · 거래처마다 마지막 통화 내용과 다음 연락일을 한곳에서 확인할 때</li>
+<li><b>총무</b> · 협력사 담당자와 연락한 내역을 팀이 같이 볼 수 있게 정리할 때</li>
+<li><b>사장님(가게)</b> · 납품·단체 주문 거래처에 재연락할 시점을 놓치지 않고 싶을 때</li></ul></div>
+</div>
+
+<script>
+(function(){"use strict";
+var KEY="client-log-v1",CH=["전화","메일","방문","메신저","화상"];
+function load(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function ymd(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function today(){return ymd(new Date())}
+function addDays(s,k){var d=new Date(s+"T00:00:00");d.setDate(d.getDate()+k);return ymd(d)}
+function diff(a,b){return Math.round((new Date(b+"T00:00:00")-new Date(a+"T00:00:00"))/864e5)}
+function uid(){return "c"+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}
+function sample(){var t=today();return{sel:"c1",q:"",clients:[
+ {id:"c1",n:"한빛솔루션",ct:"김민수 팀장",ph:"02-123-4567",em:"minsu@example.com",st:"active",fu:t,logs:[{id:"l1",d:addDays(t,-12),ch:"전화",s:"견적서 1차 전달, 납기 문의"},{id:"l2",d:addDays(t,-4),ch:"메일",s:"수정 견적 발송. 금요일까지 회신 요청"}]},
+ {id:"c2",n:"모아푸드",ct:"박서준 대표",ph:"031-555-1212",em:"",st:"active",fu:addDays(t,-3),logs:[{id:"l3",d:addDays(t,-20),ch:"방문",s:"신메뉴 샘플 전달"},{id:"l4",d:addDays(t,-10),ch:"전화",s:"샘플 후기 확인, 발주 보류 중"}]},
+ {id:"c3",n:"새봄학원",ct:"이하나 원장",ph:"02-777-9090",em:"",st:"active",fu:addDays(t,3),logs:[{id:"l5",d:addDays(t,-2),ch:"메신저",s:"교재 샘플 일정 조율"}]},
+ {id:"c4",n:"다온병원",ct:"정유진 실장",ph:"031-800-3030",em:"yujin@example.com",st:"active",fu:addDays(t,6),logs:[{id:"l6",d:addDays(t,-6),ch:"화상",s:"예약 시스템 데모 진행"}]},
+ {id:"c5",n:"청춘물류",ct:"한도윤 과장",ph:"02-300-4000",em:"",st:"active",fu:addDays(t,-1),logs:[{id:"l7",d:addDays(t,-15),ch:"전화",s:"배송 단가 협의 완료"}]},
+ {id:"c6",n:"별빛출판",ct:"오서연 편집장",ph:"",em:"seoyeon@example.com",st:"dormant",fu:"",logs:[{id:"l8",d:addDays(t,-90),ch:"메일",s:"올해 발주 계획 없음, 내년 상반기 재연락"}]}]}}
+var S=load(KEY,null);if(!S||!Array.isArray(S.clients))S=sample();if(S.q==null)S.q="";
+function find(id){for(var i=0;i<S.clients.length;i++)if(S.clients[i].id===id)return S.clients[i];return null}
+function last(c){var m="";(c.logs||[]).forEach(function(l){if(l.d>m)m=l.d});return m}
+function due(c){if(c.st==="dormant"||!c.fu)return null;return diff(today(),c.fu)}
+function badge(c){if(c.st==="dormant")return '<span class="pill mu">휴면</span>';var d=due(c);if(d===null)return '<span class="pill mu">예정 없음</span>';
+ return d<0?'<span class="pill bd">지연 '+(-d)+'일</span>':d===0?'<span class="pill wn">오늘</span>':d<=7?'<span class="pill in">D-'+d+'</span>':'<span class="pill mu">D-'+d+'</span>'}
+function sorted(){var q=S.q.trim().toLowerCase();return S.clients.filter(function(c){return !q||(c.n+" "+c.ct).toLowerCase().indexOf(q)>=0}).sort(function(a,b){var ad=a.st==="dormant",bd=b.st==="dormant";if(ad!==bd)return ad?1:-1;var x=a.fu||"9999",y=b.fu||"9999";return x<y?-1:x>y?1:a.n.localeCompare(b.n)})}
+function list(){var h=sorted().map(function(c){return '<button class="ci'+(c.id===S.sel?' sel':'')+'" data-id="'+esc(c.id)+'"><div class="n">'+esc(c.n||"(이름 없음)")+'</div><div class="m">'+badge(c)+'<span class="muted">'+(last(c)?"마지막 "+last(c).slice(5):"연락 기록 없음")+'</span></div></button>'}).join("");
+ $("list").innerHTML=h||'<p class="muted">조건에 맞는 거래처가 없어요.</p>'}
+function stats(){var t=0,l=0,w=0;S.clients.forEach(function(c){var d=due(c);if(d===null)return;if(d<0)l++;else if(d===0)t++;else if(d<=7)w++});
+ $("sAll").textContent=S.clients.length;$("sToday").textContent=t;$("sLate").textContent=l;$("sWeek").textContent=w}
+function detail(){var c=find(S.sel);if(!c){$("detail").innerHTML='<p class="muted">왼쪽에서 거래처를 고르거나 새로 추가해 주세요.</p>';return}
+ var logs=(c.logs||[]).slice().sort(function(a,b){return a.d<b.d?1:a.d>b.d?-1:0});
+ $("detail").innerHTML='<div class="row" style="justify-content:space-between;align-items:center"><b style="font-size:14px">거래처 정보</b>'+badge(c)+'</div>'+
+ '<div class="row" style="margin-top:8px"><div class="grow"><label for="cN">거래처</label><input id="cN" data-f="n" value="'+esc(c.n)+'"></div><div class="grow"><label for="cCt">담당자</label><input id="cCt" data-f="ct" value="'+esc(c.ct)+'"></div></div>'+
+ '<div class="row" style="margin-top:8px"><div class="grow"><label for="cPh">전화(업무용)</label><input id="cPh" data-f="ph" value="'+esc(c.ph)+'"></div><div class="grow"><label for="cEm">메일</label><input id="cEm" data-f="em" value="'+esc(c.em)+'"></div></div>'+
+ '<div class="row" style="margin-top:8px"><div style="width:130px"><label for="cSt">상태</label><select id="cSt" data-f="st"><option value="active"'+(c.st==="active"?" selected":"")+'>거래 중</option><option value="dormant"'+(c.st==="dormant"?" selected":"")+'>휴면</option></select></div><div style="width:160px"><label for="cFu">다음 연락일</label><input id="cFu" type="date" data-f="fu" value="'+esc(c.fu)+'"></div><button class="ghost no-print" data-act="delc">거래처 삭제</button></div>'+
+ '<hr style="border:0;border-top:1px dashed var(--line);margin:14px 0 10px"><b style="font-size:13px">연락 기록 남기기</b>'+
+ '<div class="row no-print" style="margin-top:8px"><div style="width:140px"><label for="lD">날짜</label><input id="lD" type="date" value="'+today()+'"></div><div style="width:100px"><label for="lCh">방법</label><select id="lCh">'+CH.map(function(x){return '<option>'+x+'</option>'}).join("")+'</select></div><div class="grow" style="min-width:180px"><label for="lS">내용</label><input id="lS" placeholder="무엇을 이야기했나요?"></div><div style="width:150px"><label for="lFu">다음 연락일(선택)</label><input id="lFu" type="date"></div><button class="primary" data-act="addlog">기록 추가</button></div>'+
+ '<div>'+(logs.map(function(l){return '<div class="log" data-lid="'+esc(l.id)+'"><b>'+esc(l.d)+' · '+esc(l.ch)+'</b> <button class="ghost no-print" data-act="dellog" aria-label="기록 삭제">✕</button><p>'+esc(l.s)+'</p></div>'}).join("")||'<p class="muted" style="margin-top:8px">아직 연락 기록이 없어요.</p>')+'</div>'+
+ '<div class="row no-print" style="margin-top:10px"><button data-act="copylog">이 거래처 기록 복사</button></div>'}
+function all(){stats();list();save(KEY,S)}
+function renderAll(){all();detail()}
+$("list").addEventListener("click",function(e){var b=e.target.closest("[data-id]");if(!b)return;S.sel=b.getAttribute("data-id");renderAll()});
+$("q").addEventListener("input",function(){S.q=this.value;list();save(KEY,S)});
+$("detail").addEventListener("input",function(e){var f=e.target.getAttribute("data-f");if(!f)return;var c=find(S.sel);if(!c)return;c[f]=e.target.value;all()});
+$("detail").addEventListener("change",function(e){var f=e.target.getAttribute("data-f");if(f==="st"||f==="fu"){var c=find(S.sel);if(c){c[f]=e.target.value;renderAll()}}});
+$("detail").addEventListener("click",function(e){var b=e.target.closest("[data-act]");if(!b)return;var a=b.getAttribute("data-act"),c=find(S.sel);if(!c)return;
+ if(a==="addlog"){var s=$("lS").value.trim();if(!s){$("lS").focus();return}c.logs=c.logs||[];c.logs.push({id:uid(),d:$("lD").value||today(),ch:$("lCh").value,s:s});var nf=$("lFu").value;if(nf)c.fu=nf;renderAll()}
+ else if(a==="dellog"){var id=b.closest(".log").getAttribute("data-lid");c.logs=(c.logs||[]).filter(function(l){return l.id!==id});renderAll()}
+ else if(a==="delc"){if(!confirm("이 거래처와 연락 기록을 지울까요?"))return;S.clients=S.clients.filter(function(x){return x!==c});S.sel=S.clients.length?S.clients[0].id:null;renderAll()}
+ else if(a==="copylog"){var L=["[거래처 연락 기록] "+c.n+" / "+c.ct+(c.ph?" / "+c.ph:"")];(c.logs||[]).slice().sort(function(x,y){return x.d<y.d?-1:1}).forEach(function(l){L.push(l.d+" ["+l.ch+"] "+l.s)});if(c.fu)L.push("다음 연락일: "+c.fu);
+  var t=L.join("\n"),done=function(){b.textContent="복사됐어요 ✓";setTimeout(function(){b.textContent="이 거래처 기록 복사"},1400)};
+  var fb=function(){var ta=document.createElement("textarea");ta.value=t;ta.style.cssText="position:fixed;opacity:0";document.body.appendChild(ta);ta.select();var ok=false;try{ok=document.execCommand("copy")}catch(e){}ta.remove();if(ok)done();else window.prompt("복사가 막혀 있어요. 아래 글을 직접 복사해 주세요.",t)};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,fb)}else fb()}});
+$("addC").onclick=function(){var n=$("newN").value.trim();if(!n){$("newN").focus();return}var c={id:uid(),n:n,ct:"",ph:"",em:"",st:"active",fu:"",logs:[]};S.clients.push(c);S.sel=c.id;$("newN").value="";renderAll()};
+$("newN").addEventListener("keydown",function(e){if(e.key==="Enter")$("addC").click()});
+$("sample").onclick=function(){S=sample();$("q").value="";renderAll()};
+$("clear").onclick=function(){if(!confirm("모든 거래처와 기록을 지울까요?"))return;S.clients=[];S.sel=null;renderAll()};
+$("print").onclick=function(){window.print()};
+function csvCell(c){c=String(c==null?"":c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c}
+$("csv").onclick=function(){var rows=[["거래처","담당자","전화","메일","상태","마지막 연락","다음 연락일","연락 횟수"]];S.clients.forEach(function(c){rows.push([c.n,c.ct,c.ph,c.em,c.st==="dormant"?"휴면":"거래 중",last(c),c.fu,(c.logs||[]).length])});
+ var t="\uFEFF"+rows.map(function(r){return r.map(csvCell).join(",")}).join("\r\n"),b=new Blob([t],{type:"text/csv;charset=utf-8"});
+ if(window.URL&&URL.createObjectURL){var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="clients.csv";document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500)}};
+if(!find(S.sel))S.sel=S.clients.length?S.clients[0].id:null;
+$("q").value=S.q;renderAll();
+})();
+</script>
+</body>
+</html>

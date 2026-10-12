@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>비포·애프터 사진 기록장</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#d97706;--bad:#e11d48;--soft:#f8fafc}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+.wrap{max-width:980px;margin:0 auto}h1{font-size:18px;font-weight:800;letter-spacing:-.02em}.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04)}
+.card h2{font-size:13px;font-weight:900;margin-bottom:9px;display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:7px 11px;font-weight:700;font-size:12px;transition:.12s}button:hover{border-color:var(--brand)}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border:0}
+input,select{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font-size:13px}
+input:focus,select:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:10px;font-weight:800;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:end}.muted{font-size:11px;color:var(--sub)}.grow{flex:1;min-width:130px}
+.pick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.slot{border:1.5px dashed var(--line);border-radius:12px;aspect-ratio:4/3;display:grid;place-items:center;overflow:hidden;position:relative;background:var(--soft);cursor:pointer}
+.slot img{width:100%;height:100%;object-fit:cover}
+.slot span{font-size:12px;font-weight:800;color:var(--sub);text-align:center;padding:8px}
+.slot b{position:absolute;left:8px;top:8px;background:rgba(17,24,39,.75);color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:99px}
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.rec{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card)}
+.ph{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line)}
+.ph figure{margin:0;aspect-ratio:4/3;background:var(--soft);position:relative;display:grid;place-items:center;overflow:hidden}
+.ph img{width:100%;height:100%;object-fit:cover;cursor:zoom-in}
+.ph figcaption{position:absolute;left:6px;top:6px;background:rgba(17,24,39,.75);color:#fff;font-size:9px;font-weight:900;padding:2px 7px;border-radius:99px}
+.ph .none{font-size:10px;color:var(--sub)}
+.info{padding:9px 11px}
+.info b{font-size:13px}
+.st{display:inline-flex;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:900}
+.full{background:#ecfdf5;color:#047857}.half{background:#fffbeb;color:#b45309}
+#zoom{position:fixed;inset:0;background:rgba(15,23,42,.9);display:none;place-items:center;padding:16px;z-index:50;cursor:zoom-out}
+#zoom.show{display:grid}#zoom img{max-width:100%;max-height:92vh;border-radius:10px}
+.usecases{margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}.usecases h2{font-size:12px;font-weight:900;color:var(--sub);margin-bottom:5px}
+.usecases li{font-size:11px;color:var(--sub);margin-left:15px;margin-bottom:3px}
+@media print{body{background:#fff;padding:0}.no-print{display:none!important}.rec{break-inside:avoid}}
+</style></head><body><div class="wrap">
+<header><h1>📸 비포·애프터 사진 기록장</h1><p class="sub">청소·수리·정리 전후 사진을 한 쌍으로 남겨요. 구역·담당자·날짜가 함께 기록되고, 구역별로 모아 볼 수 있어요.</p></header>
+
+<section class="card no-print">
+<h2>새 기록</h2>
+<div class="row">
+<div class="grow"><label for="area">구역 · 작업</label><input id="area" placeholder="예: 화장실 세면대" list="areaList"><datalist id="areaList"></datalist></div>
+<div style="max-width:150px"><label for="who">담당자</label><input id="who" placeholder="예: 박서준"></div>
+<div style="max-width:150px"><label for="day">날짜</label><input id="day" type="date"></div>
+</div>
+<div style="margin-top:8px"><label for="memo">메모</label><input id="memo" placeholder="예: 물때 제거, 배수구 청소"></div>
+<div class="pick">
+<label class="slot" for="beforeFile" id="beforeSlot"><b>BEFORE</b><span>눌러서 작업 전 사진 선택</span></label>
+<label class="slot" for="afterFile" id="afterSlot"><b>AFTER</b><span>눌러서 작업 후 사진 선택</span></label>
+</div>
+<input id="beforeFile" type="file" accept="image/*" capture="environment" style="display:none">
+<input id="afterFile" type="file" accept="image/*" capture="environment" style="display:none">
+<div class="row" style="margin-top:10px"><button class="primary" id="saveBtn">기록 저장</button><button id="clearForm">입력 지우기</button><span class="muted" id="msg"></span></div>
+<p class="muted" style="margin-top:7px">휴대폰에서는 바로 카메라가 열려요. 사진은 줄여서 이 브라우저에만 저장되며 서버로 보내지 않아요.</p>
+</section>
+
+<section class="card">
+<h2>기록 모음<span class="row no-print" style="gap:6px"><select id="filter" style="width:auto;min-width:150px"></select><button id="copyBtn">목록 복사</button><button id="printBtn">인쇄</button><button id="sampleBtn">예시로 되돌리기</button></span></h2>
+<p class="muted" id="summary" style="margin-bottom:9px"></p>
+<div class="list" id="list"></div>
+</section>
+
+<div class="usecases"><h2>이럴 때 좋아요</h2><ul>
+<li><b>알바·직원</b> · 청소를 했다는 걸 말로만 하기 애매할 때 — 전후 사진 한 쌍으로 깔끔하게 증명돼요.</li>
+<li><b>사장님(가게)</b> · 매장에 없을 때도 청소 상태를 확인하고 싶을 때 — 구역별로 모아 보고 날짜 순으로 확인해요.</li>
+<li><b>매장 관리자</b> · 「이 정도면 깨끗하다」는 기준을 직원과 맞추고 싶을 때 — 잘된 애프터 사진을 기준으로 보여 주세요.</li>
+</ul></div>
+</div>
+<div id="zoom"><img alt="사진 크게 보기"></div>
+<script>
+(function(){"use strict";
+var KEY="before-after-v1";
+function uid(){return "b"+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}
+function ld(d){d=d||new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+var records=[],draft={before:null,after:null},filter="all";
+function save(){try{localStorage.setItem(KEY,JSON.stringify(records));return true}catch(e){return false}}
+function load(){try{var s=JSON.parse(localStorage.getItem(KEY)||"null");if(Array.isArray(s))records=s}catch(e){}}
+/* 예시 사진: 그림으로 그린 비포(얼룩)·애프터(깨끗) */
+function demo(dirty,label,hue){
+var c=document.createElement("canvas");c.width=320;c.height=240;var g=c.getContext("2d");
+g.fillStyle="hsl("+hue+",35%,"+(dirty?"62%":"86%")+")";g.fillRect(0,0,320,240);
+g.fillStyle="rgba(255,255,255,"+(dirty?".25":".6")+")";for(var i=0;i<6;i++)g.fillRect(i*56,0,2,240);
+if(dirty){for(var j=0;j<14;j++){g.beginPath();g.fillStyle="rgba(90,60,30,"+(0.25+Math.random()*0.3)+")";g.arc(30+Math.random()*260,30+Math.random()*180,8+Math.random()*22,0,7);g.fill()}}
+else{g.fillStyle="rgba(255,255,255,.85)";g.beginPath();g.arc(250,60,18,0,7);g.fill();g.font="bold 26px sans-serif";g.fillText("✨",236,70)}
+g.fillStyle="rgba(17,24,39,.75)";g.font="bold 18px sans-serif";g.fillText(label,14,224);
+return c.toDataURL("image/jpeg",0.7)}
+function seed(){var t=new Date();records=[];
+[["홀 테이블",200,"박서준","테이블 기름때 제거",0,true],["화장실 세면대",190,"이하늘","물때·배수구 청소",-1,true],["주방 후드",30,"최민지","후드 필터 교체",-2,true],["출입문 유리",210,"정우진","지문 자국 닦기 — 애프터 사진 누락",-3,false]].forEach(function(r){
+var d=new Date(t);d.setDate(d.getDate()+r[4]);
+records.push({id:uid(),area:r[0],who:r[2],memo:r[3],day:ld(d),before:demo(true,r[0]+" 전",r[1]),after:r[5]?demo(false,r[0]+" 후",r[1]):null})})}
+function shrink(file,cb){var fr=new FileReader();
+fr.onload=function(){var img=new Image();img.onload=function(){var m=640,k=Math.min(1,m/Math.max(img.width,img.height));
+var c=document.createElement("canvas");c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
+c.getContext("2d").drawImage(img,0,0,c.width,c.height);try{cb(c.toDataURL("image/jpeg",0.72))}catch(e){cb(null)}};
+img.onerror=function(){cb(null)};img.src=fr.result};fr.onerror=function(){cb(null)};fr.readAsDataURL(file)}
+function setSlot(which){var slot=document.getElementById(which+"Slot"),src=draft[which];
+slot.innerHTML="<b>"+(which==="before"?"BEFORE":"AFTER")+"</b>"+(src?"<img src='"+src+"' alt='"+(which==="before"?"작업 전":"작업 후")+" 사진 미리보기'>":"<span>눌러서 작업 "+(which==="before"?"전":"후")+" 사진 선택</span>")}
+["before","after"].forEach(function(w){document.getElementById(w+"File").addEventListener("change",function(){
+var f=this.files[0];if(!f)return;shrink(f,function(d){if(!d){alert("사진을 읽지 못했어요. 다른 사진을 골라 주세요.");return}draft[w]=d;setSlot(w)});this.value=""})});
+function render(){
+var areas=[];records.forEach(function(r){if(r.area&&areas.indexOf(r.area)<0)areas.push(r.area)});
+document.getElementById("areaList").innerHTML=areas.map(function(a){return "<option value='"+esc(a)+"'>"}).join("");
+var sel=document.getElementById("filter");
+sel.innerHTML="<option value='all'>전체 구역</option>"+areas.map(function(a){return "<option value='"+esc(a)+"'>"+esc(a)+"</option>"}).join("");
+if(filter!=="all"&&areas.indexOf(filter)<0)filter="all";sel.value=filter;
+var list=records.filter(function(r){return filter==="all"||r.area===filter}).sort(function(a,b){return a.day<b.day?1:a.day>b.day?-1:0});
+var full=records.filter(function(r){return r.before&&r.after}).length;
+document.getElementById("summary").textContent="전체 "+records.length+"건 · 전후 사진 모두 있음 "+full+"건 · 사진 빠짐 "+(records.length-full)+"건";
+var box=document.getElementById("list");box.innerHTML="";
+if(!list.length){box.innerHTML="<p class='muted'>아직 기록이 없어요. 위에서 첫 기록을 남겨 보세요.</p>";return}
+list.forEach(function(r){
+var el=document.createElement("div");el.className="rec";
+var both=r.before&&r.after;
+el.innerHTML="<div class='ph'>"+[["before","BEFORE"],["after","AFTER"]].map(function(p){return "<figure>"+(r[p[0]]?"<img src='"+r[p[0]]+"' alt='"+esc(r.area)+" "+p[1]+"'>":"<span class='none'>사진 없음</span>")+"<figcaption>"+p[1]+"</figcaption></figure>"}).join("")+"</div>"+
+"<div class='info'><div class='row' style='justify-content:space-between;align-items:center'><b>"+esc(r.area||"구역 미입력")+"</b><span class='st "+(both?"full":"half")+"'>"+(both?"전후 완료":"사진 빠짐")+"</span></div>"+
+"<div class='muted' style='margin-top:3px'>"+esc(r.day)+" · "+esc(r.who||"담당 미입력")+(r.memo?" · "+esc(r.memo):"")+"</div>"+
+"<button class='del no-print' style='margin-top:7px;border:0;background:transparent;color:#cbd5e1;padding:0;font-size:11px'>기록 삭제</button></div>";
+el.querySelectorAll(".ph img").forEach(function(im){im.onclick=function(){var z=document.getElementById("zoom");z.querySelector("img").src=im.src;z.classList.add("show")}});
+el.querySelector(".del").onclick=function(){if(confirm("이 기록을 삭제할까요?")){records=records.filter(function(x){return x!==r});save();render()}};
+box.appendChild(el)})}
+document.getElementById("zoom").onclick=function(){this.classList.remove("show")};
+document.getElementById("filter").onchange=function(){filter=this.value;render()};
+document.getElementById("saveBtn").onclick=function(){
+var area=document.getElementById("area").value.trim();
+var msg=document.getElementById("msg");
+if(!area){msg.textContent="구역을 입력해 주세요.";msg.style.color="var(--bad)";document.getElementById("area").focus();return}
+if(!draft.before&&!draft.after){msg.textContent="사진을 한 장 이상 골라 주세요.";msg.style.color="var(--bad)";return}
+records.push({id:uid(),area:area,who:document.getElementById("who").value.trim(),memo:document.getElementById("memo").value.trim(),day:document.getElementById("day").value||ld(),before:draft.before,after:draft.after});
+if(!save()){records.pop();msg.textContent="저장 공간이 가득 찼어요. 오래된 기록을 지워 주세요.";msg.style.color="var(--bad)";return}
+msg.textContent="저장됐어요 ✓";msg.style.color="var(--ok)";
+draft={before:null,after:null};setSlot("before");setSlot("after");document.getElementById("memo").value="";render()};
+document.getElementById("clearForm").onclick=function(){draft={before:null,after:null};setSlot("before");setSlot("after");
+["area","memo"].forEach(function(k){document.getElementById(k).value=""});document.getElementById("msg").textContent=""};
+document.getElementById("copyBtn").onclick=function(){
+var lines=["[비포·애프터 기록] "+(filter==="all"?"전체":filter)];
+records.filter(function(r){return filter==="all"||r.area===filter}).forEach(function(r){lines.push("- "+r.day+" "+r.area+" · "+(r.who||"-")+" · "+(r.before&&r.after?"전후 사진 완료":"사진 빠짐")+(r.memo?" · "+r.memo:""))});
+var text=lines.join("\n"),b=this;
+var ok=function(){b.textContent="복사됐어요 ✓";setTimeout(function(){b.textContent="목록 복사"},1400)};
+if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(ok,function(){prompt("복사하세요",text)});else prompt("복사하세요",text)};
+document.getElementById("printBtn").onclick=function(){window.print()};
+document.getElementById("sampleBtn").onclick=function(){if(confirm("예시 기록으로 되돌릴까요? 지금 기록은 지워져요.")){seed();save();filter="all";render()}};
+document.getElementById("day").value=ld();
+load();if(!records.length){seed();save()}render();
+})();
+</script></body></html>

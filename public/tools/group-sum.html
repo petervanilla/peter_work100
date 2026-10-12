@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>항목별 합계표</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#b45309;--bad:#e11d48;--r:14px}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+[hidden]{display:none!important}
+.wrap{max-width:1000px;margin:0 auto}h1{font-size:18px;font-weight:800;letter-spacing:-.02em}.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04);min-width:0}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:7px 11px;font-weight:700;font-size:12px;transition:.12s}button:hover{border-color:#c7cddb;background:#fafafa}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}button.primary:hover{filter:brightness(1.07)}
+input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:13px;min-width:0}
+textarea{resize:vertical;min-height:150px;line-height:1.5;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;white-space:pre}
+input[type=checkbox]{width:16px;height:16px;accent-color:var(--brand);cursor:pointer}
+input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:11px;font-weight:800;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}.grow{flex:1;min-width:110px}.muted{color:var(--sub);font-size:12px}.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{border-bottom:1px solid var(--line);padding:7px 6px;text-align:left}th{font-size:11px;color:var(--sub);background:#f8fafc}td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tr.tot td{font-weight:900;background:#f8fafc;border-top:2px solid var(--line)}
+.pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap}
+.ok{background:#ecfdf5;color:#047857}.wn{background:#fffbeb;color:#b45309}.in{background:#eef2ff;color:#4338ca}
+.bar{height:8px;background:#eef2f7;border-radius:99px;overflow:hidden;min-width:60px}.bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--brand),#8b5cf6)}
+.usecases{margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}.usecases h2{font-size:12px;font-weight:800;color:var(--sub);margin-bottom:6px}.usecases li{font-size:12px;color:var(--sub);margin-left:15px;margin-bottom:3px}
+.chk{display:flex;gap:10px;flex-wrap:wrap}.chk label{display:flex;gap:6px;align-items:center;margin:0;font-size:12px;color:var(--ink);cursor:pointer}
+@media print{body{background:#fff;padding:0}.no-print{display:none!important}.card{box-shadow:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>🧮 항목별 합계표</h1><p class="sub">엑셀 표를 그대로 붙여 넣고 "무엇별로"(부서·품목 등)와 "무엇을"(금액·수량 등)만 고르면 합계·평균·건수를 바로 정리해 줘요. 파일은 이 브라우저 밖으로 나가지 않아요.</p></header>
+
+<section class="card">
+  <div class="row" style="justify-content:space-between"><label for="src" style="margin:0">표 붙여 넣기 (엑셀에서 복사 → 붙여 넣기)</label><span class="muted" id="parseInfo"></span></div>
+  <textarea id="src" spellcheck="false" style="margin-top:6px"></textarea>
+  <div class="row no-print" style="margin-top:8px"><label style="display:flex;gap:8px;align-items:center;margin:0 0 8px;cursor:pointer;font-size:12px;color:var(--ink)"><input id="head" type="checkbox"> 첫 줄은 제목이에요</label><div><label for="file">또는 CSV·텍스트 파일 열기</label><input id="file" type="file" accept=".csv,.txt,.tsv,text/csv,text/plain"></div><button id="sample">예시 데이터</button></div>
+</section>
+
+<section class="card">
+  <div class="row">
+    <div class="grow"><label for="gcol">무엇별로 묶을까요?</label><select id="gcol"></select></div>
+    <div><label for="agg">계산 방법</label><select id="agg"><option value="sum">합계</option><option value="avg">평균</option><option value="count">건수</option><option value="max">최대</option><option value="min">최소</option></select></div>
+    <div><label for="sort">정렬</label><select id="sort"><option value="desc">큰 값 순</option><option value="asc">작은 값 순</option><option value="name">이름 순</option><option value="orig">입력 순서</option></select></div>
+  </div>
+  <div style="margin-top:8px" id="vwrap"><label>무엇을 계산할까요? (숫자 열)</label><div class="chk" id="vcols"></div></div>
+</section>
+
+<section class="card">
+  <div class="row" style="justify-content:space-between;align-items:center"><b style="font-size:13px">정리 결과</b><span class="muted" id="resInfo"></span></div>
+  <div class="scroll" style="margin-top:6px"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+  <div class="row no-print" style="margin-top:10px"><button class="primary" id="copy">결과 복사(엑셀용)</button><button id="csv">CSV 내려받기</button><button id="print">인쇄·PDF</button></div>
+</section>
+
+<div class="usecases"><h2>이럴 때 좋아요</h2><ul>
+<li><b>회계</b> · 경비·매출 내역을 부서별·계정별로 묶어 합계를 확인할 때</li>
+<li><b>총무</b> · 신청 명단을 부서별 인원수로 빠르게 세어 볼 때</li>
+<li><b>모든 직장인</b> · 피벗 테이블을 만들기 번거로운 간단한 표를 바로 집계할 때</li></ul></div>
+</div>
+
+<script>
+(function(){"use strict";
+var KEY="group-sum-v1";
+function load(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+var AGG={sum:"합계",avg:"평균",count:"건수",max:"최대",min:"최소"};
+var SAMPLE="부서\t항목\t금액\t건수\n영업팀\t교통비\t182000\t6\n영업팀\t접대비\t450000\t3\n개발팀\t장비\t1250000\t2\n개발팀\t교육비\t380000\t4\n개발팀\t교통비\t64000\t3\n마케팅팀\t광고비\t2100000\t5\n마케팅팀\t접대비\t210000\t2\n총무팀\t소모품\t156000\t7\n총무팀\t교통비\t38000\t2\n영업팀\t소모품\t72000\t3\n마케팅팀\t교육비\t240000\t1\n총무팀\t교육비\t90000\t1";
+var S=load(KEY,null);if(!S||typeof S.text!=="string")S={text:SAMPLE,head:true,g:"부서",v:["금액"],agg:"sum",sort:"desc"};
+function detect(text){var line=(text.split(/\r?\n/).filter(function(l){return l.trim()})[0])||"",best="\t",bc=-1;["\t",",",";","|"].forEach(function(d){var c=line.split(d).length-1;if(c>bc){bc=c;best=d}});return bc>0?best:"\t"}
+function parseTable(text,delim){var rows=[],row=[],cur="",q=false,i,c;for(i=0;i<text.length;i++){c=text.charAt(i);
+  if(q){if(c==='"'){if(text.charAt(i+1)==='"'){cur+='"';i++}else q=false}else cur+=c}
+  else if(c==='"'&&cur===""){q=true}else if(c===delim){row.push(cur);cur=""}
+  else if(c==="\n"||c==="\r"){if(c==="\r"&&text.charAt(i+1)==="\n")i++;row.push(cur);cur="";rows.push(row);row=[]}else cur+=c}
+ row.push(cur);rows.push(row);return rows.filter(function(r){return r.some(function(x){return x.trim()!==""})})}
+function pn(s){s=String(s==null?"":s).trim();if(!s)return NaN;var neg=/^\(.*\)$/.test(s)||/^-/.test(s),t=s.replace(/[^\d.]/g,"");if(!t||t==="."||isNaN(+t))return NaN;return neg?-(+t):+t}
+function model(){var rows=parseTable(S.text,detect(S.text));if(!rows.length)return{cols:[],data:[],numeric:[],rows:0};
+ var width=rows.reduce(function(m,r){return Math.max(m,r.length)},0),cols=[],data;
+ if(S.head){cols=rows[0].map(function(x,i){return (x.trim()||"열"+(i+1))});for(var k=cols.length;k<width;k++)cols.push("열"+(k+1));data=rows.slice(1)}
+ else{for(var j=0;j<width;j++)cols.push("열"+(j+1));data=rows}
+ var seen={};cols=cols.map(function(c){seen[c]=(seen[c]||0)+1;return seen[c]>1?c+"("+seen[c]+")":c});
+ var numeric=cols.map(function(c,ci){var f=0,n=0;data.forEach(function(r){var v=r[ci];if(v!=null&&String(v).trim()!==""){f++;if(!isNaN(pn(v)))n++}});return f>0&&n/f>=0.7});
+ return{cols:cols,data:data,numeric:numeric,rows:data.length}}
+function fmt(v){return Math.abs(v)>=1000?Math.round(v).toLocaleString("ko-KR"):String(Math.round(v*100)/100)}
+function compute(m){var gi=m.cols.indexOf(S.g);if(gi<0)return null;var vi=S.agg==="count"?[]:S.v.map(function(n){return m.cols.indexOf(n)}).filter(function(i){return i>=0});
+ var map={},order=[],skipped=0;
+ m.data.forEach(function(r){var key=String(r[gi]==null?"":r[gi]).trim()||"(빈 값)";if(!map[key]){map[key]={n:0,s:vi.map(function(){return{sum:0,c:0,max:-Infinity,min:Infinity}})};order.push(key)}var g=map[key];g.n++;
+  vi.forEach(function(ci,k){var v=pn(r[ci]);if(isNaN(v)){skipped++;return}var a=g.s[k];a.sum+=v;a.c++;if(v>a.max)a.max=v;if(v<a.min)a.min=v})});
+ function val(a,n){if(S.agg==="count")return n;if(!a.c)return 0;return S.agg==="avg"?a.sum/a.c:S.agg==="max"?a.max:S.agg==="min"?a.min:a.sum}
+ var heads=S.agg==="count"?["건수"]:vi.map(function(ci){return m.cols[ci]}),res=order.map(function(k){var g=map[k];return{k:k,vals:S.agg==="count"?[g.n]:g.s.map(function(a){return val(a,g.n)}),n:g.n}});
+ var tot=heads.map(function(h,i){if(S.agg==="count")return res.reduce(function(a,r){return a+r.n},0);var all=[];m.data.forEach(function(r){var v=pn(r[vi[i]]);if(!isNaN(v))all.push(v)});if(!all.length)return 0;
+  return S.agg==="avg"?all.reduce(function(a,b){return a+b},0)/all.length:S.agg==="max"?Math.max.apply(null,all):S.agg==="min"?Math.min.apply(null,all):all.reduce(function(a,b){return a+b},0)});
+ if(S.sort==="desc")res.sort(function(a,b){return b.vals[0]-a.vals[0]});else if(S.sort==="asc")res.sort(function(a,b){return a.vals[0]-b.vals[0]});else if(S.sort==="name")res.sort(function(a,b){return a.k.localeCompare(b.k)});
+ return{heads:heads,res:res,tot:tot,skipped:skipped,gname:S.g}}
+function options(m){var g=S.g;if(m.cols.indexOf(g)<0){var gi=m.numeric.map(function(n,i){return n?-1:i}).filter(function(i){return i>=0});S.g=m.cols[gi.length?gi[0]:0]||""}
+ var nums=m.cols.filter(function(c,i){return m.numeric[i]&&c!==S.g});S.v=S.v.filter(function(n){return nums.indexOf(n)>=0});if(!S.v.length&&nums.length)S.v=[nums[0]];
+ $("gcol").innerHTML=m.cols.map(function(c){return '<option'+(c===S.g?' selected':'')+'>'+esc(c)+'</option>'}).join("");
+ $("vcols").innerHTML=nums.length?nums.map(function(c){return '<label><input type="checkbox" data-v="'+esc(c)+'"'+(S.v.indexOf(c)>=0?' checked':'')+'> '+esc(c)+'</label>'}).join(""):'<span class="muted">숫자로 읽을 수 있는 열이 없어요. 「건수」로 세어 볼 수 있어요.</span>';
+ $("vwrap").hidden=S.agg==="count"}
+function render(){var m=model();$("src").value=S.text;$("head").checked=!!S.head;$("agg").value=S.agg;$("sort").value=S.sort;
+ $("parseInfo").textContent=m.rows?m.rows+"행 · "+m.cols.length+"열 읽음":"표를 붙여 넣어 주세요";options(m);var r=m.rows?compute(m):null;
+ if(!r||!r.heads.length){$("thead").innerHTML="";$("tbody").innerHTML='<tr><td class="muted">'+(m.rows?"계산할 숫자 열을 골라 주세요.":"표를 붙여 넣으면 결과가 여기에 나와요.")+'</td></tr>';$("resInfo").textContent="";save(KEY,S);return}
+ $("thead").innerHTML='<tr><th>'+esc(r.gname)+'</th>'+r.heads.map(function(h){return '<th class="n">'+esc(h)+(S.agg!=="count"?" ("+AGG[S.agg]+")":"")+'</th>'}).join("")+(S.agg==="sum"||S.agg==="count"?'<th style="min-width:110px">비중</th>':'')+'</tr>';
+ var denom=r.tot[0]||1,show=S.agg==="sum"||S.agg==="count";
+ $("tbody").innerHTML=r.res.map(function(x){var p=denom?Math.max(0,x.vals[0]/denom*100):0;return '<tr><td>'+esc(x.k)+'</td>'+x.vals.map(function(v){return '<td class="n">'+fmt(v)+'</td>'}).join("")+(show?'<td><div style="display:flex;gap:6px;align-items:center"><div class="bar" style="flex:1"><i style="width:'+Math.min(100,p)+'%"></i></div><span class="muted" style="min-width:34px;text-align:right">'+p.toFixed(0)+'%</span></div></td>':'')+'</tr>'}).join("")+
+  '<tr class="tot"><td>전체'+(S.agg==="sum"||S.agg==="count"?" 합계":" "+AGG[S.agg])+'</td>'+r.tot.map(function(v){return '<td class="n">'+fmt(v)+'</td>'}).join("")+(show?'<td></td>':'')+'</tr>';
+ $("resInfo").textContent=r.res.length+"개 항목"+(r.skipped?" · 숫자가 아니어서 건너뛴 칸 "+r.skipped+"개":"");save(KEY,S)}
+function table(){var m=model(),r=compute(m);if(!r)return[];var out=[[r.gname].concat(r.heads.map(function(h){return h+(S.agg!=="count"?"("+AGG[S.agg]+")":"")}))];r.res.forEach(function(x){out.push([x.k].concat(x.vals.map(function(v){return Math.round(v*100)/100})))});out.push(["전체"].concat(r.tot.map(function(v){return Math.round(v*100)/100})));return out}
+$("src").addEventListener("input",function(){S.text=this.value;render()});
+$("head").addEventListener("change",function(){S.head=this.checked;render()});
+$("gcol").addEventListener("change",function(){S.g=this.value;render()});
+$("agg").addEventListener("change",function(){S.agg=this.value;render()});$("sort").addEventListener("change",function(){S.sort=this.value;render()});
+$("vcols").addEventListener("change",function(e){var n=e.target.getAttribute("data-v");if(!n)return;var i=S.v.indexOf(n);if(e.target.checked&&i<0)S.v.push(n);if(!e.target.checked&&i>=0)S.v.splice(i,1);render()});
+$("sample").onclick=function(){S={text:SAMPLE,head:true,g:"부서",v:["금액"],agg:"sum",sort:"desc"};render()};
+$("file").addEventListener("change",function(){var f=this.files&&this.files[0];if(!f)return;var fr=new FileReader();fr.onload=function(){var buf=fr.result,txt="";try{txt=new TextDecoder("utf-8").decode(buf);if(txt.indexOf("\uFFFD")>=0)txt=new TextDecoder("euc-kr").decode(buf)}catch(e){try{txt=new TextDecoder("utf-8").decode(buf)}catch(e2){txt=""}}
+ S.text=txt.replace(/^\uFEFF/,"");render()};fr.readAsArrayBuffer(f)});
+$("print").onclick=function(){window.print()};
+$("copy").onclick=function(){var t=table().map(function(r){return r.join("\t")}).join("\n"),b=this,done=function(){b.textContent="복사됐어요 ✓";setTimeout(function(){b.textContent="결과 복사(엑셀용)"},1400)};
+ var fb=function(){var ta=document.createElement("textarea");ta.value=t;ta.style.cssText="position:fixed;opacity:0";document.body.appendChild(ta);ta.select();var ok=false;try{ok=document.execCommand("copy")}catch(e){}ta.remove();if(ok)done();else window.prompt("복사가 막혀 있어요. 아래 글을 직접 복사해 주세요.",t)};
+ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,fb)}else fb()};
+function csvCell(c){c=String(c==null?"":c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c}
+$("csv").onclick=function(){var t="\uFEFF"+table().map(function(r){return r.map(csvCell).join(",")}).join("\r\n"),b=new Blob([t],{type:"text/csv;charset=utf-8"});
+ if(window.URL&&URL.createObjectURL){var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="group-sum.csv";document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500)}};
+render();
+})();
+</script>
+</body>
+</html>

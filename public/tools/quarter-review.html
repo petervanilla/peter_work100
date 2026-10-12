@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>분기 목표 회고·채점</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#d97706;--bad:#e11d48;--soft:#f8fafc}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+.wrap{max-width:940px;margin:0 auto}h1{font-size:18px;font-weight:800;letter-spacing:-.02em}.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04)}
+.card h2{font-size:13px;font-weight:900;margin-bottom:9px;display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:7px 11px;font-weight:700;font-size:12px;transition:.12s}button:hover{border-color:var(--brand)}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border:0}
+button.on{background:var(--brand);color:#fff;border-color:transparent}
+input,select,textarea{font:inherit;width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);font-size:13px;font-family:inherit}
+textarea{resize:vertical;min-height:58px;line-height:1.55}
+input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:10px;font-weight:800;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:end}.muted{font-size:11px;color:var(--sub)}.grow{flex:1;min-width:130px}
+.hero{display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:linear-gradient(135deg,#312e81,#4f46e5);color:#fff;border-radius:14px;padding:16px;margin-top:12px}
+.hero .ring{font-size:52px;font-weight:950;letter-spacing:-.05em;line-height:1;font-variant-numeric:tabular-nums}
+.hero .g{font-size:17px;font-weight:900;padding:4px 12px;border-radius:99px;background:rgba(255,255,255,.16)}
+.hero .mini{flex:1;min-width:96px}
+.hero .mini span{font-size:10px;color:#c7d2fe;display:block}
+.hero .mini b{font-size:15px;font-variant-numeric:tabular-nums}
+.item{border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:8px;background:var(--soft)}
+.item .top{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.item .nm{flex:1;min-width:150px;border:0;background:transparent;font-weight:800;font-size:13px;padding:2px}
+.item input.n{width:84px;text-align:right}
+.item .sc{font-size:16px;font-weight:950;min-width:52px;text-align:right;font-variant-numeric:tabular-nums}
+.bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden;margin-top:7px}.bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--brand),var(--brand2))}
+.bar i.mid{background:linear-gradient(90deg,#f59e0b,#fbbf24)}.bar i.low{background:linear-gradient(90deg,#fb7185,var(--bad))}
+.item .rm{border:0;background:transparent;color:#cbd5e1;padding:2px 5px}
+.notes{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-top:10px}
+@media(max-width:720px){.notes{grid-template-columns:1fr}.item input.n{width:70px}}
+.usecases{margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}.usecases h2{font-size:12px;font-weight:900;color:var(--sub);margin-bottom:5px}
+.usecases li{font-size:11px;color:var(--sub);margin-left:15px;margin-bottom:3px}
+@media print{body{background:#fff;padding:0}.no-print{display:none!important}.hero{-webkit-print-color-adjust:exact;print-color-adjust:exact}.item,.card{break-inside:avoid}}
+</style></head><body><div class="wrap">
+<header><h1>🏁 분기 목표 회고·채점</h1><p class="sub">분기 목표별로 목표값·실적·가중치를 넣으면 가중 총점과 등급이 자동으로 나와요. 회고 3칸까지 채워 한 장으로 마무리하세요.</p></header>
+
+<section class="card no-print">
+<div class="row">
+<div class="grow" style="max-width:180px"><label for="quarter">분기 · 팀</label><input id="quarter" placeholder="예: 2026 4분기 · 프로덕트 1팀"></div>
+<div class="grow"><label for="owner">작성자 · 직책</label><input id="owner" placeholder="예: 김보고 팀장"></div>
+<div style="max-width:150px"><label for="gradedBy">채점 기준일</label><input id="gradedBy" type="date"></div>
+</div>
+</section>
+
+<div class="hero">
+<div><div class="muted" style="color:#c7d2fe;font-weight:800;font-size:10px;letter-spacing:.1em">가중 총점</div><div class="ring" id="totalScore">0</div></div>
+<div class="g" id="grade">—</div>
+<div class="mini"><span>목표 수</span><b id="cntOut">0</b></div>
+<div class="mini"><span>달성(90%↑)</span><b id="hitOut">0</b></div>
+<div class="mini"><span>미달(60%↓)</span><b id="missOut">0</b></div>
+<div class="mini"><span>가중치 합</span><b id="weightOut">100</b></div>
+</div>
+
+<section class="card">
+<h2>목표별 채점<span class="row no-print" style="gap:6px"><button id="addItem">＋ 목표 추가</button><button id="sampleBtn">예시로 되돌리기</button></span></h2>
+<div id="items"></div>
+<p class="muted" style="margin-top:8px">채점 = 실적 ÷ 목표 × 100 (상한 150). 「낮을수록 좋음」은 실적 ÷ 목표의 역으로 계산해요. 가중치 합은 100이 되면 좋지만, 아니어도 총점은 자동 정규화합니다.</p>
+</section>
+
+<section class="card">
+<h2>회고 3칸</h2>
+<div class="notes">
+<div><label for="good">✅ 잘한 점</label><textarea id="good" placeholder="예: 배포 자동화로 지연 건수 절반으로 감소"></textarea></div>
+<div><label for="bad">⚠️ 아쉬운 점</label><textarea id="bad" placeholder="예: 온보딩 이탈 구간 개선이 분기 안에 끝나지 못함"></textarea></div>
+<div><label for="next">🎯 다음 분기 다짐</label><textarea id="next" placeholder="예: 10월 중 온보딩 3단계 개선 완료"></textarea></div>
+</div>
+<div class="row no-print" style="margin-top:11px"><button class="primary" id="copyBtn">회고 보고로 복사</button><button id="printBtn">인쇄 · PDF</button></div>
+</section>
+
+<div class="usecases"><h2>이럴 때 좋아요</h2><ul>
+<li><b>팀장</b> · 분기가 끝나면 목표마다 얼만큼 채웠는지 점수로 정리해 상위에 보고해야 할 때 — 가중 총점과 등급이 바로 나와요.</li>
+<li><b>기획</b> · 프로젝트 마감 후 무엇이 성공했고 무엇이 밀렸는지 기록해야 할 때 — 숫자 채점과 회고 3칸을 한 페이지에 담아요.</li>
+<li><b>모든 직장인</b> · 개인 OKR을 스스로 마감 채점하고 다음 분기 방향을 세울 때 — 잘한 점·아쉬운 점·다짐을 같은 양식으로 남겨요.</li>
+</ul></div>
+</div>
+<script>
+(function(){"use strict";
+var KEY="quarter-review-v1";
+function uid(){return "q"+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}
+function ld(d){d=d||new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function esc(s){return String(s==null?"":s).replace(/[&<>\"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'\"':"&quot;"}[c]})}
+function num(v){var n=parseFloat(v);return isFinite(n)?n:0}
+var SAMPLE={quarter:"2026 4분기 · 프로덕트 1팀",owner:"김보고 팀장",gradedBy:ld(),good:"배포 자동화 도입으로 지연 건수 절반 감소",bad:"온보딩 3단계 이탈 개선이 지연됨",next:"10월 중 온보딩 3단계 개선 완료",items:[
+{id:uid(),name:"신규 고객 온보딩 완료율",goal:75,act:58,weight:30,lower:false},
+{id:uid(),name:"결제 성공률",goal:99,act:99.2,weight:25,lower:false},
+{id:uid(),name:"결제 API 응답시간",goal:150,act:210,weight:20,lower:true},
+{id:uid(),name:"고객 문의 첫 응답시간",goal:15,act:13,weight:15,lower:false},
+{id:uid(),name:"배포 지연 건수",goal:0,act:1,weight:10,lower:true}]};
+var state=JSON.parse(JSON.stringify(SAMPLE));
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+function load(){try{var s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&s.items)state=s}catch(e){}}
+function scoreOf(it){
+var g=num(it.goal),a=num(it.act);
+if(g===0&&a===0)return 100;
+if(it.lower){if(a<=0)return 100;if(g<=0)return 0;return Math.max(0,Math.min(150,Math.round(g/a*100)))}
+if(g===0)return a>0?150:0;
+return Math.max(0,Math.min(150,Math.round(a/g*100)))}
+function totals(){
+var items=state.items,ws=items.reduce(function(s,i){return s+num(i.weight)},0);
+var wsum=items.reduce(function(s,i){return s+scoreOf(i)*num(i.weight)},0);
+var total=ws?Math.round(wsum/ws):0;
+return {total:total,weight:ws,
+hit:items.filter(function(i){return scoreOf(i)>=90}).length,
+miss:items.filter(function(i){return scoreOf(i)<60}).length,count:items.length}}
+function gradeOf(t){return t>=90?"A":t>=75?"B":t>=60?"C":"D"}
+function render(){
+document.getElementById("quarter").value=state.quarter||"";
+document.getElementById("owner").value=state.owner||"";
+document.getElementById("gradedBy").value=state.gradedBy||ld();
+document.getElementById("good").value=state.good||"";
+document.getElementById("bad").value=state.bad||"";
+document.getElementById("next").value=state.next||"";
+var box=document.getElementById("items");box.innerHTML="";
+state.items.forEach(function(it,i){
+var s=scoreOf(it);
+var el=document.createElement("div");el.className="item";
+el.innerHTML='<div class="top">'+
+'<span class="muted" style="font-weight:900">'+(i+1)+'</span>'+
+'<input class="nm" value="'+esc(it.name)+'" placeholder="목표 이름">'+
+'<input class="n" type="number" step="any" value="'+esc(it.goal)+'" title="목표값" aria-label="목표값">'+
+'<span class="muted">→</span>'+
+'<input class="n" type="number" step="any" value="'+esc(it.act)+'" title="실적" aria-label="실적">'+
+'<span class="muted">가중</span>'+
+'<input class="n" type="number" min="0" value="'+esc(it.weight)+'" title="가중치" aria-label="가중치">'+
+'<button class="lower '+(it.lower?"on":"")+'" title="낮을수록 좋은 지표" style="font-size:10px;padding:5px 8px">낮을수록 좋음</button>'+
+'<span class="sc" style="color:'+(s>=90?"var(--ok)":s>=60?"var(--warn)":"var(--bad)")+'">'+s+'</span>'+
+'<button class="rm" aria-label="삭제">×</button></div>'+
+'<div class="bar"><i class="'+(s>=90?"":s>=60?"mid":"low")+'" style="width:'+Math.min(s,100)+'%"></i></div>';
+var ins=el.querySelectorAll("input");
+ins[0].oninput=function(){it.name=this.value;save()};
+ins[1].oninput=function(){it.goal=this.value;save();render()};
+ins[2].oninput=function(){it.act=this.value;save();render()};
+ins[3].oninput=function(){it.weight=this.value;save();render()};
+el.querySelector(".lower").onclick=function(){it.lower=!it.lower;save();render()};
+el.querySelector(".rm").onclick=function(){state.items.splice(i,1);save();render()};
+box.appendChild(el)});
+if(!state.items.length)box.innerHTML='<p class="muted">「목표 추가」로 시작하세요.</p>';
+var t=totals();
+document.getElementById("totalScore").textContent=t.total;
+document.getElementById("grade").textContent="등급 "+gradeOf(t.total);
+document.getElementById("cntOut").textContent=t.count;
+document.getElementById("hitOut").textContent=t.hit+"개";
+document.getElementById("missOut").textContent=t.miss+"개";
+document.getElementById("weightOut").textContent=t.weight;
+save()}
+function buildText(){
+var t=totals();
+var lines=["[분기 목표 회고·채점] "+(state.quarter||""),
+"작성: "+(state.owner||"-")+" · 채점일 "+(state.gradedBy||ld()),
+"가중 총점: "+t.total+"점 · 등급 "+gradeOf(t.total)+" (달성 "+t.hit+"/"+t.count+")",""];
+state.items.forEach(function(it){var s=scoreOf(it);
+lines.push("- "+it.name+": 목표 "+it.goal+" → 실적 "+it.act+" ("+s+"점, 가중 "+num(it.weight)+")"+(it.lower?" [낮을수록 좋음]":""))});
+lines.push("","【회고】","잘한 점: "+(state.good||"-"),"아쉬운 점: "+(state.bad||"-"),"다음 분기 다짐: "+(state.next||"-"));
+return lines.join("\n")}
+["quarter","owner","gradedBy","good","bad","next"].forEach(function(k){document.getElementById(k).addEventListener("input",function(){state[k]=this.value;save()})});
+document.getElementById("addItem").onclick=function(){state.items.push({id:uid(),name:"새 목표",goal:100,act:0,weight:10,lower:false});save();render()};
+document.getElementById("copyBtn").onclick=function(){var t=buildText(),b=this;
+var ok=function(){b.textContent="복사됐어요 ✓";setTimeout(function(){b.textContent="회고 보고로 복사"},1400)};
+if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(ok,function(){prompt("복사하세요",t)});else prompt("복사하세요",t)};
+document.getElementById("printBtn").onclick=function(){window.print()};
+document.getElementById("sampleBtn").onclick=function(){if(confirm("예시 분기로 되돌릴까요?")){state=JSON.parse(JSON.stringify(SAMPLE));save();render()}};
+load();render();
+})();
+</script></body></html>

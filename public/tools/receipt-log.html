@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>자재 입고·영수증 기록장</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#d97706;--bad:#e11d48;--soft:#f8fafc}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+.wrap{max-width:1020px;margin:0 auto}h1{font-size:18px;font-weight:800;letter-spacing:-.02em}.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04)}
+.card h2{font-size:13px;font-weight:900;margin-bottom:9px;display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:7px 11px;font-weight:700;font-size:12px;transition:.12s}button:hover{border-color:var(--brand)}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border:0}
+button.on{background:var(--brand);color:#fff;border-color:transparent}
+input,select{font:inherit;width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);font-size:12.5px}
+input:focus,select:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:10px;font-weight:800;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:end}.muted{font-size:11px;color:var(--sub)}.grow{flex:1;min-width:120px}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.chip{flex:1;min-width:130px;padding:11px 13px;border-radius:13px;border:1px solid var(--line);background:var(--card)}
+.chip span{font-size:10px;font-weight:800;color:var(--sub);display:block}
+.chip b{font-size:18px;font-weight:950;display:block;margin-top:2px;font-variant-numeric:tabular-nums}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:11px}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:760px}
+th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:right;vertical-align:middle}
+th{font-size:10px;color:var(--sub);background:var(--soft);font-weight:800}
+.l{text-align:left}
+.thumb{width:42px;height:32px;object-fit:cover;border-radius:6px;border:1px solid var(--line);cursor:zoom-in;display:block;margin-left:auto}
+.noimg{display:inline-grid;place-items:center;width:42px;height:32px;border-radius:6px;border:1px dashed var(--line);color:var(--sub);font-size:9px;cursor:pointer}
+.pill{display:inline-flex;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:900;white-space:nowrap;cursor:pointer;border:0}
+.done{background:#ecfdf5;color:#047857}.wait{background:#fffbeb;color:#b45309}
+#zoom{position:fixed;inset:0;background:rgba(15,23,42,.9);display:none;place-items:center;padding:16px;z-index:50;cursor:zoom-out}
+#zoom.show{display:grid}#zoom img{max-width:100%;max-height:92vh;border-radius:10px}
+.usecases{margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}.usecases h2{font-size:12px;font-weight:900;color:var(--sub);margin-bottom:5px}
+.usecases li{font-size:11px;color:var(--sub);margin-left:15px;margin-bottom:3px}
+@media print{body{background:#fff;padding:0}.no-print{display:none!important}.tbl{overflow:visible}table{min-width:0}}
+</style></head><body><div class="wrap">
+<header><h1>🧾 자재 입고·영수증 기록장</h1><p class="sub">자재를 받으면 품목·수량·단가·거래처를 적고 영수증 사진을 붙여요. 금액은 자동 계산되고, 월 합계와 미정산이 따로 모여요.</p></header>
+
+<section class="card no-print">
+<h2>입고 기록</h2>
+<div class="row">
+<div style="max-width:140px"><label for="fDay">입고일</label><input id="fDay" type="date"></div>
+<div class="grow" style="min-width:150px"><label for="fItem">품목</label><input id="fItem" placeholder="예: 원두 1kg"></div>
+<div style="max-width:80px"><label for="fQty">수량</label><input id="fQty" type="number" min="0" step="any" value="1"></div>
+<div style="max-width:110px"><label for="fPrice">단가(원)</label><input id="fPrice" type="number" min="0" step="10" placeholder="24000"></div>
+<div style="max-width:130px"><label>금액(자동)</label><input id="fAmount" readonly tabindex="-1" style="background:var(--soft);font-weight:800"></div>
+</div>
+<div class="row" style="margin-top:8px">
+<div class="grow"><label for="fVendor">거래처</label><input id="fVendor" placeholder="예: 한빛푸드" list="vendorList"><datalist id="vendorList"></datalist></div>
+<div style="max-width:120px"><label for="fWho">받은 사람</label><input id="fWho" placeholder="예: 박서준"></div>
+<div class="grow"><label for="fPhoto">영수증 사진 (선택)</label><input id="fPhoto" type="file" accept="image/*" capture="environment"></div>
+<label style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:12px;font-weight:700;cursor:pointer"><input id="fPaid" type="checkbox" style="width:16px;height:16px;accent-color:var(--brand)"> 정산 완료</label>
+<button class="primary" id="addBtn" style="margin-bottom:0">＋ 기록</button>
+</div>
+<p class="muted" id="msg" style="margin-top:6px">사진은 줄여서 이 브라우저에만 저장돼요.</p>
+</section>
+
+<div class="stats" id="stats"></div>
+
+<section class="card">
+<h2>입고 장부<span class="row no-print" style="gap:6px"><select id="fMonth" style="width:auto;min-width:120px"></select><button id="onlyWait">미정산만</button><button id="copyBtn">월 정산 복사</button><button id="csvBtn">CSV</button><button id="printBtn">인쇄</button><button id="sampleBtn">예시로 되돌리기</button></span></h2>
+<div class="tbl"><table><thead><tr><th class="l">입고일</th><th class="l">품목</th><th class="l">거래처</th><th class="l">받은 사람</th><th>수량</th><th>단가</th><th>금액</th><th>영수증</th><th>정산</th><th class="no-print"></th></tr></thead><tbody id="rows"></tbody></table></div>
+</section>
+
+<section class="card"><h2>거래처별 합계 (선택한 달)</h2><div id="vendors"></div></section>
+
+<div class="usecases"><h2>이럴 때 좋아요</h2><ul>
+<li><b>알바·직원</b> · 자재를 받았는데 사장님이 안 계실 때 — 받은 즉시 기록하고 영수증 사진을 붙이면 전달이 끝나요.</li>
+<li><b>사장님(가게)</b> · 월말에 거래처별로 얼마를 줘야 하는지 정리할 때 — 거래처별 합계와 미정산 금액이 자동으로 모여요.</li>
+<li><b>회계</b> · 증빙이 빠진 건을 찾아야 할 때 — 영수증 사진이 없는 기록이 따로 표시돼요.</li>
+</ul></div>
+</div>
+<div id="zoom"><img alt="영수증 크게 보기"></div>
+<script>
+(function(){"use strict";
+var KEY="receipt-log-v1";
+function uid(){return "r"+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}
+function ld(d){d=d||new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function num(v){var n=parseFloat(v);return isFinite(n)&&n>0?n:0}
+function won(n){return Math.round(n||0).toLocaleString("ko-KR")+"원"}
+var rows=[],month="",onlyWait=false,pending=null,attachTo=null;
+function save(){try{localStorage.setItem(KEY,JSON.stringify(rows));return true}catch(e){return false}}
+function load(){try{var s=JSON.parse(localStorage.getItem(KEY)||"null");if(Array.isArray(s))rows=s}catch(e){}}
+function seed(){var t=new Date();rows=[];
+[[0,"원두 1kg",4,24000,"한빛푸드","박서준",false],[-1,"우유 1L",24,2400,"서울우유 대리점","이하늘",true],[-2,"테이크아웃 컵 1000개",1,62000,"패키지마트","최민지",false],[-4,"시럽 1L",3,9800,"한빛푸드","박서준",true],[-6,"주방 세제 4L",2,11500,"생활도매","정우진",true]].forEach(function(r){
+var d=new Date(t);d.setDate(d.getDate()+r[0]);rows.push({id:uid(),day:ld(d),item:r[1],qty:r[2],price:r[3],vendor:r[4],who:r[5],paid:r[6],photo:null})})}
+function amount(r){return num(r.qty)*num(r.price)}
+function shrink(file,cb){var fr=new FileReader();
+fr.onload=function(){var img=new Image();img.onload=function(){var m=720,k=Math.min(1,m/Math.max(img.width,img.height));
+var c=document.createElement("canvas");c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
+c.getContext("2d").drawImage(img,0,0,c.width,c.height);try{cb(c.toDataURL("image/jpeg",0.7))}catch(e){cb(null)}};
+img.onerror=function(){cb(null)};img.src=fr.result};fr.onerror=function(){cb(null)};fr.readAsDataURL(file)}
+function updAmount(){document.getElementById("fAmount").value=won(num(document.getElementById("fQty").value)*num(document.getElementById("fPrice").value))}
+function monthsList(){var m={};rows.forEach(function(r){m[r.day.slice(0,7)]=1});m[ld().slice(0,7)]=1;return Object.keys(m).sort().reverse()}
+function inView(){return rows.filter(function(r){return r.day.slice(0,7)===month&&(!onlyWait||!r.paid)}).sort(function(a,b){return a.day<b.day?1:a.day>b.day?-1:0})}
+function render(){
+var ms=monthsList();if(!month||ms.indexOf(month)<0)month=ms[0];
+var sel=document.getElementById("fMonth");sel.innerHTML=ms.map(function(m){return "<option value='"+m+"'>"+m.replace("-","년 ")+"월</option>"}).join("");sel.value=month;
+var vs={};rows.forEach(function(r){if(r.vendor)vs[r.vendor]=1});
+document.getElementById("vendorList").innerHTML=Object.keys(vs).map(function(v){return "<option value='"+esc(v)+"'>"}).join("");
+var mrows=rows.filter(function(r){return r.day.slice(0,7)===month});
+var total=mrows.reduce(function(s,r){return s+amount(r)},0);
+var wait=mrows.filter(function(r){return !r.paid});
+var noPhoto=mrows.filter(function(r){return !r.photo}).length;
+document.getElementById("stats").innerHTML=[
+["이번 달 입고",mrows.length+"건","var(--ink)"],["이번 달 합계",won(total),"var(--brand)"],
+["미정산",wait.length+"건 · "+won(wait.reduce(function(s,r){return s+amount(r)},0)),wait.length?"var(--warn)":"var(--ok)"],
+["영수증 사진 없음",noPhoto+"건",noPhoto?"var(--bad)":"var(--ok)"]]
+.map(function(x){return "<div class='chip'><span>"+x[0]+"</span><b style='color:"+x[2]+"'>"+x[1]+"</b></div>"}).join("");
+var tb=document.getElementById("rows");tb.innerHTML="";
+var list=inView();
+if(!list.length)tb.innerHTML="<tr><td colspan='10' class='muted' style='text-align:center;padding:18px'>이 조건의 기록이 없어요.</td></tr>";
+list.forEach(function(r){
+var tr=document.createElement("tr");
+tr.innerHTML="<td class='l'>"+esc(r.day.slice(5).replace("-","/"))+"</td><td class='l'><b>"+esc(r.item)+"</b></td><td class='l'>"+esc(r.vendor||"—")+"</td><td class='l'>"+esc(r.who||"—")+"</td>"+
+"<td>"+num(r.qty)+"</td><td>"+won(r.price)+"</td><td><b>"+won(amount(r))+"</b></td>"+
+"<td>"+(r.photo?"<img class='thumb' src='"+r.photo+"' alt='"+esc(r.item)+" 영수증'>":"<span class='noimg' title='사진 붙이기'>사진＋</span>")+"</td>"+
+"<td><button class='pill "+(r.paid?"done":"wait")+"' title='눌러서 정산 상태 바꾸기'>"+(r.paid?"정산 완료":"미정산")+"</button></td>"+
+"<td class='no-print'><button class='del' aria-label='삭제' style='border:0;background:transparent;color:#cbd5e1;padding:2px 5px'>×</button></td>";
+var th=tr.querySelector(".thumb");if(th)th.onclick=function(){var z=document.getElementById("zoom");z.querySelector("img").src=r.photo;z.classList.add("show")};
+var ni=tr.querySelector(".noimg");if(ni)ni.onclick=function(){attachTo=r;document.getElementById("fPhoto").click()};
+tr.querySelector(".pill").onclick=function(){r.paid=!r.paid;save();render()};
+tr.querySelector(".del").onclick=function(){if(confirm("「"+r.item+"」 기록을 삭제할까요?")){rows=rows.filter(function(x){return x!==r});save();render()}};
+tb.appendChild(tr)});
+var byV={};mrows.forEach(function(r){var k=r.vendor||"(거래처 미입력)";if(!byV[k])byV[k]={sum:0,wait:0,n:0};byV[k].sum+=amount(r);byV[k].n++;if(!r.paid)byV[k].wait+=amount(r)});
+var keys=Object.keys(byV).sort(function(a,b){return byV[b].sum-byV[a].sum});
+document.getElementById("vendors").innerHTML=keys.length?keys.map(function(k){var v=byV[k];
+return "<div class='row' style='justify-content:space-between;padding:7px 2px;border-bottom:1px dashed var(--line);font-size:12.5px'><b>"+esc(k)+"</b><span>"+v.n+"건 · <b>"+won(v.sum)+"</b>"+(v.wait?" · <span style='color:var(--warn)'>미정산 "+won(v.wait)+"</span>":"")+"</span></div>"}).join(""):"<p class='muted'>이 달 기록이 없어요.</p>";
+save()}
+["fQty","fPrice"].forEach(function(k){document.getElementById(k).addEventListener("input",updAmount)});
+document.getElementById("fPhoto").addEventListener("change",function(){var f=this.files[0];if(!f)return;var target=attachTo;attachTo=null;
+shrink(f,function(d){if(!d){alert("사진을 읽지 못했어요.");return}
+if(target){target.photo=d;if(!save()){target.photo=null;alert("저장 공간이 가득 찼어요.")}render()}else{pending=d;document.getElementById("msg").textContent="영수증 사진이 준비됐어요. 「기록」을 누르면 함께 저장돼요."}});
+if(target)this.value=""});
+document.getElementById("addBtn").onclick=function(){
+var item=document.getElementById("fItem").value.trim(),price=num(document.getElementById("fPrice").value),msg=document.getElementById("msg");
+if(!item){msg.textContent="품목을 입력해 주세요.";msg.style.color="var(--bad)";return}
+if(!price){msg.textContent="단가를 입력해 주세요.";msg.style.color="var(--bad)";return}
+var r={id:uid(),day:document.getElementById("fDay").value||ld(),item:item,qty:num(document.getElementById("fQty").value)||1,price:price,
+vendor:document.getElementById("fVendor").value.trim(),who:document.getElementById("fWho").value.trim(),paid:document.getElementById("fPaid").checked,photo:pending};
+rows.push(r);if(!save()){rows.pop();msg.textContent="저장 공간이 가득 찼어요. 오래된 사진 기록을 지워 주세요.";msg.style.color="var(--bad)";return}
+pending=null;month=r.day.slice(0,7);msg.textContent="기록됐어요 ✓";msg.style.color="var(--ok)";
+["fItem","fPrice"].forEach(function(k){document.getElementById(k).value=""});document.getElementById("fQty").value="1";document.getElementById("fPaid").checked=false;document.getElementById("fPhoto").value="";updAmount();render()};
+document.getElementById("fMonth").onchange=function(){month=this.value;render()};
+document.getElementById("onlyWait").onclick=function(){onlyWait=!onlyWait;this.className=onlyWait?"on":"";render()};
+document.getElementById("zoom").onclick=function(){this.classList.remove("show")};
+document.getElementById("copyBtn").onclick=function(){
+var mrows=rows.filter(function(r){return r.day.slice(0,7)===month}),byV={};
+mrows.forEach(function(r){var k=r.vendor||"(거래처 미입력)";if(!byV[k])byV[k]={sum:0,wait:0};byV[k].sum+=amount(r);if(!r.paid)byV[k].wait+=amount(r)});
+var lines=["[자재 입고 정산] "+month,"합계 "+won(mrows.reduce(function(s,r){return s+amount(r)},0))+" · "+mrows.length+"건",""];
+Object.keys(byV).forEach(function(k){lines.push("- "+k+": "+won(byV[k].sum)+(byV[k].wait?" (미정산 "+won(byV[k].wait)+")":" (정산 완료)"))});
+var text=lines.join("\n"),b=this;
+var ok=function(){b.textContent="복사됐어요 ✓";setTimeout(function(){b.textContent="월 정산 복사"},1400)};
+if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(ok,function(){prompt("복사하세요",text)});else prompt("복사하세요",text)};
+document.getElementById("csvBtn").onclick=function(){
+function q(s){return '"'+String(s==null?"":s).replace(/"/g,'""')+'"'}
+var data=[["입고일","품목","거래처","받은 사람","수량","단가","금액","정산","영수증"]];
+rows.filter(function(r){return r.day.slice(0,7)===month}).forEach(function(r){data.push([r.day,r.item,r.vendor,r.who,num(r.qty),num(r.price),amount(r),r.paid?"완료":"미정산",r.photo?"있음":"없음"])});
+var csv="\uFEFF"+data.map(function(r){return r.map(q).join(",")}).join("\r\n");
+try{var a=document.createElement("a");a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(csv);a.download="receipt-log-"+month+".csv";a.click()}catch(e){alert("CSV 저장이 막혀 있어요. 「월 정산 복사」를 써 주세요.")}};
+document.getElementById("printBtn").onclick=function(){window.print()};
+document.getElementById("sampleBtn").onclick=function(){if(confirm("예시 장부로 되돌릴까요? 지금 기록은 지워져요.")){seed();month=ld().slice(0,7);save();render()}};
+document.getElementById("fDay").value=ld();
+load();if(!rows.length)seed();updAmount();render();
+})();
+</script></body></html>

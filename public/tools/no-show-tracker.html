@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>예약 노쇼 관리표</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#b45309;--bad:#e11d48;--r:14px}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+[hidden]{display:none!important}
+.wrap{max-width:1000px;margin:0 auto}h1{font-size:18px;font-weight:800;letter-spacing:-.02em}.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04);min-width:0}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:7px 11px;font-weight:700;font-size:12px;transition:.12s}button:hover{border-color:#c7cddb;background:#fafafa}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}button.primary:hover{filter:brightness(1.07)}
+button.ghost{border-color:transparent;background:transparent;color:var(--sub)}
+input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:13px;min-width:0}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--brand);cursor:pointer}
+input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:11px;font-weight:800;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}.grow{flex:1;min-width:100px}.muted{color:var(--sub);font-size:12px}.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{border-bottom:1px solid var(--line);padding:6px;text-align:left;vertical-align:middle}th{font-size:11px;color:var(--sub);background:#f8fafc}
+.pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap}
+.ok{background:#ecfdf5;color:#047857}.wn{background:#fffbeb;color:#b45309}.bd{background:#fef2f2;color:#be123c}.in{background:#eef2ff;color:#4338ca}
+.notice{margin-top:10px;padding:8px 10px;border-radius:10px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;font-size:11px}
+.usecases{margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}.usecases h2{font-size:12px;font-weight:800;color:var(--sub);margin-bottom:6px}.usecases li{font-size:12px;color:var(--sub);margin-left:15px;margin-bottom:3px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}.stat{border:1px solid var(--line);border-radius:12px;padding:10px;background:#f8fafc}.stat span{font-size:10px;font-weight:800;color:var(--sub);display:block}.stat b{font-size:22px;font-weight:900;display:block;margin-top:2px;font-variant-numeric:tabular-nums}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}@media(max-width:760px){.two{grid-template-columns:minmax(0,1fr)}}
+.wd{display:flex;align-items:flex-end;gap:6px;height:96px;margin-top:8px}.wc{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px;height:100%;min-width:0}.wc i{display:block;width:100%;border-radius:5px 5px 0 0;background:#c7d2fe;min-height:2px}.wc.hi i{background:#f43f5e}.wc span{font-size:10px;color:var(--sub)}.wc b{font-size:10px}
+@media print{body{background:#fff;padding:0}.no-print{display:none!important}.card{box-shadow:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>📵 예약 노쇼 관리표</h1><p class="sub">예약 결과(방문·노쇼·당일 취소·변경)를 기록하면 노쇼율, 요일·시간대별 경향, 알림 문자의 효과를 보여 줘요.</p></header>
+<div class="notice">⚠️ 환자 이름·연락처·주민등록번호는 입력하지 마세요. 예약 번호나 이니셜 같은 식별 코드만 쓰고, 기록은 이 브라우저에만 저장돼요.</div>
+
+<section class="card">
+  <div class="row no-print">
+    <div><label for="fPeriod">기간</label><select id="fPeriod"><option value="month">이번 달</option><option value="prev">지난 달</option><option value="all">전체</option></select></div>
+    <div><label for="fStatus">표에 보일 결과</label><select id="fStatus"><option value="all">전체</option><option value="visit">방문</option><option value="noshow">노쇼</option><option value="cancel">당일 취소</option><option value="moved">일정 변경</option></select></div>
+    <span class="muted" id="pLabel"></span>
+  </div>
+  <div class="stats" style="margin-top:10px">
+    <div class="stat"><span>예약 건수</span><b id="sTotal">0</b></div>
+    <div class="stat"><span>방문율</span><b id="sVisit" style="color:#047857">-</b></div>
+    <div class="stat"><span>노쇼율</span><b id="sNo" style="color:#be123c">-</b></div>
+    <div class="stat"><span>당일 취소율</span><b id="sCancel" style="color:#b45309">-</b></div>
+    <div class="stat"><span>일정 변경율</span><b id="sMoved">-</b></div>
+  </div>
+</section>
+
+<div class="two">
+<section class="card">
+  <b style="font-size:13px">알림 문자의 효과</b>
+  <div class="scroll" style="margin-top:6px"><table><thead><tr><th>구분</th><th>예약</th><th>노쇼</th><th>노쇼율</th></tr></thead><tbody id="remTb"></tbody></table></div>
+  <p class="muted" id="remMsg" style="margin-top:6px"></p>
+</section>
+<section class="card">
+  <b style="font-size:13px">요일별 노쇼율</b>
+  <div class="wd" id="wd"></div>
+  <p class="muted" id="wdMsg" style="margin-top:6px"></p>
+</section>
+</div>
+
+<section class="card no-print">
+  <b style="font-size:13px">예약 결과 기록</b>
+  <div class="row" style="margin-top:8px">
+    <div><label for="nDate">날짜</label><input id="nDate" type="date" style="width:150px"></div>
+    <div style="width:110px"><label for="nTime">시간</label><input id="nTime" type="time" value="10:00"></div>
+    <div style="width:130px"><label for="nCode">예약 번호/이니셜</label><input id="nCode" maxlength="12" placeholder="예: A-105"></div>
+    <div class="grow"><label for="nKind">진료 종류</label><input id="nKind" list="kinds" placeholder="예: 정기 검진"><datalist id="kinds"><option value="정기 검진"><option value="초진 상담"><option value="재진"><option value="시술·처치"><option value="검사"></datalist></div>
+    <div style="width:130px"><label for="nSt">결과</label><select id="nSt"><option value="visit">방문</option><option value="noshow">노쇼</option><option value="cancel">당일 취소</option><option value="moved">일정 변경</option></select></div>
+    <label style="display:flex;gap:6px;align-items:center;margin:0 0 8px"><input id="nRem" type="checkbox" checked> 전날 알림 보냄</label>
+    <button class="primary" id="addRec">+ 기록 추가</button>
+  </div>
+</section>
+
+<section class="card">
+  <div class="scroll" style="max-height:300px;overflow-y:auto"><table><thead><tr><th>날짜</th><th>시간</th><th>예약 번호</th><th>진료 종류</th><th>알림</th><th>결과</th><th class="no-print"></th></tr></thead><tbody id="rows"></tbody></table></div>
+  <div class="row no-print" style="margin-top:10px"><button id="csv">CSV 내려받기</button><button id="copy">요약 복사</button><button id="print">인쇄·PDF</button><button id="sample">예시로 되돌리기</button><button id="clear">기록 모두 지우기</button></div>
+</section>
+
+<div class="usecases"><h2>이럴 때 좋아요</h2><ul>
+<li><b>병원 직원</b> · 노쇼가 잦은 요일·시간대를 찾아 예약 배치를 바꾸고 싶을 때</li>
+<li><b>팀장</b> · 전날 알림 문자가 실제로 노쇼를 줄이는지 숫자로 확인할 때</li>
+<li><b>총무</b> · 월말에 예약 현황을 CSV로 내려받아 보고 자료로 쓸 때</li></ul></div>
+</div>
+
+<script>
+(function(){"use strict";
+var KEY="no-show-tracker-v1",DOW=["일","월","화","수","목","금","토"],ST={visit:"방문",noshow:"노쇼",cancel:"당일 취소",moved:"일정 변경"},STC={visit:"ok",noshow:"bd",cancel:"wn",moved:"in"};
+function load(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function ymd(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function today(){return ymd(new Date())}
+function addDays(s,k){var d=new Date(s+"T00:00:00");d.setDate(d.getDate()+k);return ymd(d)}
+function dowOf(s){return new Date(s+"T00:00:00").getDay()}
+function uid(){return "r"+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}
+function pct(a,b){return b?(a/b*100):0}
+function seed(){var sd=21,recs=[],t=today(),kinds=["정기 검진","초진 상담","재진","시술·처치","검사"],c=100;function rnd(){sd=(sd*1664525+1013904223)%4294967296;return sd/4294967296}
+ for(var i=44;i>=0;i--){var ds=addDays(t,-i),w=dowOf(ds);if(w===0)continue;var k=2+Math.floor(rnd()*3);
+  for(var j=0;j<k;j++){var rem=rnd()<0.7,hour=9+Math.floor(rnd()*9),r=rnd(),st="visit",bump=(w===1||w===5)?0.05:0;
+   var pn=(rem?0.06:0.2)+bump,pc=0.05,pm=0.04;if(r<pn)st="noshow";else if(r<pn+pc)st="cancel";else if(r<pn+pc+pm)st="moved";
+   recs.push({id:uid(),d:ds,tm:String(hour).padStart(2,"0")+":"+(rnd()<0.5?"00":"30"),code:"A-"+(c++),kind:kinds[Math.floor(rnd()*kinds.length)],st:st,rem:rem})}}
+ return recs}
+var S=load(KEY,null);if(!S||!S.recs)S={recs:seed(),per:"month",stf:"all"};
+function range(){var t=today(),m=t.slice(0,7);if(S.per==="all")return null;if(S.per==="prev"){var d=new Date(t+"T00:00:00");d.setDate(1);d.setMonth(d.getMonth()-1);var pm=ymd(d).slice(0,7);return pm}return m}
+function inPer(r){var m=range();return m===null||r.d.slice(0,7)===m}
+function set(){return S.recs.filter(inPer)}
+function stats(){var a=set(),c={visit:0,noshow:0,cancel:0,moved:0};a.forEach(function(r){c[r.st]++});return{a:a,c:c,n:a.length}}
+function paint(){var s=stats(),n=s.n,m=range();$("pLabel").textContent=m===null?"전체 기간":m.replace("-","년 ")+"월";
+ $("sTotal").textContent=n;$("sVisit").textContent=n?pct(s.c.visit,n).toFixed(1)+"%":"-";$("sNo").textContent=n?pct(s.c.noshow,n).toFixed(1)+"%":"-";$("sCancel").textContent=n?pct(s.c.cancel,n).toFixed(1)+"%":"-";$("sMoved").textContent=n?pct(s.c.moved,n).toFixed(1)+"%":"-";
+ var rs=s.a.filter(function(r){return r.rem}),rn=s.a.filter(function(r){return !r.rem});
+ function rr(label,arr){var no=arr.filter(function(r){return r.st==="noshow"}).length;return '<tr><td>'+label+'</td><td>'+arr.length+'건</td><td>'+no+'건</td><td><b>'+(arr.length?pct(no,arr.length).toFixed(1)+"%":"-")+'</b></td></tr>'}
+ $("remTb").innerHTML=rr("알림 보냄",rs)+rr("알림 안 보냄",rn);
+ var a1=rs.length?pct(rs.filter(function(r){return r.st==="noshow"}).length,rs.length):null,a2=rn.length?pct(rn.filter(function(r){return r.st==="noshow"}).length,rn.length):null;
+ $("remMsg").textContent=a1===null||a2===null?"알림 보냄/안 보냄 기록이 둘 다 있어야 비교할 수 있어요.":(a1<a2?"전날 알림을 보낸 예약의 노쇼율이 "+(a2-a1).toFixed(1)+"%p 낮아요.":a1>a2?"이번 기간에는 알림을 보낸 쪽 노쇼율이 더 높아요. 표본이 작은지 확인해 보세요.":"두 경우의 노쇼율이 같아요.");
+ var w=[0,0,0,0,0,0,0],wn=[0,0,0,0,0,0,0];s.a.forEach(function(r){var d=dowOf(r.d);w[d]++;if(r.st==="noshow")wn[d]++});
+ var rates=w.map(function(x,i){return x?pct(wn[i],x):0}),mx=Math.max.apply(null,rates.concat([1])),top=-1,tv=0;rates.forEach(function(v,i){if(w[i]>=3&&v>tv){tv=v;top=i}});
+ var order=[1,2,3,4,5,6,0];$("wd").innerHTML=order.map(function(i){return '<div class="wc'+(i===top?' hi':'')+'" title="'+DOW[i]+'요일 예약 '+w[i]+'건 중 노쇼 '+wn[i]+'건"><b>'+(w[i]?rates[i].toFixed(0)+"%":"-")+'</b><i style="height:'+Math.max(2,Math.round(rates[i]/mx*60))+'px"></i><span>'+DOW[i]+'</span></div>'}).join("");
+ $("wdMsg").textContent=top<0?"요일별 예약이 3건 이상 쌓이면 노쇼가 잦은 요일을 알려 드려요.":DOW[top]+"요일 노쇼율이 가장 높아요("+tv.toFixed(0)+"%). 이 요일에 알림을 한 번 더 보내 보세요.";
+ var list=s.a.filter(function(r){return S.stf==="all"||r.st===S.stf}).sort(function(a,b){return (b.d+b.tm).localeCompare(a.d+a.tm)}).slice(0,60),h="";
+ list.forEach(function(r){h+='<tr data-id="'+esc(r.id)+'"><td>'+r.d.slice(5)+' ('+DOW[dowOf(r.d)]+')</td><td>'+esc(r.tm)+'</td><td>'+esc(r.code)+'</td><td>'+esc(r.kind)+'</td><td>'+(r.rem?"보냄":"-")+'</td><td><select data-act="st" aria-label="결과 변경" style="padding:3px 6px;font-size:12px">'+Object.keys(ST).map(function(k){return '<option value="'+k+'"'+(r.st===k?" selected":"")+'>'+ST[k]+'</option>'}).join("")+'</select></td><td class="no-print"><button class="ghost" data-act="del" aria-label="기록 삭제">✕</button></td></tr>'});
+ $("rows").innerHTML=h||'<tr><td colspan="7" class="muted">조건에 맞는 기록이 없어요.</td></tr>';
+ $("fPeriod").value=S.per;$("fStatus").value=S.stf;save(KEY,S)}
+$("fPeriod").addEventListener("change",function(){S.per=this.value;paint()});$("fStatus").addEventListener("change",function(){S.stf=this.value;paint()});
+$("rows").addEventListener("change",function(e){if(e.target.getAttribute("data-act")!=="st")return;var id=e.target.closest("tr").getAttribute("data-id");S.recs.forEach(function(r){if(r.id===id)r.st=e.target.value});paint()});
+$("rows").addEventListener("click",function(e){var b=e.target.closest('[data-act="del"]');if(!b)return;var id=b.closest("tr").getAttribute("data-id");S.recs=S.recs.filter(function(r){return r.id!==id});paint()});
+$("addRec").onclick=function(){var d=$("nDate").value||today();S.recs.push({id:uid(),d:d,tm:$("nTime").value||"10:00",code:($("nCode").value.trim()||"-"),kind:$("nKind").value.trim()||"기타",st:$("nSt").value,rem:$("nRem").checked});$("nCode").value="";paint()};
+$("sample").onclick=function(){S.recs=seed();S.per="month";S.stf="all";paint()};
+$("clear").onclick=function(){if(!confirm("모든 예약 기록을 지울까요?"))return;S.recs=[];paint()};
+$("print").onclick=function(){window.print()};
+function csvCell(c){c=String(c==null?"":c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c}
+$("csv").onclick=function(){var rows=[["날짜","시간","예약번호","진료종류","알림발송","결과"]];S.recs.slice().sort(function(a,b){return (a.d+a.tm).localeCompare(b.d+b.tm)}).forEach(function(r){rows.push([r.d,r.tm,r.code,r.kind,r.rem?"보냄":"안 보냄",ST[r.st]])});
+ var tx="\uFEFF"+rows.map(function(r){return r.map(csvCell).join(",")}).join("\r\n"),b=new Blob([tx],{type:"text/csv;charset=utf-8"});
+ if(window.URL&&URL.createObjectURL){var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="no-show.csv";document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500)}};
+$("copy").onclick=function(){var s=stats(),n=s.n,t="[예약 노쇼 현황] "+$("pLabel").textContent+"\n예약 "+n+"건 · 방문 "+s.c.visit+" · 노쇼 "+s.c.noshow+" ("+(n?pct(s.c.noshow,n).toFixed(1):"-")+"%) · 당일 취소 "+s.c.cancel+" · 일정 변경 "+s.c.moved+"\n"+$("remMsg").textContent+"\n"+$("wdMsg").textContent,b=this,done=function(){b.textContent="복사됐어요 ✓";setTimeout(function(){b.textContent="요약 복사"},1400)};
+ var fb=function(){var ta=document.createElement("textarea");ta.value=t;ta.style.cssText="position:fixed;opacity:0";document.body.appendChild(ta);ta.select();var ok=false;try{ok=document.execCommand("copy")}catch(e){}ta.remove();if(ok)done();else window.prompt("복사가 막혀 있어요. 아래 글을 직접 복사해 주세요.",t)};
+ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,fb)}else fb()};
+$("nDate").value=today();paint();
+})();
+</script>
+</body>
+</html>

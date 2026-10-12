@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>소독·청결 점검 일지</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#b45309;--bad:#e11d48;--r:14px}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+[hidden]{display:none!important}
+.wrap{max-width:900px;margin:0 auto}h1{font-size:18px;font-weight:800;letter-spacing:-.02em}.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04);min-width:0}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:7px 11px;font-weight:700;font-size:12px;transition:.12s}button:hover{border-color:#c7cddb;background:#fafafa}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}button.primary:hover{filter:brightness(1.07)}
+button.ghost{border-color:transparent;background:transparent;color:var(--sub)}
+input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:13px;min-width:0}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--brand);flex:none;cursor:pointer}
+input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:11px;font-weight:800;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}.grow{flex:1;min-width:110px}.muted{color:var(--sub);font-size:12px}
+.pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap}
+.ok{background:#ecfdf5;color:#047857}.wn{background:#fffbeb;color:#b45309}.bd{background:#fef2f2;color:#be123c}.in{background:#eef2ff;color:#4338ca}
+.bar{height:8px;background:#eef2f7;border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--brand),#8b5cf6)}
+.notice{margin-top:10px;padding:8px 10px;border-radius:10px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;font-size:11px}
+.usecases{margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}.usecases h2{font-size:12px;font-weight:800;color:var(--sub);margin-bottom:6px}.usecases li{font-size:12px;color:var(--sub);margin-left:15px;margin-bottom:3px}
+.grp{border:1px solid var(--line);border-radius:12px;margin-top:10px;overflow:hidden;background:#fff}.gh{display:flex;justify-content:space-between;background:#f8fafc;padding:8px 12px;font-size:12px;font-weight:800}
+.it{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border-top:1px solid #f1f3f7}.it.done .tx{color:#94a3b8;text-decoration:line-through}.tx{flex:1;min-width:0;font-size:13px;font-weight:600;overflow-wrap:anywhere}.meta{font-size:11px;color:var(--sub);margin-top:2px}
+.it.flag{background:#fff7ed}.note{margin-top:6px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{border:1px solid var(--line);border-radius:10px;padding:5px 9px;font-size:11px;font-weight:800;background:#fff;cursor:pointer}.chip.sel{border-color:var(--brand);background:#eef2ff}
+.sign{padding:10px 12px;border-radius:12px;background:#ecfdf5;border:1px solid #a7f3d0;color:#047857;font-weight:800;font-size:13px}
+@media print{body{background:#fff;padding:0}.no-print{display:none!important}.card{box-shadow:none}.grp{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>🧼 소독·청결 점검 일지</h1><p class="sub">진료실·대기실·화장실·기구 관리를 하루 한 번 점검하고 시각과 확인자(이니셜)를 남겨요. 온도 기준을 벗어나면 바로 표시돼요.</p></header>
+<div class="notice">⚠️ 환자 이름·연락처·주민등록번호 같은 개인정보는 입력하지 마세요. 확인자는 이니셜로, 메모는 상황만 적어 주세요. 기록은 이 브라우저에만 저장돼요.</div>
+
+<section class="card">
+  <div class="row">
+    <button id="prev" aria-label="전날">◀</button>
+    <div><label for="date">점검 날짜</label><input id="date" type="date" style="width:160px"></div>
+    <button id="next" aria-label="다음날">▶</button><button id="todayBtn">오늘</button>
+    <div style="width:130px"><label for="by">확인자 이니셜</label><input id="by" maxlength="8" placeholder="예: KJ"></div>
+    <div class="grow" style="min-width:180px"><div class="muted" id="progText">-</div><div class="bar" style="margin-top:6px"><i id="progBar" style="width:0"></i></div></div>
+  </div>
+  <div class="chips" id="hist" style="margin-top:10px"></div>
+</section>
+
+<div id="groups"></div>
+
+<section class="card">
+  <b style="font-size:13px">🌡️ 냉장고(보관함) 온도</b>
+  <div class="row" style="margin-top:8px">
+    <div style="width:120px"><label for="tAm">오전(℃)</label><input id="tAm" type="number" step="0.1"></div>
+    <div style="width:120px"><label for="tPm">오후(℃)</label><input id="tPm" type="number" step="0.1"></div>
+    <div style="width:100px"><label for="tMin">허용 최저</label><input id="tMin" type="number" step="0.1"></div>
+    <div style="width:100px"><label for="tMax">허용 최고</label><input id="tMax" type="number" step="0.1"></div>
+    <span id="tState" class="pill in">기록 전</span>
+  </div>
+  <p class="muted" style="margin-top:6px">허용 범위는 보관하는 물품의 기준에 맞게 바꿔 주세요. 기본값은 일반적인 냉장 보관(2~8℃)이에요.</p>
+</section>
+
+<section class="card">
+  <div id="signBox"></div>
+  <div class="row no-print" style="margin-top:8px">
+    <button class="primary" id="sign">오늘 점검 마감</button><button id="copy">일지 복사</button><button id="print">A4 인쇄·PDF</button>
+  </div>
+</section>
+
+<section class="card no-print">
+  <b style="font-size:13px">우리 병원 점검 항목 추가</b>
+  <div class="row" style="margin-top:8px"><div style="width:160px"><label for="newG">구역</label><select id="newG"></select></div><div class="grow"><label for="newT">점검 내용</label><input id="newT" placeholder="예: 치과 유닛체어 석션 라인 소독"></div><button class="primary" id="addItem">+ 항목 추가</button></div>
+  <div class="row" style="margin-top:8px"><button id="sample">예시로 되돌리기</button><button id="clear">기록 모두 지우기</button></div>
+</section>
+
+<div class="usecases"><h2>이럴 때 좋아요</h2><ul>
+<li><b>병원 직원</b> · 하루 시작·마감 때 소독·청결 점검을 빠짐없이 남기고 싶을 때</li>
+<li><b>총무</b> · 점검 기록을 A4로 인쇄해 비치하거나 감사 자료로 보관할 때</li>
+<li><b>팀장</b> · 누가 언제 확인했는지, 조치가 필요한 항목이 있는지 한눈에 볼 때</li></ul></div>
+</div>
+
+<script>
+(function(){"use strict";
+var KEY="clinic-hygiene-v1",DOW=["일","월","화","수","목","금","토"];
+function load(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function ymd(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function today(){return ymd(new Date())}
+function addDays(s,k){var d=new Date(s+"T00:00:00");d.setDate(d.getDate()+k);return ymd(d)}
+function hm(d){return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")}
+function num(v){var x=parseFloat(v);return isNaN(x)?null:x}
+var ITEMS=[
+ {id:"a1",g:"진료실",t:"진료대·의자 표면 소독"},{id:"a2",g:"진료실",t:"손 소독제·일회용 장갑 재고 확인"},{id:"a3",g:"진료실",t:"의료 폐기물 용기 확인·교체"},
+ {id:"b1",g:"대기실·접수",t:"접수대·문손잡이·키오스크 소독"},{id:"b2",g:"대기실·접수",t:"환기 및 공기청정기 필터 확인"},
+ {id:"c1",g:"화장실",t:"세면대·변기·바닥 청소"},{id:"c2",g:"화장실",t:"비누·휴지 보충"},
+ {id:"d1",g:"기구 관리",t:"사용 기구 세척·소독·멸균 기록"},{id:"d2",g:"기구 관리",t:"멸균 포장 유효기간 확인"}];
+function seed(){var d={},sd=5,t=today();function rnd(){sd=(sd*1664525+1013904223)%4294967296;return sd/4294967296}
+ for(var i=6;i>=0;i--){var ds=addDays(t,-i),c={};ITEMS.forEach(function(it,k){var lim=i===0?5:(i===3?7:ITEMS.length);if(k<lim){var h=8+Math.floor(k/3),m=Math.floor(rnd()*50)+5;c[it.id]={t:String(h).padStart(2,"0")+":"+String(m).padStart(2,"0"),by:"KJ",flag:false,note:""}}});
+  if(i===2&&c.c2){c.c2.flag=true;c.c2.note="비누 재고 부족, 발주 요청함"}
+  d[ds]={c:c,tmp:{am:i===4?"9.1":"4.6",pm:i===0?"":"5.0"},signed:(i>0&&i!==3)?{t:"18:2"+(i%10),by:"KJ"}:null}}
+ return d}
+var S=load(KEY,null);if(!S||!S.days)S={items:ITEMS,days:seed(),by:"KJ",tmin:2,tmax:8};if(!S.items)S.items=ITEMS;S.date=today();if(S.tmin==null)S.tmin=2;if(S.tmax==null)S.tmax=8;
+function day(){return S.days[S.date]||(S.days[S.date]={c:{},tmp:{am:"",pm:""},signed:null})}
+function stat(ds){var d=S.days[ds],tot=S.items.length,done=0;if(d)S.items.forEach(function(it){if(d.c[it.id])done++});return{done:done,tot:tot,pct:tot?Math.round(done/tot*100):0,flag:d?S.items.filter(function(it){return d.c[it.id]&&d.c[it.id].flag}).length:0}}
+function groups(){var g=[];S.items.forEach(function(it){if(g.indexOf(it.g)<0)g.push(it.g)});return g}
+function render(){var d=day(),h="";$("date").value=S.date;$("by").value=S.by||"";
+ groups().forEach(function(g){var its=S.items.filter(function(it){return it.g===g}),dn=its.filter(function(it){return d.c[it.id]}).length;
+  h+='<section class="grp"><div class="gh"><span>'+esc(g)+'</span><span class="muted">'+dn+' / '+its.length+'</span></div>';
+  its.forEach(function(it){var c=d.c[it.id];h+='<div class="it'+(c?' done':'')+(c&&c.flag?' flag':'')+'" data-id="'+esc(it.id)+'"><input type="checkbox" data-act="chk" aria-label="'+esc(it.t)+'"'+(c?' checked':'')+'><div class="tx">'+esc(it.t)+
+   (c?'<div class="meta">'+esc(c.t)+' · 확인 '+esc(c.by||"-")+(c.flag?' · <b style="color:#c2410c">조치 필요</b>':'')+'</div>':'')+
+   (c&&c.flag?'<input class="note" data-act="note" placeholder="어떤 조치가 필요한가요?" value="'+esc(c.note||"")+'">':'')+'</div>'+
+   (c?'<button class="ghost no-print" data-act="flag" title="조치 필요 표시" aria-label="조치 필요 표시">⚠</button>':'')+
+   '<button class="ghost no-print" data-act="del" aria-label="항목 삭제">✕</button></div>'});
+  h+='</section>'});
+ $("groups").innerHTML=h||'<p class="muted" style="margin-top:12px">점검 항목이 없어요. 아래에서 추가해 보세요.</p>';
+ $("tAm").value=d.tmp.am;$("tPm").value=d.tmp.pm;$("tMin").value=S.tmin;$("tMax").value=S.tmax;
+ var keepG=$("newG").value,sel=groups().concat(["새 구역"]);$("newG").innerHTML=sel.map(function(g){return '<option>'+esc(g)+'</option>'}).join("");if(sel.indexOf(keepG)>=0)$("newG").value=keepG;
+ paint()}
+function paint(){var d=day(),s=stat(S.date);$("progText").textContent=s.done+" / "+s.tot+"개 점검 완료 ("+s.pct+"%)"+(s.flag?" · 조치 필요 "+s.flag+"건":"");$("progBar").style.width=s.pct+"%";
+ var hh="";for(var i=6;i>=0;i--){var ds=addDays(S.date,-i),st=stat(ds);hh+='<button class="chip'+(ds===S.date?' sel':'')+'" data-d="'+ds+'">'+ds.slice(5)+' ('+DOW[new Date(ds+"T00:00:00").getDay()]+') '+(S.days[ds]?st.pct+'%':'-')+'</button>'}
+ $("hist").innerHTML=hh;
+ var ts=[num(d.tmp.am),num(d.tmp.pm)].filter(function(v){return v!==null}),bad=ts.some(function(v){return v<S.tmin||v>S.tmax});
+ $("tState").textContent=!ts.length?"기록 전":bad?"기준("+S.tmin+"~"+S.tmax+"℃) 벗어남 — 조치 기록 필요":"기준 이내";$("tState").className="pill "+(!ts.length?"in":bad?"bd":"ok");
+ $("signBox").innerHTML=d.signed?'<div class="sign">✅ '+esc(d.signed.t)+' 점검 마감 · 확인 '+esc(d.signed.by||"-")+'</div>':'<div class="muted">모든 항목을 점검한 뒤 「오늘 점검 마감」을 눌러 주세요.</div>';
+ $("sign").textContent=d.signed?"마감 취소":"오늘 점검 마감";save(KEY,{items:S.items,days:S.days,by:S.by,tmin:S.tmin,tmax:S.tmax})}
+function setDate(ds){if(!/^\d{4}-\d{2}-\d{2}$/.test(ds))return;S.date=ds;render()}
+$("groups").addEventListener("change",function(e){var a=e.target.getAttribute("data-act");if(a!=="chk")return;var id=e.target.closest(".it").getAttribute("data-id"),d=day();
+ if(e.target.checked)d.c[id]={t:hm(new Date()),by:S.by||"-",flag:false,note:""};else delete d.c[id];render()});
+$("groups").addEventListener("input",function(e){if(e.target.getAttribute("data-act")!=="note")return;var c=day().c[e.target.closest(".it").getAttribute("data-id")];if(c){c.note=e.target.value;save(KEY,{items:S.items,days:S.days,by:S.by,tmin:S.tmin,tmax:S.tmax})}});
+$("groups").addEventListener("click",function(e){var b=e.target.closest("button[data-act]");if(!b)return;var id=b.closest(".it").getAttribute("data-id"),a=b.getAttribute("data-act"),d=day();
+ if(a==="flag"&&d.c[id]){d.c[id].flag=!d.c[id].flag;render()}
+ else if(a==="del"){if(!confirm("이 점검 항목을 목록에서 지울까요?"))return;S.items=S.items.filter(function(it){return it.id!==id});render()}});
+$("hist").addEventListener("click",function(e){var b=e.target.closest("[data-d]");if(b)setDate(b.getAttribute("data-d"))});
+$("by").addEventListener("input",function(){S.by=this.value.trim().toUpperCase().slice(0,8);paint()});
+["tAm","tPm"].forEach(function(id){$(id).addEventListener("input",function(){day().tmp[id==="tAm"?"am":"pm"]=this.value;paint()})});
+["tMin","tMax"].forEach(function(id){$(id).addEventListener("input",function(){var v=num(this.value);if(v!==null){S[id==="tMin"?"tmin":"tmax"]=v;paint()}})});
+$("date").addEventListener("change",function(){setDate(this.value)});$("prev").onclick=function(){setDate(addDays(S.date,-1))};$("next").onclick=function(){setDate(addDays(S.date,1))};$("todayBtn").onclick=function(){setDate(today())};
+$("sign").onclick=function(){var d=day();if(d.signed){d.signed=null}else{d.signed={t:hm(new Date()),by:S.by||"-"}}render()};
+$("addItem").onclick=function(){var t=$("newT").value.trim();if(!t)return;var g=$("newG").value;S.items.push({id:"x"+Date.now().toString(36),g:g,t:t});$("newT").value="";render()};
+$("newT").addEventListener("keydown",function(e){if(e.key==="Enter")$("addItem").click()});
+$("sample").onclick=function(){S.items=ITEMS.slice();S.days=seed();S.by="KJ";S.tmin=2;S.tmax=8;S.date=today();render()};
+$("clear").onclick=function(){if(!confirm("모든 점검 기록을 지울까요? (항목은 유지돼요)"))return;S.days={};S.date=today();render()};
+$("print").onclick=function(){window.print()};
+$("copy").onclick=function(){var d=day(),s=stat(S.date),L=["[소독·청결 점검 일지] "+S.date+" ("+DOW[new Date(S.date+"T00:00:00").getDay()]+")","진행 "+s.done+"/"+s.tot+(d.signed?" · "+d.signed.t+" 마감("+d.signed.by+")":" · 미마감")];
+ groups().forEach(function(g){L.push("",g);S.items.filter(function(it){return it.g===g}).forEach(function(it){var c=d.c[it.id];L.push((c?"✓ ":"□ ")+it.t+(c?" ("+c.t+" "+c.by+")"+(c.flag?" ⚠ "+(c.note||"조치 필요"):""):""))})});
+ L.push("","냉장고 온도: 오전 "+(d.tmp.am||"-")+"℃ / 오후 "+(d.tmp.pm||"-")+"℃ (허용 "+S.tmin+"~"+S.tmax+"℃)");
+ var b=this,t=L.join("\n"),done=function(){b.textContent="복사됐어요 ✓";setTimeout(function(){b.textContent="일지 복사"},1400)};
+ var fb=function(){var ta=document.createElement("textarea");ta.value=t;ta.style.cssText="position:fixed;opacity:0";document.body.appendChild(ta);ta.select();var ok=false;try{ok=document.execCommand("copy")}catch(e){}ta.remove();if(ok)done();else window.prompt("복사가 막혀 있어요. 아래 글을 직접 복사해 주세요.",t)};
+ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,fb)}else fb()};
+render();
+})();
+</script>
+</body>
+</html>

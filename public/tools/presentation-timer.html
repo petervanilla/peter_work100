@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>발표 리허설 타이머</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#d97706;--bad:#e11d48;--r:14px}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+.wrap{max-width:760px;margin:0 auto}
+h1{font-size:18px;font-weight:800;letter-spacing:-.02em}
+.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04)}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:8px 12px;font-weight:600;font-size:13px;transition:.12s}
+button:hover{border-color:#c7cddb;background:#fafafa}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}
+button.primary:hover{filter:brightness(1.07)}
+input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:13px}
+input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:12px;font-weight:700;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grow{flex:1;min-width:110px}
+.muted{color:var(--sub);font-size:12px}
+.stage{text-align:center;padding:20px 14px;border-radius:var(--r);border:2px solid var(--line);background:#fff;margin-top:12px}
+.stage.warn{border-color:#fbbf24;background:#fffbeb}
+.stage.over{border-color:var(--bad);background:#fef2f2}
+#clock{font-size:56px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1.05}
+#slideName{font-size:15px;font-weight:800}
+.bar-row{display:grid;grid-template-columns:110px 1fr 64px;gap:8px;align-items:center;margin-top:6px;font-size:12px}
+.bar-track{height:14px;background:#f1f5f9;border-radius:999px;overflow:hidden;position:relative}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--brand),var(--brand2));border-radius:999px}
+.bar-fill.over{background:linear-gradient(90deg,#fb7185,var(--bad))}
+.bar-target{position:absolute;top:-2px;bottom:-2px;width:2px;background:#0f172a;opacity:.5}
+table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+th,td{border:1px solid var(--line);padding:6px;text-align:center}
+th{background:#f8fafc;font-size:11px;color:var(--sub)}
+td.over{color:var(--bad);font-weight:800}
+.slide-ed{display:flex;gap:6px;align-items:center;margin-top:6px}
+.slide-ed input{border:none;background:transparent;font-weight:600;padding:2px}
+.usecases{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+.usecases h2{font-size:12px;font-weight:800;color:var(--sub);margin-bottom:6px}
+.usecases li{font-size:12px;color:var(--sub);margin-left:14px;margin-bottom:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🎤 발표 리허설 타이머</h1>
+  <p class="sub">목표 시간과 장 수를 넣고 리허설하세요. 「다음 장」(스페이스·→ 키·화면 터치)을 누르면 장마다 걸린 시간이 기록돼요.</p>
+
+  <div class="stage" id="stage">
+    <div id="slideName">설정에서 장을 만들고 시작하세요</div>
+    <div id="clock">--:--</div>
+    <div class="muted" id="stageSub"></div>
+  </div>
+
+  <div class="row" style="margin-top:12px">
+    <button class="primary" id="btnStart">▶ 시작</button>
+    <button id="btnNext">다음 장 →</button>
+    <button id="btnFinish">발표 끝내기</button>
+    <button id="btnReset">처음으로</button>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <div class="grow"><label for="tgtMin">목표 시간(분)</label><input id="tgtMin" type="number" min="1" value="10"></div>
+      <div class="grow"><label for="tgtSlides">장(슬라이드) 수</label><input id="tgtSlides" type="number" min="1" value="8"></div>
+      <button id="btnApply" style="align-self:flex-end">적용</button>
+    </div>
+    <div id="slideList" style="margin-top:8px"></div>
+    <div class="row" style="margin-top:8px">
+      <input class="grow" id="newSlide" placeholder="장 이름 (예: 도입)">
+      <button id="btnAddSlide">+ 장 추가</button>
+    </div>
+  </div>
+
+  <div class="card" id="resultCard" style="display:none">
+    <b style="font-size:13px">리허설 결과</b>
+    <div id="bars"></div>
+    <p class="muted" id="totalLine" style="margin-top:8px"></p>
+    <div class="row" style="margin-top:8px">
+      <button id="btnCopy">결과를 글로 복사</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <b style="font-size:13px">최근 3회 비교</b>
+    <div style="overflow-x:auto"><table id="compareTable"></table></div>
+  </div>
+
+  <div class="usecases">
+    <h2>이럴 때 좋아요</h2>
+    <ul>
+      <li><b>기획</b> · 임원 보고 전에 발표 시간을 맞춰 두고 싶을 때 — 장마다 시간을 재 보면 어디서 늘어지는지 보이고, 그 장만 다듬으면 돼요.</li>
+      <li><b>교육 담당</b> · 여러 조의 발표를 똑같은 시간에 끝내야 할 때 — 목표 시간을 똑같이 맞춰 두면 조별로 남은 시간을 공정하게 보여 줄 수 있어요.</li>
+      <li><b>영업</b> · 제안 발표가 늘 시간을 넘길 때 — 리허설 때 넘긴 장을 확인하고 그 장의 설명을 반으로 줄여 보세요.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var KEY="presentation-timer-v1";
+var state={target:10,slides:[],cur:-1,running:false,startedAt:0,elapsed:0,times:[],status:"idle",history:[]};
+function sampleNames(n){var base=["도입","배경","문제 정의","해결안","데이터","기대 효과","일정","Q&A"];var a=[];for(var i=0;i<n;i++)a.push(base[i]||("장 "+(i+1)));return a}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+function load(){try{var s=localStorage.getItem(KEY);if(s){var p=JSON.parse(s);if(p&&p.slides&&p.slides.length)state=p}}catch(e){}}
+function fmt(ms){if(ms<0)ms=0;var s=Math.floor(ms/1000);var m=Math.floor(s/60);s%=60;return (m<10?"0":"")+m+":"+(s<10?"0":"")+s}
+function targetMs(){return state.target*60000}
+function perSlideTarget(){return targetMs()/Math.max(1,state.slides.length)}
+function usedTotal(){var t=0;state.times.forEach(function(x){t+=x});if(state.status==="running")t+=state.elapsed+(state.running?Date.now()-state.startedAt:0);return t}
+
+function tick(){
+  if(state.status!=="running")return;
+  var used=state.elapsed+(state.running?Date.now()-state.startedAt:0);
+  var stage=document.getElementById("stage");
+  var left=targetMs()-usedTotal();
+  document.getElementById("clock").textContent=left>=0?fmt(left):"+"+fmt(-left);
+  stage.className="stage"+(left<0?" over":(left<=60000?" warn":""));
+  document.getElementById("stageSub").textContent="목표 "+state.target+"분 중 "+fmt(usedTotal())+" 지남 · "+(state.cur+1)+"/"+state.slides.length+"장";
+}
+function renderSlides(){
+  var box=document.getElementById("slideList");box.innerHTML="";
+  state.slides.forEach(function(name,i){
+    var d=document.createElement("div");d.className="slide-ed";
+    var inp=document.createElement("input");inp.value=name;inp.placeholder="장 이름";
+    inp.addEventListener("change",function(){state.slides[i]=inp.value||("장 "+(i+1));save()});
+    var t=document.createElement("span");t.className="muted";t.style.width="90px";t.style.textAlign="right";
+    t.textContent=state.times[i]!=null?fmt(state.times[i]):"—";
+    var del=document.createElement("button");del.textContent="✕";del.style.width="30px";del.style.color="#d1d5db";
+    del.onclick=function(){state.slides.splice(i,1);state.times.splice(i,1);save();renderSlides()};
+    d.appendChild(inp);d.appendChild(t);d.appendChild(del);box.appendChild(d);
+  });
+}
+function renderResult(){
+  var card=document.getElementById("resultCard");
+  if(state.status!=="done"){card.style.display="none";return}
+  card.style.display="block";
+  var box=document.getElementById("bars");box.innerHTML="";
+  var max=0;state.times.forEach(function(t){if(t>max)max=t});
+  var total=0;
+  state.slides.forEach(function(name,i){
+    var t=state.times[i]||0;total+=t;
+    var d=document.createElement("div");d.className="bar-row";
+    var over=t>perSlideTarget()+1;
+    d.innerHTML='<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(i+1)+". "+name.replace(/</g,"&lt;")+"</span>";
+    var track=document.createElement("div");track.className="bar-track";
+    var fill=document.createElement("div");fill.className="bar-fill"+(over?" over":"");
+    fill.style.width=(max?(t/max*100):0)+"%";
+    var tgt=document.createElement("div");tgt.className="bar-target";tgt.style.left=(max?(perSlideTarget()/max*100):0)+"%";
+    track.appendChild(fill);track.appendChild(tgt);
+    var val=document.createElement("span");val.style.textAlign="right";val.className=over?"over-t":"";
+    val.textContent=(t/1000).toFixed(1)+"초"+(over?" ▲":"");
+    d.appendChild(track);d.appendChild(val);box.appendChild(d);
+  });
+  var diff=total-targetMs();
+  document.getElementById("totalLine").innerHTML="전체 "+(total/60000).toFixed(1)+"분 · 목표 "+state.target+"분보다 "+(diff>0?'<b class="over-t">'+(diff/60000).toFixed(1)+"분 길었어요</b>":'<b style="color:var(--ok)">'+(-diff/60000).toFixed(1)+"분 짧았어요</b>");
+}
+function renderCompare(){
+  var tb=document.getElementById("compareTable");
+  var head="<tr><th>회차</th>"+state.slides.map(function(n,i){return "<th>"+(i+1)+"</th>"}).join("")+"<th>전체</th></tr>";
+  var rows=state.history.slice(-3).map(function(h,ri){
+    var idx=state.history.length-Math.min(3,state.history.length)+ri;
+    return "<tr><td>"+(idx+1)+"회</td>"+h.times.map(function(t){return "<td"+(t>perSlideTarget()+1?' class="over"':"")+">"+(t/1000).toFixed(1)+"</td>"}).join("")+"<td><b>"+(h.total/60000).toFixed(1)+"분</b></td></tr>";
+  }).join("");
+  tb.innerHTML=head+(rows||"<tr><td colspan='99' class='muted' style='text-align:center;padding:10px'>아직 기록이 없어요. 리허설을 끝내면 여기에 쌓여요.</td></tr>");
+}
+function renderAll(){renderSlides();renderResult();renderCompare();tick()}
+function startPause(){
+  if(state.status==="done")return;
+  if(state.cur<0){state.cur=0}
+  if(state.running){state.elapsed+=Date.now()-state.startedAt;state.times[state.cur]=state.elapsed;state.running=false}
+  else{state.startedAt=Date.now();state.running=true}
+  state.status="running";document.getElementById("btnStart").textContent=state.running?"⏸ 일시정지":"▶ 시작";save();tick();
+}
+function nextSlide(){
+  if(state.status==="done")return;
+  if(state.cur<0){state.cur=0;state.running=true;state.startedAt=Date.now();state.status="running";save();renderAll();return}
+  if(state.running)state.elapsed+=Date.now()-state.startedAt;
+  state.running=false;state.times[state.cur]=state.elapsed;
+  if(state.cur>=state.slides.length-1){finish();return}
+  state.cur++;state.elapsed=0;state.running=true;state.status="running";
+  document.getElementById("btnStart").textContent="⏸ 일시정지";save();renderAll();
+}
+function finish(){
+  if(state.running)state.elapsed+=Date.now()-state.startedAt;
+  state.times[state.cur]=state.elapsed;state.running=false;state.status="done";
+  var total=0;state.times.forEach(function(t){total+=t});
+  state.history.push({times:state.times.slice(),total:total});
+  if(state.history.length>10)state.history=state.history.slice(-10);
+  document.getElementById("btnStart").textContent="▶ 시작";save();renderAll();beep(2);
+}
+function reset(){state.cur=-1;state.running=false;state.elapsed=0;state.times=[];state.status="idle";document.getElementById("btnStart").textContent="▶ 시작";save();renderAll()}
+var AC=null;
+function beep(n){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();for(var i=0;i<(n||1);i++){(function(i){var o=AC.createOscillator(),g=AC.createGain();o.connect(g);g.connect(AC.destination);o.frequency.value=n===2?520:740;g.gain.setValueAtTime(.0001,AC.currentTime+i*.18);g.gain.exponentialRampToValueAtTime(.25,AC.currentTime+i*.18+.02);g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+i*.18+.15);o.start(AC.currentTime+i*.18);o.stop(AC.currentTime+i*.18+.16)})(i)}}catch(e){}}
+
+document.getElementById("btnStart").onclick=startPause;
+document.getElementById("btnNext").onclick=nextSlide;
+document.getElementById("btnFinish").onclick=finish;
+document.getElementById("btnReset").onclick=reset;
+document.getElementById("btnApply").onclick=function(){
+  state.target=Math.max(1,parseInt(document.getElementById("tgtMin").value)||10);
+  var n=Math.max(1,parseInt(document.getElementById("tgtSlides").value)||8);
+  var names=sampleNames(n);
+  while(state.slides.length<n)state.slides.push(names[state.slides.length]||("장 "+(state.slides.length+1)));
+  state.slides=state.slides.slice(0,n);
+  save();renderAll();
+};
+document.getElementById("btnAddSlide").onclick=function(){
+  var v=document.getElementById("newSlide").value.trim()||("장 "+(state.slides.length+1));
+  state.slides.push(v);document.getElementById("newSlide").value="";save();renderSlides();
+};
+document.getElementById("btnCopy").onclick=function(){
+  var lines=["[발표 리허설 결과] 목표 "+state.target+"분"];
+  state.slides.forEach(function(n,i){lines.push((i+1)+". "+n+" — "+((state.times[i]||0)/1000).toFixed(1)+"초")});
+  var total=0;state.times.forEach(function(t){total+=t});
+  lines.push("전체 "+(total/60000).toFixed(1)+"분");
+  copyText(lines.join("\n"),this);
+};
+function copyText(t,btn){
+  function ok(){btn.textContent="복사됐어요 ✓";setTimeout(function(){btn.textContent="결과를 글로 복사"},1500)}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fb)}else fb();
+  function fb(){var ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");ok()}catch(e){alert(t)}ta.remove()}
+}
+document.addEventListener("keydown",function(e){
+  if(e.target.tagName==="INPUT"||e.target.tagName==="TEXTAREA")return;
+  if(e.code==="Space"){e.preventDefault();startPause()}
+  if(e.code==="ArrowRight"){e.preventDefault();nextSlide()}
+});
+document.getElementById("stage").addEventListener("click",function(){if(state.status==="running"||state.cur>=0)nextSlide()});
+
+load();
+if(!state.slides.length){state.slides=sampleNames(8)}
+renderAll();
+setInterval(tick,250);
+})();
+</script>
+</body>
+</html>

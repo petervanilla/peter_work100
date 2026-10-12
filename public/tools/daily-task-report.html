@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>일일 업무 보고서</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#d97706;--bad:#e11d48;--soft:#f8fafc}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+.wrap{max-width:1060px;margin:0 auto}h1{font-size:18px;font-weight:800;letter-spacing:-.02em}.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 1px 2px rgba(17,24,39,.04)}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:8px 12px;font-weight:700;font-size:12px;transition:.12s}button:hover{border-color:var(--brand)}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border:0}
+button.on{background:var(--brand);color:#fff;border-color:transparent}
+input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font-size:13px;font-family:inherit}
+textarea{resize:vertical;min-height:88px;line-height:1.6}
+input:focus,textarea:focus,select:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:11px;font-weight:800;color:var(--sub);display:block;margin-bottom:5px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:end}.muted{font-size:11px;color:var(--sub)}.grow{flex:1;min-width:150px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(330px,.9fr);gap:14px;margin-top:13px}
+@media(max-width:860px){.layout{grid-template-columns:1fr}.pv{order:-1}}
+.pv{padding:0;overflow:hidden}
+.pv-head{padding:14px 16px;background:linear-gradient(120deg,#111827,#312e81);color:#fff}
+.pv-head .ey{font-size:9px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#c7d2fe}
+.pv-head h2{font-size:17px;margin-top:3px;letter-spacing:-.02em}
+.pv-head p{font-size:10px;color:#cbd5e1;margin-top:3px}
+.pv-body{padding:12px 14px;display:grid;gap:8px}
+.sect{border:1px solid var(--line);border-radius:11px;padding:10px}
+.sect h3{font-size:10px;font-weight:900;color:var(--brand);margin-bottom:5px}
+.sect p{font-size:11.5px;line-height:1.65;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere;min-height:17px}
+.sect.risk{background:rgba(225,29,72,.06);border-color:#fecaca}.sect.risk h3{color:var(--bad)}
+.pv-foot{padding:8px 14px;border-top:1px solid var(--line);background:var(--soft);font-size:9px;color:var(--sub);display:flex;justify-content:space-between;gap:8px}
+.prog{display:flex;align-items:center;gap:9px}
+.prog input[type=range]{width:100%;accent-color:var(--brand)}
+.prog b{font-size:15px;font-variant-numeric:tabular-nums;min-width:44px;text-align:right}
+.hist{display:flex;flex-direction:column;gap:6px;max-height:210px;overflow:auto}
+.hrow{display:flex;gap:8px;align-items:center;padding:7px 9px;border:1px solid var(--line);border-radius:9px;font-size:11px;cursor:pointer;background:var(--card)}
+.hrow:hover{border-color:var(--brand)}.hrow b{white-space:nowrap}
+.usecases{margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}.usecases h2{font-size:12px;font-weight:900;color:var(--sub);margin-bottom:5px}
+.usecases li{font-size:11px;color:var(--sub);margin-left:15px;margin-bottom:3px}
+@media print{body{background:#fff;padding:0}.no-print{display:none!important}.layout{display:block}.pv{border:1px solid #ddd}.pv-head{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style></head><body><div class="wrap">
+<header><h1>📝 일일 업무 보고서</h1><p class="sub">오늘 한 일 · 내일 할 일 · 막힌 일을 적으면 오른쪽에 완성된 일일 보고서가 실시간으로 만들어져요.</p></header>
+<div class="layout">
+<section class="card no-print">
+<div class="row" style="justify-content:space-between;margin-bottom:11px"><b style="font-size:13px">오늘 업무 기록</b><span class="muted" id="saveState">● 자동 저장</span></div>
+<div class="row">
+<div class="grow" style="max-width:170px"><label for="rdate">날짜</label><input id="rdate" type="date"></div>
+<div class="grow"><label for="rname">이름 · 부서</label><input id="rname" placeholder="예: 김보고 · 프로덕트 1팀"></div>
+</div>
+<div class="row no-print" style="margin-top:7px;align-items:center">
+<button id="prevDay">← 이전 날</button><button id="todayBtn">오늘</button><button id="nextDay">다음 날 →</button><button id="carryBtn">어제에서 이어쓰기</button>
+</div>
+<div style="margin-top:11px"><label for="rdone">✅ 오늘 한 일 (한 줄에 하나)</label><textarea id="rdone" placeholder="- 온보딩 화면 1차 시안 확정&#10;- 결제 API 응답 속도 35% 개선"></textarea></div>
+<div style="margin-top:9px"><label for="rplan">➡️ 내일 할 일</label><textarea id="rplan" style="min-height:64px" placeholder="- 사용성 테스트 5명 진행"></textarea></div>
+<div style="margin-top:9px"><label for="rblock">🚨 막힌 일 · 도움 요청</label><textarea id="rblock" style="min-height:64px" placeholder="- 디자인 리소스 부족으로 일정 2일 지연 가능"></textarea></div>
+<div class="prog" style="margin-top:12px"><label for="rprog" style="margin:0;white-space:nowrap">오늘 진행률</label><input id="rprog" type="range" min="0" max="100" step="5" value="70"><b id="rprogOut">70%</b></div>
+<div class="row" style="margin-top:12px"><button class="primary" id="saveBtn">오늘 보고 저장</button><button id="copyBtn">보고 글 복사</button><button id="printBtn">인쇄 · PDF</button><button id="clearBtn">비우기</button></div>
+</section>
+<div style="display:grid;gap:14px;align-content:start">
+<section class="card pv" aria-label="일일 업무 보고서 미리보기">
+<div class="pv-head"><div class="ey">Daily Work Report</div><h2>일일 업무 보고</h2><p><span id="pvDate">—</span>　·　<span id="pvName">이름 · 부서</span></p></div>
+<div class="pv-body">
+<div class="sect"><h3>✅ 오늘 한 일</h3><p id="pvDone">오늘 한 일을 입력해 주세요.</p></div>
+<div class="sect"><h3>➡️ 내일 할 일</h3><p id="pvPlan">내일 할 일을 입력해 주세요.</p></div>
+<div class="sect risk"><h3>🚨 막힌 일 · 도움 요청</h3><p id="pvBlock">막힌 일이 없습니다.</p></div>
+<div class="sect"><h3>📊 오늘 진행률</h3><p id="pvProg" style="font-weight:800">70%</p></div>
+</div><div class="pv-foot"><span>업무앱 · 일일 업무 보고서</span><span id="pvStamp"></span></div>
+</section>
+<section class="card no-print"><b style="font-size:12px">저장된 보고</b><div class="hist" id="hist" style="margin-top:8px"></div></section>
+</div>
+</div>
+<div class="usecases"><h2>이럴 때 좋아요</h2><ul>
+<li><b>모든 직장인</b> · 퇴근 전에 오늘 한 일을 정리해 담당자에게 보내야 할 때 — 네 칸만 채우면 바로 보고용 글이 완성돼요.</li>
+<li><b>팀장</b> · 팀원들의 진행률과 막힌 일을 빠르게 확인하고 싶을 때 — 진행률 슬라이더와 도움 요청 칸이 한눈에 들어와요.</li>
+<li><b>기획</b> · 프로젝트 일지를 매일 쌓아 마감 보고 때 활용해야 할 때 — 날짜별로 자동 보관되고 이어쓰기가 됩니다.</li>
+</ul></div>
+</div>
+<script>
+(function(){"use strict";
+var KEY="daily-task-report-v1";
+function ld(d){d=d||new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function shift(ds,n){var d=new Date(ds+"T00:00:00");d.setDate(d.getDate()+n);return ld(d)}
+function esc(s){return String(s==null?"":s).replace(/[&<>\"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'\"':"&quot;"}[c]})}
+var FIELDS=["rdate","rname","rdone","rplan","rblock","rprog"];
+var db={records:{}};
+function save(){try{localStorage.setItem(KEY,JSON.stringify(db));return true}catch(e){return false}}
+function load(){try{var s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&s.records)db=s}catch(e){}}
+function readRec(){var o={};FIELDS.forEach(function(k){o[k]=document.getElementById(k).value});return o}
+function fill(rec){FIELDS.forEach(function(k){if(rec[k]!==undefined)document.getElementById(k).value=rec[k]});
+db.current=rec.rdate||document.getElementById("rdate").value;save();render()}
+function current(){var d=document.getElementById("rdate").value||ld();return db.records[d]||{rdate:d,rname:"",rdone:"",rplan:"",rblock:"",rprog:"70"}}
+function render(){
+var d=readRec(),date=d.rdate||ld();
+document.getElementById("pvDate").textContent=date;
+document.getElementById("pvName").textContent=d.rname||"이름 · 부서";
+document.getElementById("pvDone").textContent=d.rdone||"오늘 한 일을 입력해 주세요.";
+document.getElementById("pvPlan").textContent=d.rplan||"내일 할 일을 입력해 주세요.";
+document.getElementById("pvBlock").textContent=d.rblock||"막힌 일이 없습니다.";
+document.getElementById("pvProg").textContent=(d.rprog||0)+"%";
+document.getElementById("rprogOut").textContent=(d.rprog||0)+"%";
+var n=new Date();document.getElementById("pvStamp").textContent=n.getFullYear()+"."+String(n.getMonth()+1).padStart(2,"0")+"."+String(n.getDate()).padStart(2,"0")+" 기준";
+db.records[date]=d;var ok=save();
+var ss=document.getElementById("saveState");ss.textContent=ok?"● 자동 저장":"브라우저 저장 불가";ss.style.color=ok?"var(--ok)":"var(--warn)";
+renderHist()}
+function renderHist(){
+var box=document.getElementById("hist");box.innerHTML="";
+var keys=Object.keys(db.records).sort().reverse().slice(0,20);
+if(!keys.length){box.innerHTML='<p class="muted">저장된 보고가 없어요. 오늘 기록부터 채워 보세요.</p>';return}
+keys.forEach(function(k){var r=db.records[k];
+var el=document.createElement("div");el.className="hrow";
+var first=(r.rdone||"").split("\n").filter(Boolean)[0]||"(내용 없음)";
+el.innerHTML="<b>"+k.slice(5).replace("-","/")+"</b><span style='color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1'>"+esc(first)+"</span><b>"+(r.rprog||0)+"%</b>";
+el.onclick=function(){fill(r)};
+box.appendChild(el)})}
+function buildText(){
+var d=readRec();
+return ["[일일 업무 보고] "+(d.rdate||ld())+" · "+(d.rname||"-")+" · 진행률 "+(d.rprog||0)+"%","【오늘 한 일】\n"+(d.rdone||"-"),"【내일 할 일】\n"+(d.rplan||"-"),"【막힌 일 · 도움 요청】\n"+(d.rblock||"없음")].join("\n\n")}
+FIELDS.forEach(function(k){var e=document.getElementById(k);e.addEventListener("input",render);e.addEventListener("change",render)});
+document.getElementById("rprog").addEventListener("input",render);
+document.getElementById("rdate").addEventListener("change",function(){db.current=this.value;var r=db.records[this.value];fill(r||{rdate:this.value,rname:(current()&&current().rname)||"",rdone:"",rplan:"",rblock:"",rprog:"70"})});
+function goto(n){var c=document.getElementById("rdate").value||ld();var nd=shift(c,n);document.getElementById("rdate").value=nd;
+var r=db.records[nd];fill(r||{rdate:nd,rname:db.records[c]?db.records[c].rname:"",rdone:"",rplan:"",rblock:"",rprog:"70"})}
+document.getElementById("prevDay").onclick=function(){goto(-1)};
+document.getElementById("nextDay").onclick=function(){goto(1)};
+document.getElementById("todayBtn").onclick=function(){goto(0)};
+document.getElementById("carryBtn").onclick=function(){
+var cur=document.getElementById("rdate").value||ld();var prev=db.records[shift(cur,-1)];
+if(!prev){alert("어제 기록이 없어요.");return}
+var lines=[prev.rplan,prev.rblock].filter(Boolean).join("\n").split("\n").filter(Boolean);
+if(!lines.length){alert("어제 기록에 가져올 내용이 없어요.");return}
+var cur2=readRec();
+cur2.rdone=cur2.rdone.split("\n").filter(Boolean).concat(lines.map(function(l){return "(이월) "+l.replace(/^\s*[-•]\s*/,"")})).join("\n");
+fill(cur2);alert(lines.length+"줄을 오늘로 이어왔어요.")};
+document.getElementById("saveBtn").onclick=function(){var d=readRec();db.records[d.rdate||ld()]=d;save();render();
+var b=this;b.textContent="저장됐어요 ✓";setTimeout(function(){b.textContent="오늘 보고 저장"},1400)};
+document.getElementById("copyBtn").onclick=function(){var t=buildText(),b=this;
+var ok=function(){b.textContent="복사됐어요 ✓";setTimeout(function(){b.textContent="보고 글 복사"},1400)};
+if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(ok,function(){prompt("복사하세요",t)});else prompt("복사하세요",t)};
+document.getElementById("printBtn").onclick=function(){window.print()};
+document.getElementById("clearBtn").onclick=function(){if(!confirm("오늘 입력 내용을 비울까요?"))return;
+["rdone","rplan","rblock"].forEach(function(k){document.getElementById(k).value=""});
+document.getElementById("rprog").value=0;render()};
+load();
+var start=db.current||ld();
+document.getElementById("rdate").value=start;
+var rec=db.records[start];
+fill(rec||{rdate:start,rname:"",rdone:"",rplan:"",rblock:"",rprog:"70"});
+})();
+</script></body></html>

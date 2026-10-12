@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>알바 포인트·랭킹 보드</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#b45309;--bad:#e11d48;--r:14px}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+[hidden]{display:none!important}
+.wrap{max-width:1000px;margin:0 auto}h1{font-size:18px;font-weight:800;letter-spacing:-.02em}.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04);min-width:0}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:7px 11px;font-weight:700;font-size:12px;transition:.12s}button:hover{border-color:#c7cddb;background:#fafafa}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}button.primary:hover{filter:brightness(1.07)}
+button.ghost{border-color:transparent;background:transparent;color:var(--sub);padding:4px 7px}
+input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:13px;min-width:0}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--brand);cursor:pointer;flex:none}
+input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:11px;font-weight:800;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}.grow{flex:1;min-width:110px}.muted{color:var(--sub);font-size:12px}.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{border-bottom:1px solid var(--line);padding:6px;text-align:left;vertical-align:middle}th{font-size:11px;color:var(--sub);background:#f8fafc}td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap}
+.ok{background:#ecfdf5;color:#047857}.wn{background:#fffbeb;color:#b45309}.bd{background:#fef2f2;color:#be123c}.in{background:#eef2ff;color:#4338ca}
+.bar{height:10px;background:#eef2f7;border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--brand),#8b5cf6)}
+.usecases{margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}.usecases h2{font-size:12px;font-weight:800;color:var(--sub);margin-bottom:6px}.usecases li{font-size:12px;color:var(--sub);margin-left:15px;margin-bottom:3px}
+.two{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:12px}@media(max-width:780px){.two{grid-template-columns:minmax(0,1fr)}}
+.rk{display:flex;gap:10px;align-items:center;padding:9px 6px;border-top:1px solid #f1f3f7}.rk:first-child{border-top:0}.rn{width:30px;text-align:center;font-size:18px;font-weight:900;flex:none}.rb{flex:1;min-width:0}.rb b{font-size:14px;overflow-wrap:anywhere}.pt{font-size:18px;font-weight:900;font-variant-numeric:tabular-nums;white-space:nowrap}
+.mvp{background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fde68a;border-radius:12px;padding:10px 12px;font-size:13px;font-weight:800;color:#92400e;margin-bottom:8px}
+.notice{margin-top:10px;padding:8px 10px;border-radius:10px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;font-size:11px}
+.cfg{display:flex;gap:6px;margin-top:6px;align-items:center}.cfg .a{width:80px}
+.log{display:flex;gap:8px;align-items:center;padding:6px 0;border-top:1px solid #f1f3f7;font-size:12px}.log:first-child{border-top:0}.log .t{flex:1;min-width:0;overflow-wrap:anywhere}
+@media print{body{background:#fff;padding:0}.no-print{display:none!important}.card{box-shadow:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>🏆 알바 포인트·랭킹 보드</h1><p class="sub">오픈 체크, 청소 인증, 고객 칭찬 같은 좋은 행동에 포인트를 주고 이달의 순위와 보너스 단계를 보여 줘요. 속도만이 아니라 품질도 함께 보상하도록 설계했어요.</p></header>
+
+<section class="card">
+  <div class="row" style="justify-content:space-between;align-items:center">
+    <div class="row" style="align-items:center"><button id="mPrev" aria-label="이전 달">◀</button><b id="mLabel" style="font-size:14px;min-width:110px;text-align:center">-</b><button id="mNext" aria-label="다음 달">▶</button></div>
+    <label style="display:flex;gap:8px;align-items:center;margin:0;color:var(--ink);font-size:12px;cursor:pointer"><input id="hide" type="checkbox"> 순위 숨기기(이름순으로 보기)</label>
+  </div>
+  <div id="mvp" style="margin-top:10px"></div>
+  <div id="rank"></div>
+</section>
+
+<div class="two">
+<section class="card no-print">
+  <b style="font-size:13px">포인트 주기</b>
+  <div class="row" style="margin-top:8px">
+    <div class="grow"><label for="who">직원</label><select id="who"></select></div>
+    <div class="grow" style="min-width:170px"><label for="rule">항목</label><select id="rule"></select></div>
+    <div style="width:140px"><label for="awDate">날짜</label><input id="awDate" type="date"></div>
+  </div>
+  <div class="row" style="margin-top:8px"><div class="grow"><label for="memo">메모(선택)</label><input id="memo" maxlength="60" placeholder="예: 오픈 사진 3장 확인"></div></div>
+  <label id="okWrap" style="display:flex;gap:8px;align-items:center;margin-top:8px;color:var(--ink);font-size:12px;cursor:pointer" hidden><input id="okChk" type="checkbox"> 사진·점검 결과를 사장님이 확인했어요</label>
+  <div class="row" style="margin-top:10px;align-items:center"><button class="primary" id="award">포인트 주기</button><span class="muted" id="msg" role="status"></span></div>
+  <p class="muted" style="margin-top:8px">⚠️ 속도만 보상하면 위생·안전이 소홀해질 수 있어요. 정시 마감처럼 속도와 관련된 항목은 「확인 필요」로 두는 것을 권해요.</p>
+</section>
+
+<section class="card">
+  <b style="font-size:13px">최근 기록</b>
+  <div id="logs" style="margin-top:6px;max-height:300px;overflow-y:auto"></div>
+</section>
+</div>
+
+<details class="card no-print">
+  <summary style="cursor:pointer;font-size:13px;font-weight:800">⚙️ 직원 · 항목 · 보너스 설정</summary>
+  <div class="two" style="margin-top:10px">
+    <div>
+      <b style="font-size:12px">포인트 항목 (+는 적립, −는 차감)</b>
+      <div id="rules"></div>
+      <div class="row" style="margin-top:8px"><div class="grow"><label for="rT">새 항목 이름</label><input id="rT" placeholder="예: 신메뉴 설명 완벽"></div><div style="width:80px"><label for="rP">점수</label><input id="rP" type="number" value="10"></div><label style="display:flex;gap:6px;align-items:center;margin:0 0 8px;color:var(--ink);font-size:12px"><input id="rC" type="checkbox"> 확인 필요</label><button id="addRule">추가</button></div>
+    </div>
+    <div>
+      <b style="font-size:12px">직원</b>
+      <div id="staffList"></div>
+      <div class="row" style="margin-top:8px"><div class="grow"><label for="sN">새 직원(닉네임 가능)</label><input id="sN" maxlength="12" placeholder="예: 민지"></div><button id="addStaff">추가</button></div>
+      <b style="font-size:12px;display:block;margin-top:14px">보너스 단계</b>
+      <div id="tiers"></div>
+      <div class="row" style="margin-top:8px"><div style="width:90px"><label for="tP">필요 점수</label><input id="tP" type="number" value="100"></div><div class="grow"><label for="tT">보상</label><input id="tT" placeholder="예: 음료 쿠폰"></div><button id="addTier">추가</button></div>
+      <div style="margin-top:12px"><label for="cap">하루 적립 상한(점, 0이면 없음)</label><input id="cap" type="number" min="0" style="width:120px"></div>
+    </div>
+  </div>
+</details>
+
+<div class="row no-print" style="margin-top:12px"><button id="copy">순위 복사</button><button id="csv">기록 CSV</button><button id="print">인쇄·PDF</button><button id="sample">예시로 되돌리기</button><button id="clear">기록 모두 지우기</button></div>
+
+<div class="usecases"><h2>이럴 때 좋아요</h2><ul>
+<li><b>사장님(가게)</b> · 알바생의 오픈·청소·친절 같은 좋은 행동을 눈에 보이게 보상할 때</li>
+<li><b>알바·직원</b> · 이번 달 내 포인트와 다음 보너스까지 남은 점수를 확인할 때</li>
+<li><b>총무·점장</b> · 평가 기준과 보너스 단계를 직원과 투명하게 공유할 때</li></ul></div>
+</div>
+
+<script>
+(function(){"use strict";
+var KEY="staff-points-v1",MEDAL=["🥇","🥈","🥉"];
+function load(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function num(v){var x=parseFloat(v);return isNaN(x)?0:x}
+function ymd(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function today(){return ymd(new Date())}
+function uid(){return "p"+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}
+function shiftMonth(m,k){var y=+m.slice(0,4),mo=+m.slice(5,7)-1+k;var d=new Date(y,mo,1);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")}
+var RULES=[{id:"r1",t:"오픈 체크 사진 인증 완료",p:10,c:true},{id:"r2",t:"청소 구역 비포·애프터 인증",p:15,c:true},{id:"r3",t:"마감 정리 완료(점검 통과)",p:10,c:true},{id:"r4",t:"고객 칭찬 접수",p:20,c:false},{id:"r5",t:"재고·위생 문제 먼저 보고",p:10,c:false},{id:"r6",t:"지각",p:-10,c:false},{id:"r7",t:"주문·응대 실수",p:-5,c:false}];
+function seed(){var t=today(),m=t.slice(0,7),dn=+t.slice(8),log=[],sd=9;function rnd(){sd=(sd*1664525+1013904223)%4294967296;return sd/4294967296}
+ var staff=[{id:"s1",n:"민지"},{id:"s2",n:"서준"},{id:"s3",n:"하윤"},{id:"s4",n:"도현"},{id:"s5",n:"지아"}],w=[1.3,1.0,1.15,0.7,0.55];
+ for(var d=1;d<=dn;d++)staff.forEach(function(s,si){var k=Math.round(rnd()*1.2*w[si]*1.2);for(var j=0;j<k;j++){var r=RULES[Math.floor(rnd()*(rnd()<0.12?7:5))];log.push({id:uid(),d:m+"-"+String(d).padStart(2,"0"),sid:s.id,rid:r.id,p:r.p,memo:"",ok:!!r.c})}});
+ return{staff:staff,rules:RULES.map(function(r){return{id:r.id,t:r.t,p:r.p,c:r.c}}),log:log,tiers:[{p:50,t:"음료 쿠폰"},{p:100,t:"간식 선물"},{p:150,t:"보너스 3만원"}],cap:50,hide:false,month:m}}
+var S=load(KEY,null);if(!S||!Array.isArray(S.staff)||!Array.isArray(S.rules))S=seed();if(!Array.isArray(S.log))S.log=[];if(!Array.isArray(S.tiers))S.tiers=[];if(!S.month)S.month=today().slice(0,7);
+function sName(id){for(var i=0;i<S.staff.length;i++)if(S.staff[i].id===id)return S.staff[i].n;return "(삭제됨)"}
+function rule(id){for(var i=0;i<S.rules.length;i++)if(S.rules[i].id===id)return S.rules[i];return null}
+function monthLog(){return S.log.filter(function(l){return l.d.slice(0,7)===S.month})}
+function totals(){var m={};S.staff.forEach(function(s){m[s.id]={s:s,p:0,n:0}});monthLog().forEach(function(l){if(m[l.sid]){m[l.sid].p+=l.p;m[l.sid].n++}});return Object.keys(m).map(function(k){return m[k]})}
+function tierOf(p){var cur=null,next=null;S.tiers.slice().sort(function(a,b){return a.p-b.p}).forEach(function(t){if(p>=t.p)cur=t;else if(!next)next=t});return{cur:cur,next:next}}
+function render(){$("mLabel").textContent=S.month.slice(0,4)+"년 "+Number(S.month.slice(5))+"월";$("hide").checked=!!S.hide;
+ var tt=totals(),max=Math.max.apply(null,tt.map(function(x){return x.p}).concat([1]));
+ if(S.hide)tt.sort(function(a,b){return a.s.n.localeCompare(b.s.n)});else tt.sort(function(a,b){return b.p-a.p||a.s.n.localeCompare(b.s.n)});
+ var rank=0,prev=null,h="";tt.forEach(function(x,i){if(x.p!==prev){rank=i+1;prev=x.p}x.rank=rank});
+ var top=tt.filter(function(x){return x.p>0&&x.rank===1});
+ $("mvp").innerHTML=!S.hide&&top.length?'<div class="mvp">🌟 이달의 MVP: '+top.map(function(x){return esc(x.s.n)}).join(", ")+' · '+top[0].p+'점</div>':'';
+ tt.forEach(function(x){var t=tierOf(x.p);h+='<div class="rk"><div class="rn">'+(S.hide?"·":(x.p>0&&x.rank<=3?MEDAL[x.rank-1]:x.rank))+'</div><div class="rb"><b>'+esc(x.s.n)+'</b> <span class="muted">'+x.n+'건</span>'+
+  (S.hide?'':'<div class="bar" style="margin-top:5px"><i style="width:'+Math.max(0,Math.round(x.p/max*100))+'%"></i></div>')+
+  '<div class="muted" style="margin-top:3px">'+(t.cur?'<span class="pill ok">'+esc(t.cur.t)+' 달성</span> ':'')+(t.next?'다음 「'+esc(t.next.t)+'」까지 '+(t.next.p-x.p)+'점':(S.tiers.length?'모든 보너스 단계를 달성했어요 🎉':''))+'</div></div><div class="pt">'+x.p+'<small class="muted" style="font-size:11px"> 점</small></div></div>'});
+ $("rank").innerHTML=h||'<p class="muted">직원을 추가해 주세요.</p>';
+ var keepW=$("who").value,keepR=$("rule").value;
+ $("who").innerHTML=S.staff.map(function(s){return '<option value="'+esc(s.id)+'">'+esc(s.n)+'</option>'}).join("");
+ $("rule").innerHTML=S.rules.map(function(r){return '<option value="'+esc(r.id)+'">'+(r.p>0?"+":"")+r.p+" · "+esc(r.t)+(r.c?" (확인 필요)":"")+'</option>'}).join("");
+ if(S.staff.some(function(s){return s.id===keepW}))$("who").value=keepW;
+ if(S.rules.some(function(r){return r.id===keepR}))$("rule").value=keepR;
+ ruleVis();
+ $("logs").innerHTML=monthLog().slice().reverse().slice(0,40).map(function(l){return '<div class="log" data-id="'+esc(l.id)+'"><span class="muted" style="width:44px">'+l.d.slice(5)+'</span><span class="t"><b>'+esc(sName(l.sid))+'</b> · '+(rule(l.rid)?esc(rule(l.rid).t):"(삭제된 항목)")+(l.memo?' <span class="muted">'+esc(l.memo)+'</span>':'')+(l.ok?' <span class="pill in">확인</span>':'')+'</span><b style="color:'+(l.p<0?"#be123c":"#047857")+'">'+(l.p>0?"+":"")+l.p+'</b><button class="ghost no-print" data-act="undo" aria-label="기록 취소">취소</button></div>'}).join("")||'<p class="muted">이 달에는 기록이 없어요.</p>';
+ $("rules").innerHTML=S.rules.map(function(r){return '<div class="cfg" data-id="'+esc(r.id)+'"><input data-f="t" value="'+esc(r.t)+'" aria-label="항목 이름" class="grow"><input class="a" data-f="p" type="number" value="'+esc(r.p)+'" aria-label="점수"><label style="display:flex;gap:4px;align-items:center;margin:0;font-size:11px;color:var(--ink);white-space:nowrap"><input data-f="c" type="checkbox"'+(r.c?" checked":"")+'>확인</label><button class="ghost" data-act="delrule" aria-label="항목 삭제">✕</button></div>'}).join("");
+ $("staffList").innerHTML=S.staff.map(function(s){return '<div class="cfg" data-id="'+esc(s.id)+'"><input data-f="n" value="'+esc(s.n)+'" aria-label="직원 이름" class="grow"><button class="ghost" data-act="delstaff" aria-label="직원 삭제">✕</button></div>'}).join("");
+ $("tiers").innerHTML=S.tiers.map(function(t,i){return '<div class="cfg" data-i="'+i+'"><input class="a" data-f="p" type="number" value="'+esc(t.p)+'" aria-label="필요 점수"><input data-f="t" value="'+esc(t.t)+'" aria-label="보상" class="grow"><button class="ghost" data-act="deltier" aria-label="단계 삭제">✕</button></div>'}).join("");
+ $("cap").value=S.cap==null?0:S.cap;if(!$("awDate").value)$("awDate").value=today();save(KEY,S)}
+function ruleVis(){var r=rule($("rule").value);$("okWrap").hidden=!(r&&r.c);if(!(r&&r.c))$("okChk").checked=false}
+var mt=null;function msg(t){$("msg").textContent=t;clearTimeout(mt);mt=setTimeout(function(){$("msg").textContent=""},4000)}
+$("rule").addEventListener("change",ruleVis);
+$("award").onclick=function(){var sid=$("who").value,r=rule($("rule").value),d=$("awDate").value||today();if(!sid||!r){msg("직원과 항목을 골라 주세요.");return}
+ if(r.c&&!$("okChk").checked){msg("이 항목은 사진·점검을 확인한 뒤 체크해야 줄 수 있어요.");return}
+ var cap=num(S.cap);if(cap>0&&r.p>0){var day=S.log.filter(function(l){return l.d===d&&l.sid===sid&&l.p>0}).reduce(function(a,l){return a+l.p},0);if(day+r.p>cap){msg("하루 적립 상한("+cap+"점)을 넘어서 줄 수 없어요.");return}}
+ S.log.push({id:uid(),d:d,sid:sid,rid:r.id,p:r.p,memo:$("memo").value.trim(),ok:!!r.c});$("memo").value="";$("okChk").checked=false;if(d.slice(0,7)!==S.month)S.month=d.slice(0,7);msg(sName(sid)+" "+(r.p>0?"+":"")+r.p+"점 기록했어요.");render()};
+$("logs").addEventListener("click",function(e){var b=e.target.closest('[data-act="undo"]');if(!b)return;var id=b.closest(".log").getAttribute("data-id");S.log=S.log.filter(function(l){return l.id!==id});render()});
+$("mPrev").onclick=function(){S.month=shiftMonth(S.month,-1);render()};$("mNext").onclick=function(){S.month=shiftMonth(S.month,1);render()};
+$("hide").addEventListener("change",function(){S.hide=this.checked;render()});
+$("cap").addEventListener("input",function(){S.cap=Math.max(0,num(this.value));save(KEY,S)});
+function findBy(arr,id){for(var i=0;i<arr.length;i++)if(arr[i].id===id)return arr[i];return null}
+$("rules").addEventListener("input",function(e){var f=e.target.getAttribute("data-f");if(!f)return;var r=findBy(S.rules,e.target.closest(".cfg").getAttribute("data-id"));if(!r)return;r[f]=f==="p"?num(e.target.value):f==="c"?e.target.checked:e.target.value;save(KEY,S)});
+$("rules").addEventListener("change",function(){render()});
+$("rules").addEventListener("click",function(e){var b=e.target.closest('[data-act="delrule"]');if(!b)return;var id=b.closest(".cfg").getAttribute("data-id");S.rules=S.rules.filter(function(r){return r.id!==id});render()});
+$("staffList").addEventListener("input",function(e){var s=findBy(S.staff,e.target.closest(".cfg").getAttribute("data-id"));if(s){s.n=e.target.value;save(KEY,S)}});
+$("staffList").addEventListener("change",function(){render()});
+$("staffList").addEventListener("click",function(e){var b=e.target.closest('[data-act="delstaff"]');if(!b)return;var id=b.closest(".cfg").getAttribute("data-id");if(!confirm("이 직원을 지울까요? 이 직원의 포인트 기록도 함께 지워져요."))return;S.staff=S.staff.filter(function(s){return s.id!==id});S.log=S.log.filter(function(l){return l.sid!==id});render()});
+$("tiers").addEventListener("input",function(e){var f=e.target.getAttribute("data-f");if(!f)return;var t=S.tiers[+e.target.closest(".cfg").getAttribute("data-i")];if(t){t[f]=f==="p"?num(e.target.value):e.target.value;save(KEY,S)}});
+$("tiers").addEventListener("change",function(){render()});
+$("tiers").addEventListener("click",function(e){var b=e.target.closest('[data-act="deltier"]');if(!b)return;S.tiers.splice(+b.closest(".cfg").getAttribute("data-i"),1);render()});
+$("addRule").onclick=function(){var t=$("rT").value.trim();if(!t)return;S.rules.push({id:uid(),t:t,p:num($("rP").value),c:$("rC").checked});$("rT").value="";render()};
+$("addStaff").onclick=function(){var n=$("sN").value.trim();if(!n)return;S.staff.push({id:uid(),n:n});$("sN").value="";render()};
+$("addTier").onclick=function(){var t=$("tT").value.trim();if(!t)return;S.tiers.push({p:Math.max(1,num($("tP").value)),t:t});$("tT").value="";render()};
+$("sample").onclick=function(){S=seed();$("awDate").value=today();render()};
+$("clear").onclick=function(){if(!confirm("모든 포인트 기록을 지울까요? (직원·항목 설정은 유지돼요)"))return;S.log=[];render()};
+$("print").onclick=function(){window.print()};
+function csvCell(c){c=String(c==null?"":c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c}
+$("csv").onclick=function(){var rows=[["날짜","직원","항목","점수","확인","메모"]];S.log.slice().sort(function(a,b){return a.d<b.d?-1:a.d>b.d?1:0}).forEach(function(l){rows.push([l.d,sName(l.sid),rule(l.rid)?rule(l.rid).t:"(삭제된 항목)",l.p,l.ok?"확인":"",l.memo])});
+ var t="\uFEFF"+rows.map(function(r){return r.map(csvCell).join(",")}).join("\r\n"),b=new Blob([t],{type:"text/csv;charset=utf-8"});
+ if(window.URL&&URL.createObjectURL){var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="staff-points.csv";document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500)}};
+$("copy").onclick=function(){var tt=totals().sort(function(a,b){return b.p-a.p}),rank=0,prev=null,L=["[이달의 포인트 순위] "+S.month.slice(0,4)+"년 "+Number(S.month.slice(5))+"월"];
+ tt.forEach(function(x,i){if(x.p!==prev){rank=i+1;prev=x.p}var t=tierOf(x.p);L.push((S.hide?"-":rank+"위")+" "+x.s.n+" "+x.p+"점"+(t.cur?" ("+t.cur.t+")":""))});
+ var txt=L.join("\n"),b=this,done=function(){b.textContent="복사됐어요 ✓";setTimeout(function(){b.textContent="순위 복사"},1400)};
+ var fb=function(){var ta=document.createElement("textarea");ta.value=txt;ta.style.cssText="position:fixed;opacity:0";document.body.appendChild(ta);ta.select();var ok=false;try{ok=document.execCommand("copy")}catch(e){}ta.remove();if(ok)done();else window.prompt("복사가 막혀 있어요. 아래 글을 직접 복사해 주세요.",txt)};
+ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,fb)}else fb()};
+render();
+})();
+</script>
+</body>
+</html>

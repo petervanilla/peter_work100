@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>오늘 할 일 3개 보드</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#d97706;--bad:#e11d48;--r:14px}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+.wrap{max-width:640px;margin:0 auto}
+h1{font-size:18px;font-weight:800;letter-spacing:-.02em}
+.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04)}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:8px 12px;font-weight:600;font-size:13px;transition:.12s}
+button:hover{border-color:#c7cddb;background:#fafafa}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}
+button.primary:hover{filter:brightness(1.07)}
+input,select,textarea{font:inherit;width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);font-size:14px}
+input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:12px;font-weight:700;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.muted{color:var(--sub);font-size:12px}
+.task{display:flex;gap:10px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:14px;margin-top:10px;background:#fff;transition:.15s}
+.task.done{background:#f0fdf4;border-color:#bbf7d0}
+.task input[type=text]{border:none;background:transparent;font-size:16px;font-weight:700;flex:1;padding:2px}
+.task.done input[type=text]{text-decoration:line-through;color:var(--sub)}
+.num{width:26px;height:26px;border-radius:50%;background:#eef2ff;color:var(--brand);display:grid;place-items:center;font-weight:800;font-size:13px;flex-shrink:0}
+.task.done .num{background:#dcfce7;color:var(--ok)}
+.chk{width:24px;height:24px;accent-color:var(--ok);cursor:pointer;flex-shrink:0}
+.stats{display:flex;gap:8px;margin-top:12px}
+.stat{flex:1;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.stat b{display:block;font-size:20px}
+.usecases{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+.usecases h2{font-size:12px;font-weight:800;color:var(--sub);margin-bottom:6px}
+.usecases li{font-size:12px;color:var(--sub);margin-left:14px;margin-bottom:2px}
+.hist{font-size:12px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin-top:6px;background:#fff}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>3️⃣ 오늘 할 일 3개 보드</h1>
+  <p class="sub">오늘 꼭 끝낼 일만 크게 적고, 끝나면 눌러 줄을 그어요. 날짜가 바뀌면 새 판이 열려요.</p>
+
+  <div class="card" style="margin-top:14px">
+    <div class="row" style="justify-content:space-between">
+      <b id="dateLabel" style="font-size:13px"></b>
+      <span class="muted" id="progressLabel"></span>
+    </div>
+    <div id="tasks"></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b id="stDone">0</b><span class="muted">오늘 완료</span></div>
+    <div class="stat"><b id="stWeek">0</b><span class="muted">이번 주 완료</span></div>
+    <div class="stat"><b id="stStreak">0</b><span class="muted">연속 3개 달성</span></div>
+  </div>
+
+  <div class="row" style="margin-top:12px">
+    <button id="btnCarry" class="primary">어제 못 한 일 가져오기</button>
+    <button id="btnClear">오늘 판 비우기</button>
+  </div>
+
+  <div class="card">
+    <b style="font-size:13px">지난 판</b>
+    <div id="history"></div>
+  </div>
+
+  <div class="usecases">
+    <h2>이럴 때 좋아요</h2>
+    <ul>
+      <li><b>모든 직장인</b> · 아침에 할 일을 정리하려면 한참이 걸릴 때 — 3칸만 있으니까 1분이면 오늘의 판이 완성돼요.</li>
+      <li><b>팀장</b> · 팀원들에게 「오늘 꼭 할 일」을 물어볼 때 — 3개만 적게 하면 답이 간결해지고 우선순위를 바로 알 수 있어요.</li>
+      <li><b>일이 많은 직장인</b> · 어제 못 한 일이 자꾸 밀릴 때 — 버튼 하나로 어제 못 한 일을 오늘 판으로 가져올 수 있어요.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var KEY="today-three-v1";
+function todayStr(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){return{}}}
+function save(o){try{localStorage.setItem(KEY,JSON.stringify(o))}catch(e){}}
+var data=load();
+if(!data.boards)data.boards={};
+var today=todayStr();
+if(!data.boards[today])data.boards[today]=[{t:"",done:false},{t:"",done:false},{t:"",done:false}];
+
+function prevDate(){
+  var keys=Object.keys(data.boards).filter(function(k){return k<today}).sort();
+  return keys.length?keys[keys.length-1]:null;
+}
+function render(){
+  var board=data.boards[today];
+  var box=document.getElementById("tasks");box.innerHTML="";
+  board.forEach(function(task,i){
+    var el=document.createElement("div");el.className="task"+(task.done?" done":"");
+    var num=document.createElement("span");num.className="num";num.textContent=i+1;
+    var inp=document.createElement("input");inp.type="text";inp.value=task.t;inp.placeholder="예: 기획서 2차 초안 보내기";
+    inp.addEventListener("input",function(){task.t=inp.value;save(data);renderStats()});
+    var chk=document.createElement("input");chk.type="checkbox";chk.className="chk";chk.checked=task.done;chk.title="끝났어요";
+    chk.onchange=function(){task.done=chk.checked;save(data);render();renderStats()};
+    el.appendChild(num);el.appendChild(inp);el.appendChild(chk);
+    box.appendChild(el);
+  });
+  var d=new Date();
+  document.getElementById("dateLabel").textContent=(d.getMonth()+1)+"월 "+d.getDate()+"일의 판";
+  renderStats();
+  renderHistory();
+}
+function renderStats(){
+  var board=data.boards[today];
+  var done=board.filter(function(t){return t.done&&t.t.trim()}).length;
+  document.getElementById("stDone").textContent=done+"/3";
+  document.getElementById("progressLabel").textContent=done===3?"🎉 오늘 목표 달성!":"";
+  // 이번 주 완료
+  var d=new Date();var day=d.getDay();var monday=new Date(d);monday.setDate(d.getDate()-(day===0?6:day-1));
+  var mondayStr=monday.getFullYear()+"-"+String(monday.getMonth()+1).padStart(2,"0")+"-"+String(monday.getDate()).padStart(2,"0");
+  var week=0,streak=0;
+  Object.keys(data.boards).sort().forEach(function(k){
+    if(k<mondayStr)return;
+    var b=data.boards[k];
+    if(b.filter(function(t){return t.done&&t.t.trim()}).length>=3){week++;streak++}else streak=0;
+  });
+  document.getElementById("stWeek").textContent=week;
+  document.getElementById("stStreak").textContent=streak;
+}
+function renderHistory(){
+  var box=document.getElementById("history");box.innerHTML="";
+  var keys=Object.keys(data.boards).filter(function(k){return k<today}).sort().reverse().slice(0,5);
+  if(!keys.length){box.innerHTML='<p class="muted" style="margin-top:6px">어제 판은 오늘 자정이 지나면 여기에 남아요.</p>';return}
+  keys.forEach(function(k){
+    var b=data.boards[k];
+    var done=b.filter(function(t){return t.done&&t.t.trim()}).length;
+    var names=b.filter(function(t){return t.t.trim()}).map(function(t){return (t.done?"✓ ":"· ")+t.t}).join(" / ");
+    var el=document.createElement("div");el.className="hist";
+    el.innerHTML="<b>"+k.slice(5).replace("-","/")+"</b> · 완료 "+done+"/3<br><span class='muted'>"+names.replace(/</g,"&lt;")+"</span>";
+    box.appendChild(el);
+  });
+}
+document.getElementById("btnCarry").onclick=function(){
+  var pk=prevDate();
+  if(!pk){alert("가져올 어제 판이 없어요.");return}
+  var undone=data.boards[pk].filter(function(t){return !t.done&&t.t.trim()});
+  if(!undone.length){alert("어제 판에 못 한 일이 없어요. 👏");return}
+  var board=data.boards[today];
+  undone.slice(0,3).forEach(function(u,i){board[i]={t:u.t,done:false}});
+  save(data);render();
+};
+document.getElementById("btnClear").onclick=function(){
+  if(!confirm("오늘 판을 비울까요? (완료한 일은 지난 판에 남지 않아요)"))return;
+  data.boards[today]=[{t:"",done:false},{t:"",done:false},{t:"",done:false}];
+  save(data);render();
+};
+render();
+})();
+</script>
+</body>
+</html>

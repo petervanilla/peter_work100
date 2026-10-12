@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>주간 KPI 체크인</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#d97706;--bad:#e11d48;--soft:#f8fafc}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+.wrap{max-width:940px;margin:0 auto}h1{font-size:18px;font-weight:800;letter-spacing:-.02em}.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04)}
+.card h2{font-size:13px;font-weight:900;margin-bottom:9px;display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:7px 11px;font-weight:700;font-size:12px;transition:.12s}button:hover{border-color:var(--brand)}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border:0}
+input,select{font:inherit;width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);font-size:13px}
+input:focus,select:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:10px;font-weight:800;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:end}.muted{font-size:11px;color:var(--sub)}.grow{flex:1;min-width:130px}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.chip{flex:1;min-width:110px;padding:11px 13px;border-radius:13px;border:1px solid var(--line);background:var(--card)}
+.chip span{font-size:10px;font-weight:800;color:var(--sub);display:block}
+.chip b{font-size:20px;font-weight:950;display:block;margin-top:2px;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:right;vertical-align:middle}
+th{font-size:10px;color:var(--sub);background:var(--soft);font-weight:800}
+th:first-child,td:first-child,td.c{text-align:left}
+input.n{width:74px;text-align:right}
+input.nm{font-weight:700}
+tr.rm:hover td{background:rgba(225,29,72,.04)}
+.signal{display:inline-flex;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:900;white-space:nowrap}
+.up{background:#ecfdf5;color:#047857}.flat{background:var(--soft);color:var(--sub)}.down{background:#fef2f2;color:#be123c}
+.comment{width:100%;min-width:96px;font-size:11px}
+.hist{margin-top:10px}
+.hrow{display:grid;grid-template-columns:78px repeat(4,1fr);gap:6px;font-size:11px;padding:6px 4px;border-bottom:1px solid var(--line);align-items:center}
+.hrow.head{color:var(--sub);font-weight:800;background:var(--soft)}
+.usecases{margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}.usecases h2{font-size:12px;font-weight:900;color:var(--sub);margin-bottom:5px}
+.usecases li{font-size:11px;color:var(--sub);margin-left:15px;margin-bottom:3px}
+@media(max-width:700px){.tbl{overflow-x:auto}.stats{gap:6px}.chip{min-width:96px;padding:9px 10px}}
+@media print{body{background:#fff;padding:0}.no-print{display:none!important}.card{box-shadow:none;break-inside:avoid}}
+</style></head><body><div class="wrap">
+<header><h1>📈 주간 KPI 체크인</h1><p class="sub">지표마다 지난주와 이번주 값을 넣으면 달성률과 변화 신호를 보여요. 한 줄 코멘트까지 남기면 주간 회의 준비가 끝납니다.</p></header>
+
+<section class="card no-print">
+<h2>이번 주 체크인<span class="muted" id="saveState" style="font-weight:600">● 자동 저장</span></h2>
+<div class="row">
+<div style="max-width:150px"><label for="week">주차 (월요일 기준)</label><input id="week" type="date"></div>
+<div class="grow"><label for="teamName">팀 · 작성자</label><input id="teamName" placeholder="예: 프로덕트 1팀 · 김보고"></div>
+<div style="max-width:130px"><label for="goalRate">달성 기준(%)</label><input id="goalRate" type="number" min="1" max="200" value="100"></div>
+<div style="max-width:140px"><label for="okRate">양호 기준(%)</label><input id="okRate" type="number" min="1" max="200" value="80"></div>
+<button id="lastWeek">지난주 값 불러오기</button>
+</div>
+</section>
+
+<div class="stats" id="stats"></div>
+
+<section class="card">
+<h2>지표별 주간 값<span class="row no-print" style="gap:6px"><button id="addRow">＋ 지표 추가</button><button id="copyBtn">체크인 복사</button><button id="printBtn">인쇄 · PDF</button><button id="sampleBtn">예시로 되돌리기</button></span></h2>
+<div class="tbl"><table><thead><tr>
+<th>지표</th><th>단위</th><th>목표</th><th>지난주</th><th>이번주</th><th>달성률</th><th>신호</th><th class="c">한 줄 코멘트</th><th></th>
+</tr></thead><tbody id="rows"></tbody></table></div>
+<p class="muted" style="margin-top:8px">신호 = 이번주 vs 지난주 변화 + 달성률 기준으로 자동 판정돼요. 입력은 이 브라우저에 저장됩니다.</p>
+</section>
+
+<section class="card">
+<h2>주차별 기록<span class="muted" style="font-weight:600">최근 8주</span></h2>
+<div class="hist" id="hist"></div>
+</section>
+
+<div class="usecases"><h2>이럴 때 좋아요</h2><ul>
+<li><b>팀장</b> · 주간 회의에서 지표별 진행을 순서대로 설명해야 할 때 — 달성률과 전주 대비 변화를 한 표로 보여 줘요.</li>
+<li><b>기획</b> · 캠페인·서비스 지표의 주간 흐름을 코멘트와 함께 남겨야 할 때 — 숫자와 판단을 같은 줄에 기록해요.</li>
+<li><b>모든 직장인</b> · 월요일 아침에 지난주 결과를 정리할 때 — 지난주 값을 불러와 이번주 값만 바꾸면 체크인이 끝나요.</li>
+</ul></div>
+</div>
+<script>
+(function(){"use strict";
+var KEY="kpi-checkin-v1";
+function uid(){return "k"+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}
+function monday(d){d=d||new Date();var day=d.getDay();var m=new Date(d);m.setDate(d.getDate()-(day===0?6:day-1));return m.getFullYear()+"-"+String(m.getMonth()+1).padStart(2,"0")+"-"+String(m.getDate()).padStart(2,"0")}
+function shift(ds,n){var d=new Date(ds+"T00:00:00");d.setDate(d.getDate()+n*7);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function esc(s){return String(s==null?"":s).replace(/[&<>\"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'\"':"&quot;"}[c]})}
+function num(v){var n=parseFloat(v);return isFinite(n)?n:0}
+function wkey(ds){var d=new Date(ds+"T00:00:00");return d.getFullYear()+"-W"+String(Math.ceil((d.getDate()+new Date(d.getFullYear(),d.getMonth(),1).getDay())/7)).padStart(2,"0")}
+var SAMPLE={teamName:"프로덕트 1팀 · 김보고",goalRate:100,okRate:80,weeks:{}};
+function sampleWeek(){
+return [
+{name:"신규 가입자",unit:"명",goal:500,last:410,now:462,comment:"검색 광고 재구성 효과"},
+{name:"결제 성공률",unit:"%",goal:99,last:97.4,now:99.2,comment:"게이트웨이 안정화 반영"},
+{name:"고객 문의 응답시간",unit:"분",goal:15,last:22,now:13,comment:"봇 응답 도입"},
+{name:"온보딩 완료율",unit:"%",goal:75,last:61,now:58,comment:"3단계에서 이탈 — 개선안 필요",},
+{name:"배포 지연 건수",unit:"건",goal:0,last:3,now:1,comment:"체크리스트 적용"}]}
+var state={...SAMPLE};
+function save(){try{var ok=localStorage.setItem(KEY,JSON.stringify(state));return ok===undefined}catch(e){return false}}
+function load(){try{var s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&s.weeks)state=s}catch(e){}}
+function curWeek(){return document.getElementById("week").value||monday()}
+function curRows(){var k=curWeek();if(!state.weeks[k])state.weeks[k]=sampleWeek();return state.weeks[k]}
+function judge(r){
+var g=num(r.goal),v=num(r.now),l=num(r.last);
+var rate=g===0?(v===0?100:0):Math.round(v/Math.abs(g)*100);
+var ok=Number(state.goalRate)||100,warn=Number(state.okRate)||80;
+var sig=rate>=ok?"up":rate>=warn?"flat":"down";
+if(l!==0){var ch=(v-l)/Math.abs(l)*100;if(ch>=1&&sig==="down"&&rate>=warn)sig="flat";if(ch<=-1&&rate>=ok)sig="flat"}
+return {rate:rate,sig:sig}}
+function render(){
+document.getElementById("week").value=curWeek();
+document.getElementById("teamName").value=state.teamName||"";
+document.getElementById("goalRate").value=state.goalRate||100;
+document.getElementById("okRate").value=state.okRate||80;
+var rows=curRows();
+var tb=document.getElementById("rows");tb.innerHTML="";
+rows.forEach(function(r,i){
+var j=judge(r);
+var tr=document.createElement("tr");tr.className="rm";
+tr.innerHTML='<td><input class="nm" value="'+esc(r.name)+'" placeholder="지표 이름"></td>'+
+'<td><input class="n" value="'+esc(r.unit)+'" style="width:52px;text-align:right" aria-label="단위"></td>'+
+'<td><input class="n" type="number" step="any" value="'+esc(r.goal)+'" aria-label="목표"></td>'+
+'<td><input class="n" type="number" step="any" value="'+esc(r.last)+'" aria-label="지난주"></td>'+
+'<td><input class="n" type="number" step="any" value="'+esc(r.now)+'" aria-label="이번주"></td>'+
+'<td class="rateCell"><b style="color:'+(j.sig==="up"?"var(--ok)":j.sig==="down"?"var(--bad)":"var(--warn)")+'">'+j.rate+'%</b></td>'+
+'<td class="sigCell"><span class="signal '+j.sig+'">'+(j.sig==="up"?"상승·달성":j.sig==="down"?"부족":"양호")+'</span></td>'+
+'<td class="c"><input class="comment" value="'+esc(r.comment)+'" placeholder="한 줄 코멘트"></td>'+
+'<td><button class="del" aria-label="삭제" style="border:0;background:transparent;color:#cbd5e1;padding:2px 5px">×</button></td>';
+var ins=tr.querySelectorAll("input");
+ins[0].oninput=function(){r.name=this.value;save()};
+ins[1].oninput=function(){r.unit=this.value;save()};
+function updateRow(){var q=judge(r);
+var rc=tr.querySelector(".rateCell"),sc=tr.querySelector(".sigCell");
+if(rc)rc.innerHTML='<b style="color:'+(q.sig==="up"?"var(--ok)":q.sig==="down"?"var(--bad)":"var(--warn)")+'">'+q.rate+'%</b>';
+if(sc)sc.innerHTML='<span class="signal '+q.sig+'">'+(q.sig==="up"?"상승·달성":q.sig==="down"?"부족":"양호")+'</span>';
+renderTotals()}
+ins[2].oninput=function(){r.goal=this.value;save();updateRow()};
+ins[3].oninput=function(){r.last=this.value;save()};
+ins[4].oninput=function(){r.now=this.value;save();updateRow()};
+ins[5].oninput=function(){r.comment=this.value;save()};
+tr.querySelector(".del").onclick=function(){rows.splice(i,1);save();render()};
+tb.appendChild(tr)});
+if(!rows.length)tb.innerHTML='<tr><td colspan="9" class="muted" style="text-align:center;padding:16px">「지표 추가」로 시작하세요.</td></tr>';
+renderTotals();renderHist();save()}
+function renderTotals(){
+var rows=curRows(),n=rows.length;
+var rates=rows.map(function(r){return judge(r).rate});
+var avg=rates.length?Math.round(rates.reduce(function(a,b){return a+b},0)/rates.length):0;
+var hit=rows.filter(function(r){return judge(r).rate>=(Number(state.goalRate)||100)}).length;
+var risk=rows.filter(function(r){return judge(r).sig==="down"}).length;
+document.getElementById("stats").innerHTML=
+[['지표 수',n+"개","var(--ink)"],["평균 달성률",avg+"%",avg>=(Number(state.okRate)||80)?"var(--ok)":"var(--warn)"],["목표 달성",hit+"/"+n+"개","var(--brand)"],["리스크 지표",risk+"개",risk?"var(--bad)":"var(--sub)"]]
+.map(function(x){return '<div class="chip"><span>'+x[0]+'</span><b style="color:'+x[2]+'">'+x[1]+"</b></div>"}).join("")+
+'<div class="chip" style="min-width:170px"><span>주차</span><b style="font-size:13px">'+esc(wkey(curWeek()))+" "+curWeek().slice(5).replace("-","/")+"~</b></div>"}
+function renderHist(){
+var box=document.getElementById("hist");box.innerHTML="";
+var keys=Object.keys(state.weeks).sort().reverse().slice(0,8);
+if(keys.length<2){box.innerHTML='<p class="muted">주차를 바꿔 기록하면 여기에 쌓여요.</p>';return}
+var head='<div class="hrow head"><span>주차</span><span>평균 달성률</span><span>달성 지표</span><span>리스크</span><span>지표 수</span></div>';
+box.innerHTML=head+keys.map(function(k){
+var rows=state.weeks[k]||[];
+var rates=rows.map(function(r){return judge(r).rate});
+var avg=rates.length?Math.round(rates.reduce(function(a,b){return a+b},0)/rates.length):0;
+var hit=rows.filter(function(r){return judge(r).rate>=(Number(state.goalRate)||100)}).length;
+var risk=rows.filter(function(r){return judge(r).sig==="down"}).length;
+return '<div class="hrow"><b>'+k.replace(/-W/," W")+'</b><span style="color:'+(avg>=80?"var(--ok)":"var(--warn)")+'">'+avg+'%</span><span>'+hit+"/"+rows.length+'</span><span style="color:'+(risk?"var(--bad)":"var(--sub)")+'">'+risk+'</span><span>'+rows.length+'</span></div>'}).join("")}
+function buildText(){
+var rows=curRows();
+var rates=rows.map(function(r){return judge(r).rate});
+var avg=rates.length?Math.round(rates.reduce(function(a,b){return a+b},0)/rates.length):0;
+var lines=["[주간 KPI 체크인] "+curWeek()+" ("+wkey(curWeek())+")","작성: "+(state.teamName||"-")+" · 평균 달성률 "+avg+"%",""];
+rows.forEach(function(r){var j=judge(r);
+lines.push("- "+r.name+" ("+r.unit+"): "+r.now+" / 목표 "+r.goal+" → "+j.rate+"% ["+(j.sig==="up"?"상승·달성":j.sig==="down"?"부족":"양호")+"]"+(r.comment?" — "+r.comment:""))});
+return lines.join("\n")}
+["week","teamName","goalRate","okRate"].forEach(function(k){document.getElementById(k).addEventListener("input",function(){
+state[k==="week"?"week":k]=this.value;save();render()})});
+document.getElementById("week").onchange=function(){state.week=this.value;save();render()};
+document.getElementById("addRow").onclick=function(){curRows().push({name:"새 지표",unit:"",goal:100,last:0,now:0,comment:""});render()};
+document.getElementById("lastWeek").onclick=function(){var prev=state.weeks[shift(curWeek(),-1)];
+if(!prev){alert("지난주 기록이 없어요.");return}
+state.weeks[curWeek()]=JSON.parse(JSON.stringify(prev)).map(function(r){r.now=r.last;return r});
+render();alert("지난주 값을 이번주 칸으로 불러왔어요.")};
+document.getElementById("copyBtn").onclick=function(){var t=buildText(),b=this;
+var ok=function(){b.textContent="복사됐어요 ✓";setTimeout(function(){b.textContent="체크인 복사"},1400)};
+if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(ok,function(){prompt("복사하세요",t)});else prompt("복사하세요",t)};
+document.getElementById("printBtn").onclick=function(){window.print()};
+document.getElementById("sampleBtn").onclick=function(){if(confirm("예시 지표로 되돌릴까요?")){state=JSON.parse(JSON.stringify(SAMPLE));save();render()}};
+load();
+document.getElementById("week").value=monday();
+state.week=curWeek();
+if(!Object.keys(state.weeks).length)state.weeks[curWeek()]=sampleWeek();
+render();
+})();
+</script></body></html>

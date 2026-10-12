@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>시험 D-day 학습 플래너</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#b45309;--bad:#e11d48;--r:14px}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+[hidden]{display:none!important}
+.wrap{max-width:1000px;margin:0 auto}h1{font-size:18px;font-weight:800;letter-spacing:-.02em}.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04);min-width:0}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:7px 11px;font-weight:700;font-size:12px;transition:.12s}button:hover{border-color:#c7cddb;background:#fafafa}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}button.primary:hover{filter:brightness(1.07)}
+button.ghost{border-color:transparent;background:transparent;color:var(--sub)}
+input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:13px;min-width:0}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--brand);cursor:pointer;flex:none}
+input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:11px;font-weight:800;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}.grow{flex:1;min-width:110px}.muted{color:var(--sub);font-size:12px}
+.pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap}
+.ok{background:#ecfdf5;color:#047857}.wn{background:#fffbeb;color:#b45309}.bd{background:#fef2f2;color:#be123c}.in{background:#eef2ff;color:#4338ca}
+.bar{height:8px;background:#eef2f7;border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--brand),#8b5cf6)}
+.usecases{margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}.usecases h2{font-size:12px;font-weight:800;color:var(--sub);margin-bottom:6px}.usecases li{font-size:12px;color:var(--sub);margin-left:15px;margin-bottom:3px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}.stat{border:1px solid var(--line);border-radius:12px;padding:10px;background:#f8fafc}.stat span{font-size:10px;font-weight:800;color:var(--sub);display:block}.stat b{font-size:20px;font-weight:900;display:block;margin-top:2px}
+.two{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:12px}@media(max-width:780px){.two{grid-template-columns:minmax(0,1fr)}}
+.sj{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px;background:#fff}.sh{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.sh b{font-size:14px}
+.today{display:flex;gap:8px;align-items:center;padding:6px 0;font-size:13px;font-weight:600}.today.done{color:#94a3b8;text-decoration:line-through}
+.chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}.u{border:1px solid var(--line);border-radius:8px;padding:3px 8px;font-size:11px;font-weight:700;cursor:pointer;background:#fff}.u.d{background:#ecfdf5;border-color:#a7f3d0;color:#047857;text-decoration:line-through}
+.wk{display:flex;align-items:flex-end;gap:6px;height:84px;margin-top:8px}.wb{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px;height:100%;min-width:0}.wb i{display:block;width:100%;border-radius:5px 5px 0 0;background:#c7d2fe;min-height:2px}.wb.t i{background:var(--brand)}.wb span{font-size:10px;color:var(--sub)}.wb b{font-size:10px}
+@media print{body{background:#fff;padding:0}.no-print{display:none!important}.card{box-shadow:none}.sj{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>📚 시험 D-day 학습 플래너</h1><p class="sub">과목과 시험 날짜, 단원을 넣으면 남은 날짜에 맞춰 "오늘 몇 단원"을 자동으로 계산해 줘요. 체크하면 진행률과 연속 공부 일수가 쌓여요.</p></header>
+
+<section class="card">
+  <div class="stats">
+    <div class="stat"><span>가장 가까운 시험</span><b id="sNext">-</b></div>
+    <div class="stat"><span>전체 진행률</span><b id="sProg">0%</b><div class="bar" style="margin-top:6px"><i id="sBar" style="width:0"></i></div></div>
+    <div class="stat"><span>오늘 공부</span><b id="sToday">0분</b></div>
+    <div class="stat"><span>연속 공부</span><b id="sStreak">0일</b></div>
+  </div>
+</section>
+
+<div class="two">
+<div>
+  <section class="card" style="margin-top:12px">
+    <b style="font-size:13px">✅ 오늘 할 공부</b>
+    <div id="plan" style="margin-top:6px"></div>
+  </section>
+  <div id="subs"></div>
+</div>
+<div>
+  <section class="card" style="margin-top:12px">
+    <b style="font-size:13px">⏱️ 공부 시간</b>
+    <div class="row" style="margin-top:8px"><div style="width:130px"><label for="min">오늘 공부한 시간(분)</label><input id="min" type="number" min="0" max="1440"></div><div style="width:130px"><label for="goal">하루 목표(분)</label><input id="goal" type="number" min="0" max="1440"></div></div>
+    <div class="wk" id="wk" aria-label="최근 7일 공부 시간"></div>
+  </section>
+  <section class="card no-print">
+    <b style="font-size:13px">+ 과목 추가</b>
+    <div class="row" style="margin-top:8px"><div class="grow"><label for="nName">과목</label><input id="nName" placeholder="예: 과학"></div><div style="width:150px"><label for="nDate">시험 날짜</label><input id="nDate" type="date"></div></div>
+    <div style="margin-top:8px"><label for="nUnits">단원 (한 줄에 하나, 숫자만 쓰면 1~N단원)</label><textarea id="nUnits" rows="3" placeholder="예: 8 &#10;또는&#10;1. 힘과 운동&#10;2. 에너지"></textarea></div>
+    <div class="row" style="margin-top:8px"><button class="primary" id="addSub">과목 추가</button></div>
+  </section>
+</div>
+</div>
+
+<div class="row no-print" style="margin-top:12px"><button id="copy">계획 복사</button><button id="print">인쇄·PDF</button><button id="sample">예시로 되돌리기</button><button id="clear">모두 비우기</button></div>
+
+<div class="usecases"><h2>이럴 때 좋아요</h2><ul>
+<li><b>학생</b> · 시험 2주 전에 과목별로 하루 몇 단원씩 해야 하는지 계산할 때</li>
+<li><b>교육 담당</b> · 학생들에게 같은 틀의 학습 계획표를 나눠 줄 때</li>
+<li><b>자격증·승진 시험 준비생</b> · 범위가 넓은 시험을 날짜에 맞게 쪼개 관리할 때</li></ul></div>
+</div>
+
+<script>
+(function(){"use strict";
+var KEY="exam-planner-v1",DOW=["일","월","화","수","목","금","토"];
+function load(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function ymd(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function today(){return ymd(new Date())}
+function addDays(s,k){var d=new Date(s+"T00:00:00");d.setDate(d.getDate()+k);return ymd(d)}
+function diff(a,b){return Math.round((new Date(b+"T00:00:00")-new Date(a+"T00:00:00"))/864e5)}
+function num(v){var x=parseFloat(v);return isNaN(x)?0:x}
+function uid(){return "s"+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}
+function U(n,done){var a=[];for(var i=1;i<=n;i++)a.push({t:i+"단원",done:i<=done});return a}
+function sample(){var t=today(),log={},sd=3;function rnd(){sd=(sd*1664525+1013904223)%4294967296;return sd/4294967296}
+ for(var i=6;i>=1;i--){if(i===3)continue;log[addDays(t,-i)]=Math.round((40+rnd()*100)/5)*5}log[t]=55;
+ return{subs:[{id:"s1",n:"국어",d:addDays(t,14),u:U(8,3)},{id:"s2",n:"수학",d:addDays(t,12),u:U(10,3)},{id:"s3",n:"영어",d:addDays(t,16),u:U(6,2)}],log:log,goal:120}}
+var S=load(KEY,null);if(!S||!S.subs)S=sample();if(!S.log)S.log={};if(S.goal==null)S.goal=120;
+function remain(s){return s.u.filter(function(x){return !x.done}).length}
+function dleft(s){return diff(today(),s.d)}
+function dlabel(d){return d<0?"종료":d===0?"D-Day":"D-"+d}
+function perDay(s){var d=dleft(s);if(d<0)return 0;return Math.ceil(remain(s)/Math.max(1,d))}
+function picks(s){var n=perDay(s),out=[];for(var i=0;i<s.u.length&&out.length<n;i++)if(!s.u[i].done)out.push(i);return out}
+function streak(){var d=today(),c=0;if(!(S.log[d]>0))d=addDays(d,-1);while(S.log[d]>0){c++;d=addDays(d,-1)}return c}
+function render(){var active=S.subs.filter(function(s){return dleft(s)>=0}).sort(function(a,b){return dleft(a)-dleft(b)});
+ var h="";S.subs.forEach(function(s,si){var d=dleft(s),tot=s.u.length,dn=tot-remain(s),p=tot?Math.round(dn/tot*100):0,cls=d<0?"in":d<=3?"bd":d<=7?"wn":"ok";
+  h+='<section class="sj" data-s="'+si+'"><div class="sh"><b>'+esc(s.n)+'</b><span class="pill '+cls+'">'+dlabel(d)+'</span><input type="date" data-act="date" value="'+esc(s.d)+'" style="width:140px" aria-label="'+esc(s.n)+' 시험 날짜"><span class="muted" style="margin-left:auto">'+dn+'/'+tot+'단원 · '+p+'%</span><button class="ghost no-print" data-act="delsub" aria-label="'+esc(s.n)+' 삭제">삭제</button></div>'+
+  '<div class="bar" style="margin-top:8px"><i style="width:'+p+'%"></i></div><div class="chips">'+s.u.map(function(x,ui){return '<span class="u'+(x.done?' d':'')+'" data-act="tog" data-u="'+ui+'" role="button" tabindex="0">'+esc(x.t)+'</span>'}).join("")+'</div>'+
+  '<div class="row no-print" style="margin-top:8px"><input data-new placeholder="단원 추가 (예: 9. 확률)" style="flex:1;min-width:140px" aria-label="단원 추가"><button data-act="addu">추가</button></div></section>'});
+ $("subs").innerHTML=h||'<p class="muted" style="margin-top:12px">과목을 추가해 주세요.</p>';
+ var ph="";active.forEach(function(s){var si=S.subs.indexOf(s),d=dleft(s),r=remain(s),pk=picks(s);
+  ph+='<div style="margin-top:8px"><b style="font-size:13px">'+esc(s.n)+'</b> <span class="muted">'+(r===0?"모든 단원을 끝냈어요 🎉":d===0?"시험 당일이에요 — 틀린 문제를 복습해요":"남은 "+r+"단원 ÷ "+Math.max(1,d)+"일 = 하루 "+perDay(s)+"단원")+'</span>'+
+  pk.map(function(ui){return '<div class="today" data-s="'+si+'"><input type="checkbox" data-act="pick" data-u="'+ui+'" aria-label="'+esc(s.n+" "+s.u[ui].t)+'"><span>'+esc(s.u[ui].t)+'</span></div>'}).join("")+'</div>'});
+ $("plan").innerHTML=ph||'<p class="muted" style="margin-top:6px">예정된 시험이 없어요. 과목을 추가해 보세요.</p>';
+ stats(active);$("min").value=S.log[today()]||"";$("goal").value=S.goal;week()}
+function stats(active){var all=0,done=0;S.subs.forEach(function(s){all+=s.u.length;done+=s.u.length-remain(s)});var p=all?Math.round(done/all*100):0;
+ $("sProg").textContent=p+"%";$("sBar").style.width=p+"%";$("sNext").textContent=active.length?active[0].n+" "+dlabel(dleft(active[0])):"-";
+ $("sToday").textContent=(S.log[today()]||0)+"분";$("sStreak").textContent=streak()+"일";save(KEY,S)}
+function week(){var h="",mx=Math.max(S.goal,1),d,i;for(i=6;i>=0;i--){d=addDays(today(),-i);mx=Math.max(mx,S.log[d]||0)}
+ for(i=6;i>=0;i--){d=addDays(today(),-i);var v=S.log[d]||0;h+='<div class="wb'+(i===0?' t':'')+'" title="'+d+' '+v+'분"><b>'+(v||"")+'</b><i style="height:'+Math.max(2,Math.round(v/mx*54))+'px"></i><span>'+DOW[new Date(d+"T00:00:00").getDay()]+'</span></div>'}
+ $("wk").innerHTML=h}
+function refresh(){var active=S.subs.filter(function(s){return dleft(s)>=0}).sort(function(a,b){return dleft(a)-dleft(b)});stats(active);week()}
+function toggle(el){var sec=el.closest("[data-s]"),s=S.subs[+sec.getAttribute("data-s")];if(!s)return;var u=s.u[+el.getAttribute("data-u")];if(!u)return;u.done=!u.done;render()}
+$("subs").addEventListener("click",function(e){var b=e.target.closest("[data-act]");if(!b)return;var a=b.getAttribute("data-act"),sec=b.closest("[data-s]"),si=+sec.getAttribute("data-s"),s=S.subs[si];if(!s)return;
+ if(a==="tog")toggle(b);else if(a==="delsub"){S.subs.splice(si,1);render()}
+ else if(a==="addu"){var inp=sec.querySelector("[data-new]"),t=inp.value.trim();if(!t)return;s.u.push({t:t,done:false});render()}});
+$("subs").addEventListener("keydown",function(e){if((e.key==="Enter"||e.key===" ")&&e.target.getAttribute("data-act")==="tog"){e.preventDefault();toggle(e.target)}});
+$("subs").addEventListener("change",function(e){if(e.target.getAttribute("data-act")!=="date")return;var s=S.subs[+e.target.closest("[data-s]").getAttribute("data-s")];if(s&&/^\d{4}-\d{2}-\d{2}$/.test(e.target.value)){s.d=e.target.value;render()}});
+$("plan").addEventListener("change",function(e){if(e.target.getAttribute("data-act")!=="pick")return;toggle(e.target)});
+$("min").addEventListener("input",function(){var v=Math.max(0,Math.floor(num(this.value)));if(v>0)S.log[today()]=v;else delete S.log[today()];refresh()});
+$("goal").addEventListener("input",function(){S.goal=Math.max(0,Math.floor(num(this.value)));refresh()});
+$("addSub").onclick=function(){var n=$("nName").value.trim(),d=$("nDate").value;if(!n||!d)return;var raw=$("nUnits").value.trim(),u=[];
+ if(/^\d+$/.test(raw)){var c=Math.min(60,+raw);for(var i=1;i<=c;i++)u.push({t:i+"단원",done:false})}else raw.split(/\r?\n/).forEach(function(l){l=l.trim();if(l)u.push({t:l,done:false})});
+ if(!u.length)u=U(5,0);S.subs.push({id:uid(),n:n,d:d,u:u});$("nName").value="";$("nUnits").value="";render()};
+$("sample").onclick=function(){S=sample();render()};
+$("clear").onclick=function(){if(!confirm("모든 과목과 공부 기록을 지울까요?"))return;S={subs:[],log:{},goal:S.goal};render()};
+$("print").onclick=function(){window.print()};
+$("copy").onclick=function(){var L=["[시험 학습 계획] "+today()],act=S.subs.filter(function(s){return dleft(s)>=0}).sort(function(a,b){return dleft(a)-dleft(b)});
+ act.forEach(function(s){var pk=picks(s);L.push(s.n+" "+dlabel(dleft(s))+" · 남은 "+remain(s)+"단원 · 오늘 "+perDay(s)+"단원"+(pk.length?" ("+pk.map(function(i){return s.u[i].t}).join(", ")+")":""))});
+ if(!act.length)L.push("예정된 시험이 없어요.");L.push("오늘 공부 "+(S.log[today()]||0)+"분 / 목표 "+S.goal+"분 · 연속 "+streak()+"일");
+ var t=L.join("\n"),b=this,done=function(){b.textContent="복사됐어요 ✓";setTimeout(function(){b.textContent="계획 복사"},1400)};
+ var fb=function(){var ta=document.createElement("textarea");ta.value=t;ta.style.cssText="position:fixed;opacity:0";document.body.appendChild(ta);ta.select();var ok=false;try{ok=document.execCommand("copy")}catch(e){}ta.remove();if(ok)done();else window.prompt("복사가 막혀 있어요. 아래 글을 직접 복사해 주세요.",t)};
+ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,fb)}else fb()};
+$("nDate").value=addDays(today(),14);render();
+})();
+</script>
+</body>
+</html>

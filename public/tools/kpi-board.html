@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KPI 측정 카드판</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#b45309;--bad:#e11d48;--r:14px}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+[hidden]{display:none!important}
+.wrap{max-width:1000px;margin:0 auto}h1{font-size:18px;font-weight:800;letter-spacing:-.02em}.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04);min-width:0}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:7px 11px;font-weight:700;font-size:12px;transition:.12s}button:hover{border-color:#c7cddb;background:#fafafa}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}button.primary:hover{filter:brightness(1.07)}
+button.ghost{border-color:transparent;background:transparent;color:var(--sub)}
+input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:13px;min-width:0}
+input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:11px;font-weight:800;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}.grow{flex:1;min-width:90px}.muted{color:var(--sub);font-size:12px}
+.pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap}
+.ok{background:#ecfdf5;color:#047857}.wn{background:#fffbeb;color:#b45309}.bd{background:#fef2f2;color:#be123c}.in{background:#eef2ff;color:#4338ca}
+.bar{height:8px;background:#eef2f7;border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;border-radius:99px}
+.okf{background:#10b981}.wnf{background:#f59e0b}.bdf{background:#f43f5e}
+.usecases{margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}.usecases h2{font-size:12px;font-weight:800;color:var(--sub);margin-bottom:6px}.usecases li{font-size:12px;color:var(--sub);margin-left:15px;margin-bottom:3px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+.stat{border:1px solid var(--line);border-radius:12px;padding:10px;background:#f8fafc}.stat span{font-size:10px;font-weight:800;color:var(--sub);display:block}.stat b{font-size:22px;font-weight:900;display:block;margin-top:2px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin-top:12px}
+.kc{border:1px solid var(--line);border-radius:14px;background:#fff;padding:12px;min-width:0}
+.kh{display:flex;justify-content:space-between;gap:6px;align-items:center}.kn{font-size:13px;overflow-wrap:anywhere}
+.kv{font-size:30px;font-weight:900;letter-spacing:-.04em;font-variant-numeric:tabular-nums;margin-top:4px;line-height:1.1}.kv small{font-size:13px;color:var(--sub);margin-left:3px;font-weight:700}
+.ed{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);display:grid;gap:8px}
+@media print{body{background:#fff;padding:0}.no-print{display:none!important}.card{box-shadow:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>📊 KPI 측정 카드판</h1><p class="sub">지표마다 목표와 현재값을 넣으면 달성률과 신호등(달성·주의·위험)으로 한눈에 보여요. 낮을수록 좋은 지표도 설정할 수 있어요.</p></header>
+
+<section class="card">
+  <div class="stats">
+    <div class="stat"><span>전체 지표</span><b id="sTotal">0</b></div>
+    <div class="stat"><span>달성</span><b id="sOk" style="color:#047857">0</b></div>
+    <div class="stat"><span>주의</span><b id="sWn" style="color:#b45309">0</b></div>
+    <div class="stat"><span>위험</span><b id="sBd" style="color:#be123c">0</b></div>
+    <div class="stat"><span>평균 달성률</span><b id="sAvg">-</b></div>
+  </div>
+  <div class="row no-print" style="margin-top:10px">
+    <div style="width:130px"><label for="gy">달성 기준(%)</label><input id="gy" type="number" min="1" max="200"></div>
+    <div style="width:130px"><label for="yy">주의 기준(%)</label><input id="yy" type="number" min="1" max="200"></div>
+    <p class="muted" style="flex:1;min-width:200px">달성률이 달성 기준 이상이면 초록, 주의 기준 이상이면 노랑, 그 미만이면 빨강이에요.</p>
+  </div>
+</section>
+
+<div id="cards" class="grid"></div>
+
+<div class="row no-print" style="margin-top:12px">
+  <button class="primary" id="add">+ KPI 추가</button>
+  <button id="copy">현황 복사</button>
+  <button id="csv">CSV 내려받기</button>
+  <button id="print">인쇄·PDF</button>
+  <button id="sample">예시로 되돌리기</button>
+  <button id="clear">모두 비우기</button>
+</div>
+
+<div class="usecases"><h2>이럴 때 좋아요</h2><ul>
+<li><b>팀장</b> · 주간 회의에서 팀 지표 현황을 한 화면으로 보여 주고 문제 지표부터 이야기할 때</li>
+<li><b>기획</b> · 서비스 지표를 목표 대비·이전 기간 대비로 같이 보고 싶을 때</li>
+<li><b>사장님(가게)</b> · 매출·재방문율·불만 건수 같은 가게 지표를 월말에 점검할 때</li></ul></div>
+</div>
+
+<script>
+(function(){"use strict";
+var KEY="kpi-board-v1";
+function load(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function num(v){var n=parseFloat(v);return isNaN(n)?0:n}
+function uid(){return "k"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function sample(){return{gy:100,yy:80,cards:[
+ {id:"k1",n:"월 매출",u:"백만원",dir:"up",g:150,c:138,p:121},
+ {id:"k2",n:"신규 가입자",u:"명",dir:"up",g:1200,c:1310,p:1100},
+ {id:"k3",n:"고객 이탈률",u:"%",dir:"down",g:3,c:4.2,p:4.8},
+ {id:"k4",n:"고객 추천 점수(NPS)",u:"점",dir:"up",g:45,c:41,p:38},
+ {id:"k5",n:"평균 응답 시간",u:"시간",dir:"down",g:4,c:3.5,p:5},
+ {id:"k6",n:"구매 전환율",u:"%",dir:"up",g:3.5,c:2.9,p:2.6}]}}
+var S=load(KEY,null);if(!S||!S.cards)S=sample();if(!S.gy)S.gy=100;if(!S.yy)S.yy=80;
+var editing={};
+function ach(k){var g=num(k.g),c=num(k.c),r;if(k.dir==="down"){r=c<=0?2:g/c}else{r=g<=0?(c>0?2:1):c/g}return Math.max(0,Math.min(2,r))*100}
+function st(a){return a>=S.gy?["ok","달성"]:a>=S.yy?["wn","주의"]:["bd","위험"]}
+function chg(k){var p=num(k.p),c=num(k.c);if(!p)return null;var d=(c-p)/Math.abs(p)*100;return{d:d,flat:Math.abs(d)<0.05,good:k.dir==="down"?d<0:d>0}}
+function fmtN(n){n=num(n);return Math.abs(n)>=1000?Math.round(n).toLocaleString("ko-KR"):String(Math.round(n*100)/100)}
+function viewHtml(k){var a=ach(k),s=st(a),c=chg(k);
+ return '<div class="kh"><b class="kn">'+esc(k.n||"이름 없음")+'</b><span class="pill '+s[0]+'">'+s[1]+'</span></div>'+
+ '<div class="kv">'+fmtN(k.c)+'<small>'+esc(k.u)+'</small></div>'+
+ '<div class="muted">목표 '+fmtN(k.g)+esc(k.u)+' · '+(k.dir==="down"?"낮을수록 좋음":"높을수록 좋음")+'</div>'+
+ '<div class="bar" style="margin:8px 0 6px"><i class="'+s[0]+'f" style="width:'+Math.min(100,a)+'%"></i></div>'+
+ '<div class="row" style="justify-content:space-between;align-items:center"><b style="font-size:12px">달성률 '+Math.round(a)+'%</b>'+
+ (c?'<span class="pill '+(c.flat?"in":c.good?"ok":"bd")+'">'+(c.flat?"변화 없음":(c.d>0?"▲ ":"▼ ")+Math.abs(c.d).toFixed(1)+"%")+'</span>':'<span class="muted">이전 값 없음</span>')+'</div>'}
+function cardHtml(k){var ed=!!editing[k.id];
+ return '<article class="kc" data-id="'+esc(k.id)+'"><div class="vw">'+viewHtml(k)+'</div>'+
+ '<div class="ed no-print"'+(ed?'':' hidden')+'><div class="row"><div class="grow"><label>지표 이름</label><input data-f="n" value="'+esc(k.n)+'"></div><div style="width:84px"><label>단위</label><input data-f="u" value="'+esc(k.u)+'"></div></div>'+
+ '<div><label>좋은 방향</label><select data-f="dir"><option value="up"'+(k.dir==="down"?"":" selected")+'>높을수록 좋음</option><option value="down"'+(k.dir==="down"?" selected":"")+'>낮을수록 좋음</option></select></div>'+
+ '<div class="row"><div class="grow"><label>목표</label><input type="number" step="any" data-f="g" value="'+esc(k.g)+'"></div><div class="grow"><label>현재</label><input type="number" step="any" data-f="c" value="'+esc(k.c)+'"></div><div class="grow"><label>이전 기간</label><input type="number" step="any" data-f="p" value="'+esc(k.p)+'"></div></div></div>'+
+ '<div class="row no-print" style="margin-top:8px"><button data-act="edit">'+(ed?'수정 완료':'수정')+'</button><button class="ghost" data-act="del">삭제</button></div></article>'}
+function render(){$("gy").value=S.gy;$("yy").value=S.yy;$("cards").innerHTML=S.cards.map(cardHtml).join("")||'<p class="muted">지표가 없어요. 아래에서 추가해 보세요.</p>';summary()}
+function summary(){var cnt={ok:0,wn:0,bd:0},sum=0;S.cards.forEach(function(k){var a=ach(k);cnt[st(a)[0]]++;sum+=Math.min(100,a)});
+ $("sTotal").textContent=S.cards.length;$("sOk").textContent=cnt.ok;$("sWn").textContent=cnt.wn;$("sBd").textContent=cnt.bd;
+ $("sAvg").textContent=S.cards.length?Math.round(sum/S.cards.length)+"%":"-";save(KEY,S)}
+function find(el){var c=el.closest(".kc");if(!c)return null;var id=c.getAttribute("data-id");for(var i=0;i<S.cards.length;i++)if(S.cards[i].id===id)return{k:S.cards[i],i:i,el:c};return null}
+function onField(e){var el=e.target,f=el.getAttribute("data-f");if(!f)return;var r=find(el);if(!r)return;
+ r.k[f]=(f==="n"||f==="u"||f==="dir")?el.value:num(el.value);r.el.querySelector(".vw").innerHTML=viewHtml(r.k);summary()}
+$("cards").addEventListener("input",onField);$("cards").addEventListener("change",onField);
+$("cards").addEventListener("click",function(e){var b=e.target.closest("[data-act]");if(!b)return;var r=find(b);if(!r)return;var a=b.getAttribute("data-act");
+ if(a==="edit"){editing[r.k.id]=!editing[r.k.id];render()}else if(a==="del"){S.cards.splice(r.i,1);render()}});
+function th(){S.gy=Math.max(1,num($("gy").value)||100);S.yy=Math.max(1,Math.min(S.gy,num($("yy").value)||80));render()}
+$("gy").addEventListener("change",th);$("yy").addEventListener("change",th);
+$("add").onclick=function(){var k={id:uid(),n:"새 지표",u:"",dir:"up",g:100,c:0,p:0};S.cards.push(k);editing[k.id]=true;render()};
+$("sample").onclick=function(){S=sample();editing={};render()};
+$("clear").onclick=function(){if(!confirm("모든 지표를 지울까요?"))return;S.cards=[];render()};
+$("print").onclick=function(){window.print()};
+function text(){var L=["[KPI 현황] 평균 달성률 "+$("sAvg").textContent];S.cards.forEach(function(k){var a=ach(k),c=chg(k);L.push("- "+k.n+": "+fmtN(k.c)+k.u+" / 목표 "+fmtN(k.g)+k.u+" ("+Math.round(a)+"% · "+st(a)[1]+")"+(c&&!c.flat?" · 이전 대비 "+(c.d>0?"▲":"▼")+Math.abs(c.d).toFixed(1)+"%":""))});return L.join("\n")}
+$("copy").onclick=function(){var b=this,t=text(),done=function(){b.textContent="복사됐어요 ✓";setTimeout(function(){b.textContent="현황 복사"},1400)};
+ var fb=function(){var ta=document.createElement("textarea");ta.value=t;ta.style.cssText="position:fixed;opacity:0";document.body.appendChild(ta);ta.select();var ok=false;try{ok=document.execCommand("copy")}catch(e){}ta.remove();if(ok)done();else window.prompt("복사가 막혀 있어요. 아래 글을 직접 복사해 주세요.",t)};
+ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,fb)}else fb()};
+function csvCell(c){c=String(c==null?"":c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c}
+$("csv").onclick=function(){var rows=[["지표","단위","좋은 방향","목표","현재","이전","달성률(%)","상태"]];S.cards.forEach(function(k){var a=ach(k);rows.push([k.n,k.u,k.dir==="down"?"낮을수록":"높을수록",k.g,k.c,k.p,Math.round(a),st(a)[1]])});
+ var t="\uFEFF"+rows.map(function(r){return r.map(csvCell).join(",")}).join("\r\n"),b=new Blob([t],{type:"text/csv;charset=utf-8"});
+ if(window.URL&&URL.createObjectURL){var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="kpi.csv";document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500)}};
+render();
+})();
+</script>
+</body>
+</html>

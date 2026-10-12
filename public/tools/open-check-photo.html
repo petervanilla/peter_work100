@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>매장 오픈 체크(사진 인증)</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#b45309;--bad:#e11d48;--r:14px}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+[hidden]{display:none!important}
+.wrap{max-width:860px;margin:0 auto}h1{font-size:18px;font-weight:800;letter-spacing:-.02em}.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04);min-width:0}
+button,.cam{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:7px 11px;font-weight:700;font-size:12px;transition:.12s;display:inline-flex;align-items:center;gap:4px}button:hover,.cam:hover{border-color:#c7cddb;background:#fafafa}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}button.primary:hover{filter:brightness(1.07)}button:disabled{opacity:.45;cursor:not-allowed}
+button.ghost{border-color:transparent;background:transparent;color:var(--sub);padding:4px 7px}
+input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:13px;min-width:0}
+input[type=checkbox]{width:22px;height:22px;accent-color:var(--brand);cursor:pointer;flex:none}input[type=checkbox]:disabled{cursor:not-allowed;opacity:.5}
+input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:11px;font-weight:800;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}.grow{flex:1;min-width:110px}.muted{color:var(--sub);font-size:12px}
+.pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap}
+.ok{background:#ecfdf5;color:#047857}.wn{background:#fffbeb;color:#b45309}.bd{background:#fef2f2;color:#be123c}.in{background:#eef2ff;color:#4338ca}
+.bar{height:8px;background:#eef2f7;border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--brand),#8b5cf6)}
+.notice{margin-top:10px;padding:8px 10px;border-radius:10px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;font-size:11px}
+.usecases{margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}.usecases h2{font-size:12px;font-weight:800;color:var(--sub);margin-bottom:6px}.usecases li{font-size:12px;color:var(--sub);margin-left:15px;margin-bottom:3px}
+.it{display:flex;gap:10px;align-items:center;padding:10px 4px;border-top:1px solid #f1f3f7;flex-wrap:wrap}.it:first-child{border-top:0}.tx{flex:1;min-width:150px}.tx b{font-size:13px;overflow-wrap:anywhere}.it.done .tx b{color:#94a3b8;text-decoration:line-through}.meta{font-size:11px;color:var(--sub);margin-top:2px}
+.thumb{position:relative;width:64px;height:48px;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:#f1f5f9;cursor:zoom-in;flex:none}.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{border:1px solid var(--line);border-radius:10px;padding:5px 9px;font-size:11px;font-weight:800;background:#fff;cursor:pointer}.chip.sel{border-color:var(--brand);background:#eef2ff}
+.done-box{padding:12px;border-radius:12px;background:#ecfdf5;border:1px solid #a7f3d0;color:#047857;font-weight:800;font-size:14px}
+#viewer{position:fixed;inset:0;background:rgba(15,23,42,.85);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}#viewer img{max-width:100%;max-height:100%;border-radius:12px}
+@media print{body{background:#fff;padding:0}.no-print{display:none!important}.card{box-shadow:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>📸 매장 오픈 체크 (사진 인증)</h1><p class="sub">오픈 전 점검 항목을 체크하고, 중요한 곳은 사진으로 남겨요. 사진이 필요한 항목은 사진을 찍어야 체크할 수 있어요. 모두 끝나면 "오픈 완료" 시각이 기록돼요.</p></header>
+<div class="notice">⚠️ 사진에 고객 얼굴, 카드번호, 개인정보가 찍히지 않게 주의해 주세요. 사진은 줄여서 이 브라우저에만 저장되고, 3일이 지나면 저장 공간 보호를 위해 자동으로 지워져요.</div>
+
+<section class="card">
+  <div class="row">
+    <button id="prev" aria-label="전날">◀</button>
+    <div><label for="date">날짜</label><input id="date" type="date" style="width:160px"></div>
+    <button id="next" aria-label="다음날">▶</button><button id="todayBtn">오늘</button>
+    <div style="width:140px"><label for="by">담당자</label><input id="by" maxlength="10" placeholder="이름 또는 이니셜"></div>
+  </div>
+  <div class="row" style="margin-top:10px;align-items:center"><div class="grow"><div class="muted" id="progText">-</div><div class="bar" style="margin-top:6px"><i id="progBar" style="width:0"></i></div></div></div>
+  <div class="chips" id="hist" style="margin-top:10px"></div>
+</section>
+
+<section class="card">
+  <div id="items"></div>
+  <p class="muted" id="msg" role="status" style="margin-top:6px;min-height:18px"></p>
+</section>
+
+<section class="card">
+  <div id="closeBox"></div>
+  <div class="row no-print" style="margin-top:8px"><button class="primary" id="closeBtn">오늘 오픈 완료</button><button id="copy">결과 복사</button><button id="print">인쇄·PDF</button></div>
+</section>
+
+<section class="card no-print">
+  <b style="font-size:13px">우리 매장 항목 추가</b>
+  <div class="row" style="margin-top:8px"><div class="grow"><label for="newT">점검 내용</label><input id="newT" placeholder="예: 쇼케이스 온도 확인"></div><label style="display:flex;gap:6px;align-items:center;margin:0 0 8px;color:var(--ink);font-size:12px"><input id="newPh" type="checkbox" style="width:18px;height:18px"> 사진 필수</label><button class="primary" id="addItem">+ 항목 추가</button></div>
+  <div class="row" style="margin-top:8px"><button id="sample">예시로 되돌리기</button><button id="delPhotos">사진 모두 지우기</button><button id="clear">기록 모두 지우기</button></div>
+</section>
+
+<div class="usecases"><h2>이럴 때 좋아요</h2><ul>
+<li><b>사장님(가게)</b> · 직접 가지 않아도 오픈 상태를 사진과 시각으로 확인하고 싶을 때</li>
+<li><b>알바·직원</b> · 해야 할 오픈 준비를 순서대로 놓치지 않고 확인할 때</li>
+<li><b>총무</b> · 무인·반무인 매장의 오픈 점검 기록을 남길 때</li></ul></div>
+</div>
+<div id="viewer" hidden role="dialog" aria-label="사진 크게 보기"><img alt="확대한 사진"></div>
+
+<script>
+(function(){"use strict";
+var KEY="open-check-photo-v1",PKEY="open-check-photos-v1",DOW=["일","월","화","수","목","금","토"],KEEP_DAYS=3;
+function load(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}}
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function ymd(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function today(){return ymd(new Date())}
+function addDays(s,k){var d=new Date(s+"T00:00:00");d.setDate(d.getDate()+k);return ymd(d)}
+function hm(d){return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")}
+var ITEMS=[
+ {id:"i1",t:"출입문·보안 장치 해제 확인",ph:false},{id:"i2",t:"조명·냉난방 켜기",ph:false},
+ {id:"i3",t:"매장 바닥·테이블 청결 상태",ph:true},{id:"i4",t:"카운터·계산대 정리 상태",ph:true},
+ {id:"i5",t:"진열대·주방 위생 상태",ph:true},{id:"i6",t:"시재(잔돈) 준비 확인 — 금액은 적지 않아요",ph:false},
+ {id:"i7",t:"재고·유통기한 확인",ph:false},{id:"i8",t:"간판·입구 조명 상태",ph:true}];
+function sampleSvg(c1,c2,label){var s='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120"><rect width="160" height="120" fill="'+c1+'"/><rect y="70" width="160" height="50" fill="'+c2+'"/><circle cx="124" cy="34" r="14" fill="#fff" fill-opacity=".55"/><text x="80" y="62" text-anchor="middle" font-size="13" font-family="sans-serif" fill="#fff">'+label+'</text></svg>';return "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(s)}
+function seed(){var t=today(),days={},ph={};
+ var d0={};d0.i1={t:"08:41",by:"김민지"};d0.i2={t:"08:43",by:"김민지"};d0.i3={t:"08:52",by:"김민지"};d0.i4={t:"08:55",by:"김민지"};
+ ph[t+"|i3"]=sampleSvg("#7c8cf8","#4f46e5","예시 사진");ph[t+"|i4"]=sampleSvg("#34d399","#059669","예시 사진");
+ days[t]={d:d0,closed:null};
+ for(var i=1;i<=4;i++){var ds=addDays(t,-i),d={};ITEMS.forEach(function(it,k){if(i===2&&k>5)return;d[it.id]={t:"08:"+String(30+k*3).padStart(2,"0"),by:"김민지"}});days[ds]={d:d,closed:i===2?null:{t:"09:0"+i,by:"김민지"}}}
+ return{state:{by:"김민지",items:ITEMS,days:days},photos:ph}}
+var P=load(PKEY,null),S=load(KEY,null);
+if(!S||!S.days){var sd=seed();S=sd.state;P=sd.photos}
+if(!P)P={};if(!S.items)S.items=ITEMS;S.date=today();
+function cleanup(){var min=addDays(today(),-(KEEP_DAYS-1)),ch=false;Object.keys(P).forEach(function(k){if(k.split("|")[0]<min){delete P[k];ch=true}});return ch}
+cleanup();
+function day(){return S.days[S.date]||(S.days[S.date]={d:{},closed:null})}
+function req(it){return it.ph}
+function okItem(it,d){var c=d.d[it.id];return !!c&&(!req(it)||!!P[S.date+"|"+it.id])}
+function stat(ds){var d=S.days[ds],n=S.items.length,done=0;if(d)S.items.forEach(function(it){if(d.d[it.id])done++});return{done:done,n:n,pct:n?Math.round(done/n*100):0}}
+function persist(){var a=save(KEY,{by:S.by,items:S.items,days:S.days}),b=save(PKEY,P);if(!a||!b)flash("저장 공간이 부족해요. 「사진 모두 지우기」로 공간을 비워 주세요.");return a&&b}
+var tm=null;function flash(t){$("msg").textContent=t;clearTimeout(tm);tm=setTimeout(function(){$("msg").textContent=""},4000)}
+function render(){var d=day(),h="";$("date").value=S.date;$("by").value=S.by||"";
+ S.items.forEach(function(it){var c=d.d[it.id],pk=P[S.date+"|"+it.id],locked=!!d.closed;
+  h+='<div class="it'+(c?' done':'')+'" data-id="'+esc(it.id)+'"><input type="checkbox" data-act="chk" aria-label="'+esc(it.t)+'"'+(c?' checked':'')+((req(it)&&!pk&&!c)||locked?' disabled':'')+'>'+
+  '<div class="tx"><b>'+esc(it.t)+'</b> '+(req(it)?'<span class="pill in">사진 필수</span>':'')+(c?'<div class="meta">'+esc(c.t)+' · '+esc(c.by||"-")+'</div>':(req(it)&&!pk?'<div class="meta">사진을 먼저 찍어 주세요</div>':''))+'</div>'+
+  (pk?'<div class="thumb" data-act="zoom" role="button" tabindex="0" aria-label="사진 크게 보기"><img src="'+pk+'" alt="'+esc(it.t)+' 사진"></div><button class="ghost no-print" data-act="delph" aria-label="사진 삭제">사진 삭제</button>':'')+
+  (!locked&&(req(it)||true)?'<label class="cam no-print" style="margin:0">📷 '+(pk?'다시 찍기':'사진')+'<input type="file" accept="image/*" capture="environment" data-act="file" hidden></label>':'')+
+  '<button class="ghost no-print" data-act="del" aria-label="항목 삭제">✕</button></div>'});
+ $("items").innerHTML=h||'<p class="muted">점검 항목이 없어요. 아래에서 추가해 보세요.</p>';paint()}
+function paint(){var d=day(),s=stat(S.date),allOk=S.items.length>0&&S.items.every(function(it){return okItem(it,d)});
+ $("progText").textContent=s.done+" / "+s.n+"개 점검 · 사진 "+S.items.filter(function(it){return P[S.date+"|"+it.id]}).length+"장";$("progBar").style.width=s.pct+"%";
+ var hh="";for(var i=6;i>=0;i--){var ds=addDays(S.date,-i),st=stat(ds);hh+='<button class="chip'+(ds===S.date?' sel':'')+'" data-d="'+ds+'">'+ds.slice(5)+' ('+DOW[new Date(ds+"T00:00:00").getDay()]+') '+(S.days[ds]?(S.days[ds].closed?'✓ ':'')+st.pct+'%':'-')+'</button>'}$("hist").innerHTML=hh;
+ $("closeBox").innerHTML=d.closed?'<div class="done-box">✅ '+esc(d.closed.t)+' 오픈 완료 · 담당 '+esc(d.closed.by||"-")+'</div>':'<div class="muted">'+(allOk?"모든 항목을 확인했어요. 「오늘 오픈 완료」를 눌러 주세요.":"모든 항목(사진 필수 포함)을 확인하면 오픈 완료를 누를 수 있어요.")+'</div>';
+ $("closeBtn").textContent=d.closed?"다시 열기(수정)":"오늘 오픈 완료";$("closeBtn").disabled=!d.closed&&!allOk;persist()}
+function shrink(file,cb){var fr=new FileReader();fr.onerror=function(){cb(null)};fr.onload=function(){var img=new Image();img.onerror=function(){cb(null)};img.onload=function(){var max=640,w=img.width,h=img.height,k=Math.min(1,max/Math.max(w,h));w=Math.max(1,Math.round(w*k));h=Math.max(1,Math.round(h*k));
+  var c=document.createElement("canvas");c.width=w;c.height=h;var x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,w,h);x.drawImage(img,0,0,w,h);try{cb(c.toDataURL("image/jpeg",0.72))}catch(e){cb(null)}};img.src=fr.result};fr.readAsDataURL(file)}
+$("items").addEventListener("change",function(e){var el=e.target,a=el.getAttribute("data-act");if(!a)return;var row=el.closest(".it"),id=row.getAttribute("data-id"),it=S.items.filter(function(x){return x.id===id})[0],d=day();if(!it)return;
+ if(a==="chk"){if(el.checked){if(req(it)&&!P[S.date+"|"+id]){el.checked=false;return}d.d[id]={t:hm(new Date()),by:S.by||"-"}}else delete d.d[id];render()}
+ else if(a==="file"){var f=el.files&&el.files[0];if(!f)return;flash("사진을 줄이는 중이에요…");shrink(f,function(url){if(!url){flash("이미지를 읽지 못했어요. 다른 사진으로 시도해 주세요.");return}
+  var key=S.date+"|"+id,old=P[key];P[key]=url;if(!save(PKEY,P)){if(old)P[key]=old;else delete P[key];flash("저장 공간이 부족해요. 「사진 모두 지우기」로 공간을 비워 주세요.");render();return}
+  if(!d.d[id])d.d[id]={t:hm(new Date()),by:S.by||"-"};flash("사진이 저장되고 체크됐어요.");render()})}});
+$("items").addEventListener("click",function(e){var b=e.target.closest("[data-act]");if(!b)return;var a=b.getAttribute("data-act");if(a==="file"||a==="chk")return;var row=b.closest(".it"),id=row.getAttribute("data-id"),d=day();
+ if(a==="zoom"){var im=row.querySelector(".thumb img");$("viewer").querySelector("img").src=im.src;$("viewer").hidden=false}
+ else if(a==="delph"){delete P[S.date+"|"+id];var it=S.items.filter(function(x){return x.id===id})[0];if(it&&req(it))delete d.d[id];render()}
+ else if(a==="del"){if(!confirm("이 점검 항목을 지울까요?"))return;S.items=S.items.filter(function(x){return x.id!==id});render()}});
+$("items").addEventListener("keydown",function(e){if((e.key==="Enter"||e.key===" ")&&e.target.getAttribute("data-act")==="zoom"){e.preventDefault();e.target.click()}});
+$("viewer").addEventListener("click",function(){this.hidden=true});document.addEventListener("keydown",function(e){if(e.key==="Escape")$("viewer").hidden=true});
+$("hist").addEventListener("click",function(e){var b=e.target.closest("[data-d]");if(b){S.date=b.getAttribute("data-d");render()}});
+function setDate(s){if(/^\d{4}-\d{2}-\d{2}$/.test(s)){S.date=s;render()}}
+$("date").addEventListener("change",function(){setDate(this.value)});$("prev").onclick=function(){setDate(addDays(S.date,-1))};$("next").onclick=function(){setDate(addDays(S.date,1))};$("todayBtn").onclick=function(){setDate(today())};
+$("by").addEventListener("input",function(){S.by=this.value.trim().slice(0,10);persist()});
+$("closeBtn").onclick=function(){var d=day();if(d.closed){d.closed=null}else{d.closed={t:hm(new Date()),by:S.by||"-"}}render()};
+$("addItem").onclick=function(){var t=$("newT").value.trim();if(!t)return;S.items.push({id:"x"+Date.now().toString(36),t:t,ph:$("newPh").checked});$("newT").value="";$("newPh").checked=false;render()};
+$("newT").addEventListener("keydown",function(e){if(e.key==="Enter")$("addItem").click()});
+$("sample").onclick=function(){var sd=seed();S=sd.state;P=sd.photos;S.date=today();render()};
+$("delPhotos").onclick=function(){if(!confirm("저장된 사진을 모두 지울까요? (체크 기록은 남아요)"))return;P={};S.items.forEach(function(it){if(req(it)){Object.keys(S.days).forEach(function(ds){delete S.days[ds].d[it.id]})}});render()};
+$("clear").onclick=function(){if(!confirm("모든 점검 기록과 사진을 지울까요? (항목은 유지돼요)"))return;S.days={};P={};S.date=today();render()};
+$("print").onclick=function(){window.print()};
+$("copy").onclick=function(){var d=day(),s=stat(S.date),L=["[매장 오픈 체크] "+S.date+" ("+DOW[new Date(S.date+"T00:00:00").getDay()]+")",d.closed?"오픈 완료 "+d.closed.t+" · 담당 "+d.closed.by:"오픈 전 · "+s.done+"/"+s.n+" 완료"];
+ S.items.forEach(function(it){var c=d.d[it.id],pk=P[S.date+"|"+it.id];L.push((c?"✓ ":"□ ")+it.t+(c?" ("+c.t+" "+c.by+")":"")+(req(it)?(pk?" [사진 있음]":" [사진 필요]"):""))});
+ var t=L.join("\n"),b=this,done=function(){b.textContent="복사됐어요 ✓";setTimeout(function(){b.textContent="결과 복사"},1400)};
+ var fb=function(){var ta=document.createElement("textarea");ta.value=t;ta.style.cssText="position:fixed;opacity:0";document.body.appendChild(ta);ta.select();var ok=false;try{ok=document.execCommand("copy")}catch(e){}ta.remove();if(ok)done();else window.prompt("복사가 막혀 있어요. 아래 글을 직접 복사해 주세요.",t)};
+ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,fb)}else fb()};
+render();
+})();
+</script>
+</body>
+</html>

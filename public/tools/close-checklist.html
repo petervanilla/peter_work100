@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>마감·퇴근 체크리스트</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#d97706;--bad:#e11d48;--soft:#f8fafc}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+.wrap{max-width:860px;margin:0 auto}h1{font-size:18px;font-weight:800;letter-spacing:-.02em}.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04)}
+.card h2{font-size:13px;font-weight:900;margin-bottom:9px;display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:8px 12px;font-weight:700;font-size:12px;transition:.12s}button:hover{border-color:var(--brand)}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border:0}
+button:disabled{opacity:.45;cursor:not-allowed}
+input{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font-size:13px}
+input:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:10px;font-weight:800;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:end}.muted{font-size:11px;color:var(--sub)}.grow{flex:1;min-width:140px}
+.top{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.pct{font-size:34px;font-weight:950;letter-spacing:-.04em;font-variant-numeric:tabular-nums;color:var(--brand)}
+.bar{height:10px;background:var(--line);border-radius:99px;overflow:hidden;flex:1;min-width:160px}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),var(--brand2));border-radius:99px;transition:width .2s}
+.group{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:10px}
+.ghead{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(--soft);font-size:12px;font-weight:900}
+.task{display:grid;grid-template-columns:22px 1fr auto 26px;gap:9px;align-items:center;padding:10px 12px;border-top:1px solid var(--line)}
+.task input[type=checkbox]{width:20px;height:20px;accent-color:var(--ok);cursor:pointer}
+.task .txt{font-size:13px;font-weight:600}
+.task.done .txt{text-decoration:line-through;color:var(--sub)}
+.task .tm{font-size:10px;color:var(--sub);white-space:nowrap;font-variant-numeric:tabular-nums}
+.task .rm{border:0;background:transparent;color:#cbd5e1;padding:2px}
+.done-box{margin-top:12px;padding:13px;border-radius:12px;background:#ecfdf5;border:1px solid #a7f3d0;color:#047857;font-weight:800;font-size:13px;display:none}
+.hist div{display:flex;justify-content:space-between;gap:8px;padding:6px 2px;border-bottom:1px solid var(--line);font-size:12px}
+.usecases{margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}.usecases h2{font-size:12px;font-weight:900;color:var(--sub);margin-bottom:5px}
+.usecases li{font-size:11px;color:var(--sub);margin-left:15px;margin-bottom:3px}
+@media print{body{background:#fff;padding:0}.no-print{display:none!important}.group{break-inside:avoid}}
+</style></head><body><div class="wrap">
+<header><h1>🌙 마감·퇴근 체크리스트</h1><p class="sub">정산·정리·보안·퇴근 순서로 체크하면 항목마다 완료 시각이 남아요. 모두 끝나야 「마감 완료」를 누를 수 있어요.</p></header>
+
+<section class="card">
+<div class="row">
+<div class="grow"><label for="who">마감 담당자</label><input id="who" placeholder="예: 박서준"></div>
+<div style="max-width:160px"><label for="day">날짜</label><input id="day" type="date"></div>
+</div>
+<div class="top" style="margin-top:12px"><div class="pct" id="pct">0%</div><div class="bar"><i id="bar"></i></div><span class="muted" id="cnt">0 / 0</span></div>
+</section>
+
+<div id="groups"></div>
+
+<section class="card no-print">
+<div class="row"><input id="newTask" class="grow" placeholder="우리 매장 항목 추가 (마지막 묶음에 들어가요)"><button id="addTask">＋ 추가</button></div>
+<div class="row" style="margin-top:10px"><button class="primary" id="finishBtn" disabled>✅ 마감 완료</button><button id="copyBtn">마감 보고 복사</button><button id="resetBtn">오늘 체크 초기화</button><button id="printBtn">인쇄</button></div>
+<div class="done-box" id="doneBox"></div>
+</section>
+
+<section class="card"><h2>최근 마감 기록</h2><div class="hist" id="hist"></div></section>
+
+<div class="usecases"><h2>이럴 때 좋아요</h2><ul>
+<li><b>알바·직원</b> · 혼자 마감하는데 가스·전기·문단속을 빠뜨릴까 불안할 때 — 순서대로 체크하면 끝나는 순간을 확인할 수 있어요.</li>
+<li><b>사장님(가게)</b> · 누가 몇 시에 마감했는지 다음 날 확인하고 싶을 때 — 담당자와 항목별 완료 시각이 기록으로 남아요.</li>
+<li><b>매장 관리자</b> · 새로 온 직원에게 마감 순서를 알려 줄 때 — 체크리스트를 그대로 화면에 띄우거나 인쇄해 붙여 두세요.</li>
+</ul></div>
+</div>
+<script>
+(function(){"use strict";
+var KEY="close-checklist-v1";
+function ld(d){d=d||new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function hm(){var d=new Date();return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+var TEMPLATE=[
+{name:"💰 정산",items:["포스 마감·매출 확인","현금 시재 맞추고 금고 보관","카드 단말기 마감 전표 출력"]},
+{name:"🧹 정리",items:["테이블·의자 정리","설거지·식기 건조대 정리","쓰레기·재활용 분리 배출","냉장고 문 닫힘·온도 확인"]},
+{name:"🔒 보안",items:["가스 밸브 잠금","불필요한 전기·간판 끄기","창문·뒷문 잠금","보안 경비 설정"]},
+{name:"🚪 퇴근",items:["출입문 잠금 확인","사장님께 마감 보고"]}];
+var state={who:"",groups:JSON.parse(JSON.stringify(TEMPLATE)),days:{},history:[]};
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+function load(){try{var s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&s.groups)state=s}catch(e){}}
+function dayKey(){return document.getElementById("day").value||ld()}
+function rec(){var k=dayKey();if(!state.days[k])state.days[k]={};return state.days[k]}
+function id(gi,ii){return gi+"-"+ii}
+function counts(){var t=0,d=0,r=rec();state.groups.forEach(function(g,gi){g.items.forEach(function(_,ii){t++;if(r[id(gi,ii)])d++})});return{t:t,d:d}}
+function render(){
+document.getElementById("who").value=state.who||"";
+var r=rec(),box=document.getElementById("groups");box.innerHTML="";
+state.groups.forEach(function(g,gi){
+var done=g.items.filter(function(_,ii){return r[id(gi,ii)]}).length;
+var sec=document.createElement("section");sec.className="group card";sec.style.padding="0";
+sec.innerHTML='<div class="ghead"><span>'+esc(g.name)+'</span><span class="muted">'+done+' / '+g.items.length+'</span></div>';
+g.items.forEach(function(t,ii){
+var v=r[id(gi,ii)];
+var row=document.createElement("div");row.className="task"+(v?" done":"");
+row.innerHTML='<input type="checkbox" '+(v?"checked":"")+' aria-label="'+esc(t)+' 완료"><span class="txt">'+esc(t)+'</span><span class="tm">'+(v?esc(v.time)+(v.who?" · "+esc(v.who):""):"—")+'</span><button class="rm no-print" aria-label="항목 삭제">×</button>';
+row.querySelector("input").onchange=function(){if(this.checked)r[id(gi,ii)]={time:hm(),who:state.who||""};else delete r[id(gi,ii)];save();render()};
+row.querySelector(".rm").onclick=function(){if(!confirm("「"+t+"」 항목을 삭제할까요?"))return;g.items.splice(ii,1);state.days={};save();render()};
+sec.appendChild(row)});
+box.appendChild(sec)});
+var c=counts(),p=c.t?Math.round(c.d/c.t*100):0;
+document.getElementById("pct").textContent=p+"%";
+document.getElementById("bar").style.width=p+"%";
+document.getElementById("cnt").textContent=c.d+" / "+c.t;
+var fb=document.getElementById("finishBtn");fb.disabled=!(c.t&&c.d===c.t);
+fb.title=fb.disabled?"모든 항목을 체크해야 누를 수 있어요":"";
+var h=state.history.filter(function(x){return x.day===dayKey()})[0];
+var db=document.getElementById("doneBox");
+if(h){db.style.display="block";db.textContent="✅ "+h.day+" "+h.time+" 마감 완료"+(h.who?" · 담당 "+h.who:"")}else db.style.display="none";
+var hb=document.getElementById("hist");
+hb.innerHTML=state.history.length?state.history.slice().reverse().slice(0,10).map(function(x){return "<div><b>"+esc(x.day)+"</b><span>"+esc(x.time)+" · "+esc(x.who||"담당 미입력")+"</span></div>"}).join(""):'<p class="muted">아직 마감 기록이 없어요.</p>';
+save()}
+document.getElementById("who").oninput=function(){state.who=this.value;save()};
+document.getElementById("day").onchange=render;
+document.getElementById("addTask").onclick=function(){var v=document.getElementById("newTask").value.trim();if(!v)return;
+state.groups[state.groups.length-1].items.push(v);document.getElementById("newTask").value="";save();render()};
+document.getElementById("newTask").addEventListener("keydown",function(e){if(e.key==="Enter")document.getElementById("addTask").click()});
+document.getElementById("finishBtn").onclick=function(){
+state.history=state.history.filter(function(x){return x.day!==dayKey()});
+state.history.push({day:dayKey(),time:hm(),who:state.who||""});
+if(state.history.length>60)state.history=state.history.slice(-60);save();render()};
+document.getElementById("resetBtn").onclick=function(){if(!confirm("오늘 체크를 모두 지울까요?"))return;
+state.days[dayKey()]={};state.history=state.history.filter(function(x){return x.day!==dayKey()});save();render()};
+document.getElementById("copyBtn").onclick=function(){
+var r=rec(),c=counts(),lines=["[마감 보고] "+dayKey()+" · 담당 "+(state.who||"-")+" · "+c.d+"/"+c.t+" 완료"];
+state.groups.forEach(function(g,gi){lines.push("",g.name);g.items.forEach(function(t,ii){var v=r[id(gi,ii)];lines.push((v?"✓ ":"□ ")+t+(v?" ("+v.time+")":""))})});
+var text=lines.join("\n"),b=this;
+var ok=function(){b.textContent="복사됐어요 ✓";setTimeout(function(){b.textContent="마감 보고 복사"},1400)};
+if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(ok,function(){prompt("복사하세요",text)});else prompt("복사하세요",text)};
+document.getElementById("printBtn").onclick=function(){window.print()};
+load();document.getElementById("day").value=ld();render();
+})();
+</script></body></html>

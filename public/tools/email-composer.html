@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>메일 문구 조립기</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#d97706;--bad:#e11d48;--r:14px}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+.wrap{max-width:760px;margin:0 auto}
+h1{font-size:18px;font-weight:800;letter-spacing:-.02em}
+.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04)}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:8px 12px;font-weight:600;font-size:13px;transition:.12s}
+button:hover{border-color:#c7cddb;background:#fafafa}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}
+button.primary:hover{filter:brightness(1.07)}
+button.on{background:var(--brand);color:#fff;border-color:transparent}
+input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:13px;font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:12px;font-weight:700;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grow{flex:1;min-width:130px}
+.muted{color:var(--sub);font-size:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:560px){.grid2{grid-template-columns:1fr}}
+.mail{background:#fff;border:1px solid var(--line);border-radius:12px;margin-top:12px;overflow:hidden}
+.mail .head{padding:12px 14px;border-bottom:1px solid var(--line);background:#f8fafc}
+.mail .head b{font-size:14px}
+.mail .body{padding:16px 14px;font-size:13.5px;line-height:1.8;white-space:pre-wrap;min-height:180px}
+.recent{font-size:12px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin-top:6px;background:#fff;cursor:pointer}
+.recent:hover{border-color:var(--brand)}
+.usecases{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+.usecases h2{font-size:12px;font-weight:800;color:var(--sub);margin-bottom:6px}
+.usecases li{font-size:12px;color:var(--sub);margin-left:14px;margin-bottom:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>✉️ 메일 문구 조립기</h1>
+  <p class="sub">상황·대상·톤을 고르면 첫문장과 본문, 맺음말을 조립해 줘요. 매일 쓰는 메일을 30초 만에 끝내세요.</p>
+
+  <div class="card">
+    <div class="grid2">
+      <div><label for="situation">상황</label><select id="situation">
+        <option value="greet">안부·인사</option>
+        <option value="request" selected>요청</option>
+        <option value="sorry">사과</option>
+        <option value="thanks">감사</option>
+        <option value="report">보고</option>
+        <option value="schedule">일정 제안</option>
+      </select></div>
+      <div><label for="target">대상</label><select id="target">
+        <option value="client" selected>거래처</option>
+        <option value="boss">상사</option>
+        <option value="team">팀원</option>
+        <option value="customer">고객</option>
+        <option value="partner">협력사</option>
+      </select></div>
+      <div><label for="tone">톤</label><select id="tone">
+        <option value="polite" selected>정중</option>
+        <option value="sorry">사과·정중</option>
+        <option value="friendly">친근</option>
+        <option value="brief">간결</option>
+      </select></div>
+      <div><label for="length">길이</label><select id="length">
+        <option value="short" selected>3줄</option>
+        <option value="para">한 단락</option>
+        <option value="list">항목별</option>
+      </select></div>
+    </div>
+
+    <div class="grid2" style="margin-top:8px">
+      <div><label for="name">받는 사람 이름</label><input id="name" placeholder="예: 김민수 팀장님"></div>
+      <div><label for="dateWhen">날짜 · 시각</label><input id="dateWhen" placeholder="예: 10월 7일(화) 오후 3시"></div>
+      <div><label for="place">장소</label><input id="place" placeholder="예: 3층 회의실 A · 화상 회의"></div>
+      <div><label for="amount">금액 · 수량</label><input id="amount" placeholder="예: 1,200,000원"></div>
+    </div>
+
+    <div style="margin-top:8px">
+      <label for="core">핵심 내용 (가장 중요해요)</label>
+      <textarea id="core" rows="3" placeholder="예: 3분기 실적 자료 검토를 요청드립니다. 10/7(화)까지 회신 부탁드려요."></textarea>
+    </div>
+
+    <div style="margin-top:8px">
+      <label for="sign">서명 (메일 맺음 뒤에 붙어요)</label>
+      <input id="sign" placeholder="예: 김보고 드림 · 프로덕트 1팀 · 010-1234-5678">
+    </div>
+
+    <div class="row" style="margin-top:10px">
+      <button class="primary" id="btnMake">메일 조립하기</button>
+      <button id="btnCopy">복사</button>
+      <button id="btnSave">최근 목록에 저장</button>
+      <button id="btnReset">비우기</button>
+    </div>
+  </div>
+
+  <div class="mail" id="mailBox">
+    <div class="head">
+      <b id="subjectLine">제목이 여기 보여요</b>
+      <div class="muted" id="toLine" style="margin-top:2px"></div>
+    </div>
+    <div class="body" id="mailBody">왼쪽에서 상황·대상·톤을 고르고 「메일 조립하기」를 눌러 주세요.</div>
+  </div>
+
+  <div class="card">
+    <b style="font-size:13px">최근에 조립한 메일</b>
+    <div id="recentList" style="margin-top:8px"></div>
+  </div>
+
+  <div class="usecases">
+    <h2>이럴 때 좋아요</h2>
+    <ul>
+      <li><b>모든 직장인</b> · 안부 인사 하나 쓰는 데도 10분이 걸릴 때 — 상황과 대상을 고르면 첫문장부터 맺음말까지 흐름이 자연스러운 메일이 조립돼요.</li>
+      <li><b>영업</b> · 거래처에 미안한 마음을 전해야 하는데 말이 조심스러울 때 — 톤을 「사과·정중」으로 고르면 과하지 않고 단정한 문장을 만들어 줘요.</li>
+      <li><b>팀장</b> · 같은 내용을 여러 사람에게 보내야 할 때 — 한 번 조립해 두면 받는 사람만 바꿔 반복해서 보낼 수 있어요.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var KEY="email-composer-v1";
+function v(id){return document.getElementById(id).value.trim()}
+var OPEN={
+  greet:{client:"안녕하세요, {name}님. 언제나 바쁘신 와중에 부탁드려 죄송합니다.",boss:"안녕하세요, {name}. 늘 건강하게 지내시는지요.",team:"안녕하세요, {name}님. 이번 주도 수고 많으셨습니다.",customer:"안녕하세요, {name}님. 그동안 잘 지내셨는지요.",partner:"안녕하세요, {name}님. 늘 협조에 감사드립니다."},
+  request:{client:"안녕하세요, {name}님. 다름이 아니라 아래 내용으로 검토와 회신을 부탁드려 연락드렸습니다.",boss:"안녕하세요, {name}. 아래 내용으로 검토를 부탁드려 메일드렸습니다.",team:"안녕하세요, {name}님. 아래 내용으로 도움을 부탁드려요.",customer:"안녕하세요, {name}님. 아래와 같이 확인을 부탁드려 연락드렸습니다.",partner:"안녕하세요, {name}님. 아래 내용으로 협조를 부탁드려 메일드렸습니다."},
+  sorry:{client:"안녕하세요, {name}님. 늘 성의껏 응대해 주시는 데 불구하고 이번 일로 심려를 끼쳐드려 대단히 죄송합니다.",boss:"안녕하세요, {name}. 이번 건으로 불편을 드려 죄송합니다.",team:"안녕하세요, {name}님. 이번 일로 팀에 영향을 드려 죄송합니다.",customer:"안녕하세요, {name}님. 불편을 드려 대단히 죄송합니다.",partner:"안녕하세요, {name}님. 이번 일로 협업에 차질을 드려 죄송합니다."},
+  thanks:{client:"안녕하세요, {name}님. 이번에 바쁘신 와중에도 도움을 주셔서 진심으로 감사드립니다.",boss:"안녕하세요, {name}. 이번 건으로 큰 도움을 주셔서 감사합니다.",team:"안녕하세요, {name}님. 이번 작업 도와주셔서 정말 감사드려요.",customer:"안녕하세요, {name}님. 믿고 이용해 주셔서 감사합니다.",partner:"안녕하세요, {name}님. 늘 든든하게 협조해 주셔서 감사합니다."},
+  report:{client:"안녕하세요, {name}님. 아래와 같이 진행 상황을 공유드립니다.",boss:"안녕하세요, {name}. 아래와 같이 현황을 보고드립니다.",team:"안녕하세요, {name}님. 이번 주 진행 상황을 공유드려요.",customer:"안녕하세요, {name}님. 요청하신 내용의 진행 상황을 알려드립니다.",partner:"안녕하세요, {name}님. 협업 진행 상황을 공유드립니다."},
+  schedule:{client:"안녕하세요, {name}님. 아래 일정으로 진행 가능하신지 확인을 부탁드려 연락드렸습니다.",boss:"안녕하세요, {name}. 아래 일정으로 괜찮으실지 여쭤보고 싶어 메일드렸습니다.",team:"안녕하세요, {name}님. 아래 시간에 회의를 하려고 해요.",customer:"안녕하세요, {name}님. 아래 시간으로 안내드려도 될지 문의드립니다.",partner:"안녕하세요, {name}님. 아래 일정으로 함께 진행하면 좋을 것 같습니다."}
+};
+var CLOSE={
+  polite:"검토하시어 회신 부탁드립니다. 감사합니다.",
+  sorry:"다시는 같은 일이 없도록 하겠습니다. 너그러이 양해 부탁드립니다.",
+  friendly:"편하실 때 답장 주세요. 고마워요!",
+  brief:"회신 부탁드립니다. 감사합니다."
+};
+var SUBJECT={
+  greet:"안부 인사드립니다",request:"[요청] 검토 및 회신 부탁드립니다",sorry:"[사과] 이번 건으로 죄송합니다",thanks:"[감사] 도움에 감사드립니다",report:"[보고] 진행 상황 공유드립니다",schedule:"[일정] 일정 확인 부탁드립니다"
+};
+function fill(str){
+  var name=v("name")||"담당자";
+  var s=str.replace(/\{name\}/g,name);
+  if(v("dateWhen"))s+="\n\n일정: "+v("dateWhen")+(v("place")?" · "+v("place"):"");
+  else if(v("place"))s+="\n\n장소: "+v("place");
+  if(v("amount"))s+="\n금액: "+v("amount");
+  return s;
+}
+function make(){
+  var sit=v("situation"),tgt=v("target"),tone=v("tone"),len=v("length");
+  var open=fill(OPEN[sit][tgt]);
+  var core=v("core");
+  var body=open;
+  if(core){
+    if(len==="list"){
+      body+="\n\n아래와 같이 정리해 드립니다.\n· "+core.split("\n").map(function(s){return s.trim()}).filter(Boolean).join("\n· ");
+    } else if(len==="short"){
+      body+="\n\n"+core.split("\n")[0];
+    } else {
+      body+="\n\n"+core;
+    }
+  }
+  body+="\n\n"+CLOSE[tone];
+  var sign=v("sign");
+  if(sign)body+="\n\n"+sign;
+  document.getElementById("subjectLine").textContent=SUBJECT[sit];
+  document.getElementById("toLine").textContent=(v("name")||"받는 사람")+" 님께";
+  document.getElementById("mailBody").textContent=body;
+  return {subject:SUBJECT[sit],body:body};
+}
+function copyText(t,btn){
+  function ok(){btn.textContent="복사됐어요 ✓";setTimeout(function(){btn.textContent="복사"},1500)}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fb)}else fb();
+  function fb(){var ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");ok()}catch(e){alert(t)}ta.remove()}
+}
+function recent(){
+  try{return JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){return[]}
+}
+function renderRecent(){
+  var box=document.getElementById("recentList");box.innerHTML="";
+  var list=recent();
+  if(!list.length){box.innerHTML='<p class="muted">아직 없어요. 조립한 메일을 저장하면 여기에 쌓여요.</p>';return}
+  list.slice().reverse().slice(0,8).forEach(function(m){
+    var d=document.createElement("div");d.className="recent";
+    d.innerHTML="<b>"+m.subject+"</b> <span class='muted'>"+m.date+"</span>";
+    d.onclick=function(){
+      document.getElementById("subjectLine").textContent=m.subject;
+      document.getElementById("toLine").textContent="";
+      document.getElementById("mailBody").textContent=m.body;
+    };
+    box.appendChild(d);
+  });
+}
+document.getElementById("btnMake").onclick=make;
+document.getElementById("btnCopy").onclick=function(){
+  var m=make();
+  copyText("제목: "+m.subject+"\n\n"+m.body,this);
+};
+document.getElementById("btnSave").onclick=function(){
+  var m=make();
+  var list=recent();var _d=new Date();list.push({subject:m.subject,body:m.body,date:_d.getFullYear()+"-"+String(_d.getMonth()+1).padStart(2,"0")+"-"+String(_d.getDate()).padStart(2,"0")});
+  if(list.length>20)list=list.slice(-20);
+  try{localStorage.setItem(KEY,JSON.stringify(list))}catch(e){}
+  renderRecent();
+  this.textContent="저장됐어요 ✓";setTimeout(function(){document.getElementById("btnSave").textContent="최근 목록에 저장"},1500);
+};
+document.getElementById("btnReset").onclick=function(){
+  ["name","dateWhen","place","amount","core","sign"].forEach(function(id){document.getElementById(id).value=""});
+  document.getElementById("mailBody").textContent="왼쪽에서 상황·대상·톤을 고르고 「메일 조립하기」를 눌러 주세요.";
+};
+renderRecent();
+})();
+</script>
+</body>
+</html>

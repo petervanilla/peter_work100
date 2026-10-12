@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>손익분기점 계산기</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#b45309;--bad:#e11d48;--r:14px}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+[hidden]{display:none!important}
+.wrap{max-width:1000px;margin:0 auto}h1{font-size:18px;font-weight:800;letter-spacing:-.02em}.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04);min-width:0}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:7px 11px;font-weight:700;font-size:12px;transition:.12s}button:hover{border-color:#c7cddb;background:#fafafa}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}button.primary:hover{filter:brightness(1.07)}
+button.ghost{border-color:transparent;background:transparent;color:var(--sub)}
+input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:13px;min-width:0}
+input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:11px;font-weight:800;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}.grow{flex:1;min-width:110px}.muted{color:var(--sub);font-size:12px}.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{border-bottom:1px solid var(--line);padding:7px 6px;text-align:left}th{font-size:11px;color:var(--sub);background:#f8fafc}td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap}
+.ok{background:#ecfdf5;color:#047857}.wn{background:#fffbeb;color:#b45309}.bd{background:#fef2f2;color:#be123c}.in{background:#eef2ff;color:#4338ca}
+.usecases{margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}.usecases h2{font-size:12px;font-weight:800;color:var(--sub);margin-bottom:6px}.usecases li{font-size:12px;color:var(--sub);margin-left:15px;margin-bottom:3px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:12px}
+@media(max-width:780px){.two{grid-template-columns:minmax(0,1fr)}}
+.res{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.rs{border:1px solid var(--line);border-radius:12px;padding:10px;background:#f8fafc}.rs span{font-size:10px;font-weight:800;color:var(--sub);display:block}.rs b{font-size:19px;font-weight:900;font-variant-numeric:tabular-nums;display:block;margin-top:2px;overflow-wrap:anywhere}
+.hero{background:linear-gradient(135deg,#eef2ff,#f5f3ff);border-color:#c7d2fe}.hero b{color:#3730a3;font-size:23px}
+svg{width:100%;height:auto;display:block;border-radius:10px;border:1px solid var(--line);font-family:inherit}
+.fx{display:flex;gap:6px;margin-top:6px}.fx .a{width:130px}
+@media print{body{background:#fff;padding:0}.no-print{display:none!important}.card{box-shadow:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>⚖️ 손익분기점 계산기</h1><p class="sub">월 고정비와 상품 한 개의 가격·원가를 넣으면, 적자를 면하려면 한 달에 몇 개(또는 몇 원)를 팔아야 하는지 계산해요.</p></header>
+
+<div class="two">
+<section class="card">
+  <b style="font-size:13px">월 고정비</b>
+  <div id="fixed"></div>
+  <div class="row no-print" style="margin-top:8px"><button id="addFx">+ 고정비 항목 추가</button><span class="muted">합계 <b id="fxSum">0원</b></span></div>
+  <div class="row" style="margin-top:12px">
+    <div class="grow"><label for="price">판매가·객단가(원)</label><input id="price" type="number" min="0" inputmode="numeric"></div>
+    <div class="grow"><label for="vm">변동 원가 입력 방식</label><select id="vm"><option value="rate">원가율(%)</option><option value="amt">개당 원가(원)</option></select></div>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <div class="grow" id="vrBox"><label for="vr">원가율(%)</label><input id="vr" type="number" min="0" max="100" step="any"></div>
+    <div class="grow" id="vaBox"><label for="va">개당 원가(원)</label><input id="va" type="number" min="0" inputmode="numeric"></div>
+    <div class="grow"><label for="fee">수수료·기타 변동비(%)</label><input id="fee" type="number" min="0" max="100" step="any"></div>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <div class="grow"><label for="days">월 영업일</label><input id="days" type="number" min="1" max="31"></div>
+    <div class="grow"><label for="cur">현재 월 매출(선택)</label><input id="cur" type="number" min="0" inputmode="numeric"></div>
+    <div class="grow"><label for="tp">목표 순이익(원)</label><input id="tp" type="number" min="0" inputmode="numeric"></div>
+  </div>
+</section>
+
+<section class="card">
+  <div id="warn" class="pill bd" hidden style="white-space:normal;padding:8px 10px;margin-bottom:8px"></div>
+  <div class="res">
+    <div class="rs hero"><span>손익분기 판매량(월)</span><b id="rUnits">-</b></div>
+    <div class="rs hero"><span>손익분기 매출(월)</span><b id="rSales">-</b></div>
+    <div class="rs"><span>하루 필요 판매량</span><b id="rDay">-</b></div>
+    <div class="rs"><span>하루 필요 매출</span><b id="rDaySales">-</b></div>
+    <div class="rs"><span>개당 공헌이익</span><b id="rCm">-</b></div>
+    <div class="rs"><span>안전 여유율</span><b id="rSafe">-</b></div>
+    <div class="rs"><span>현재 예상 손익</span><b id="rProfit">-</b></div>
+    <div class="rs"><span>목표 순이익 필요 매출</span><b id="rTarget">-</b></div>
+  </div>
+  <p class="muted" id="msg" style="margin-top:8px"></p>
+  <div class="row no-print" style="margin-top:8px"><button class="primary" id="copy">결과 복사</button><button id="sample">예시로 되돌리기</button><button id="print">인쇄·PDF</button></div>
+</section>
+</div>
+
+<section class="card">
+  <b style="font-size:13px">매출·비용 그래프</b> <span class="muted">파란 선(매출)이 빨간 선(총비용) 위로 올라가는 지점이 손익분기점이에요.</span>
+  <svg id="chart" viewBox="0 0 600 250" role="img" aria-label="손익분기점 그래프" style="margin-top:8px"></svg>
+</section>
+
+<section class="card">
+  <b style="font-size:13px">가격·원가가 바뀌면?</b>
+  <div class="scroll" style="margin-top:6px"><table><thead><tr><th>시나리오</th><th class="n">판매가</th><th class="n">손익분기 판매량</th><th class="n">손익분기 매출</th></tr></thead><tbody id="sens"></tbody></table></div>
+</section>
+
+<div class="usecases"><h2>이럴 때 좋아요</h2><ul>
+<li><b>사장님(가게)</b> · 창업·확장 전에 "한 달에 몇 개를 팔아야 본전인지" 먼저 알고 싶을 때</li>
+<li><b>기획</b> · 가격 인상·원가 절감이 손익분기점을 얼마나 바꾸는지 비교할 때</li>
+<li><b>회계</b> · 고정비·변동비를 나눠 목표 순이익에 필요한 매출을 계산할 때</li></ul></div>
+</div>
+
+<script>
+(function(){"use strict";
+var KEY="break-even-v1";
+function load(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function n(v){var x=parseFloat(v);return isNaN(x)?0:x}
+function won(v){return Math.round(v).toLocaleString("ko-KR")+"원"}
+function cnt(v){return Math.round(v).toLocaleString("ko-KR")+"개"}
+function shortWon(v){return v>=1e8?(v/1e8).toFixed(1)+"억":v>=1e4?Math.round(v/1e4).toLocaleString("ko-KR")+"만":String(Math.round(v))}
+function sample(){return{fixed:[{n:"임대료",a:3000000},{n:"고정 인건비",a:4000000},{n:"보험·통신·기타",a:600000}],price:12000,vm:"rate",vr:35,va:4200,fee:3,days:26,cur:13500000,tp:2000000}}
+var S=load(KEY,null);if(!S||!S.fixed)S=sample();
+function calc(s,pm){pm=pm||1;var price=n(s.price)*pm,fee=n(s.fee)/100,vc=s.vm==="amt"?n(s.va):n(s.price)*n(s.vr)/100;
+ var varU=vc+price*fee,cm=price-varU,fixed=s.fixed.reduce(function(a,f){return a+n(f.a)},0),o={price:price,varU:varU,cm:cm,fixed:fixed,ok:cm>0&&price>0};
+ if(o.ok){o.units=Math.ceil(fixed/cm);o.sales=o.units*price;var d=Math.max(1,n(s.days));o.unitsDay=Math.ceil(o.units/d);o.salesDay=o.sales/d;
+  var c=n(s.cur);o.cur=c;o.curUnits=c/price;o.safe=c>0?(c-o.sales)/c*100:null;o.profit=o.curUnits*cm-fixed;
+  var tp=n(s.tp);o.tpUnits=Math.ceil((fixed+tp)/cm);o.tpSales=o.tpUnits*price}
+ return o}
+function fixedHtml(){return S.fixed.map(function(f,i){return '<div class="fx" data-i="'+i+'"><input class="grow" data-f="n" aria-label="고정비 항목 이름" placeholder="항목 이름" value="'+esc(f.n)+'"><input class="a" data-f="a" type="number" min="0" inputmode="numeric" aria-label="금액" value="'+esc(f.a)+'"><button class="ghost" data-act="del" aria-label="항목 삭제">✕</button></div>'}).join("")||'<p class="muted" style="margin-top:6px">고정비 항목이 없어요.</p>'}
+function setInputs(){["price","vr","va","fee","days","cur","tp"].forEach(function(k){$(k).value=S[k]});$("vm").value=S.vm;$("fixed").innerHTML=fixedHtml();vis()}
+function vis(){$("vrBox").hidden=S.vm==="amt";$("vaBox").hidden=S.vm!=="amt"}
+function chart(o){var el=$("chart");if(!o.ok){el.innerHTML='<rect width="600" height="250" fill="#fff"/><text x="300" y="130" text-anchor="middle" font-size="13" fill="#6b7280">판매가가 변동비보다 커야 그래프를 그릴 수 있어요</text>';return}
+ var W=600,H=250,L=58,B=30,T=14,R=16,pw=W-L-R,ph=H-T-B,xmax=Math.max(o.units*1.8,o.curUnits*1.2,10),ymax=Math.max(o.price*xmax,o.fixed+o.varU*xmax);
+ function X(u){return L+u/xmax*pw}function Y(v){return T+ph-v/ymax*ph}
+ var s='<rect width="600" height="250" fill="#fff"/>';
+ for(var i=0;i<=4;i++){var gy=T+ph*i/4;s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+gy+'" y2="'+gy+'" stroke="#e5e9f2"/><text x="'+(L-6)+'" y="'+(gy+4)+'" text-anchor="end" font-size="10" fill="#6b7280">'+shortWon(ymax*(4-i)/4)+'</text>'}
+ s+='<text x="'+L+'" y="'+(H-8)+'" font-size="10" fill="#6b7280">0개</text><text x="'+(W-R)+'" y="'+(H-8)+'" text-anchor="end" font-size="10" fill="#6b7280">'+cnt(xmax)+'</text>';
+ s+='<polyline fill="none" stroke="#4f46e5" stroke-width="2.5" points="'+X(0)+','+Y(0)+' '+X(xmax)+','+Y(o.price*xmax)+'"/>';
+ s+='<polyline fill="none" stroke="#e11d48" stroke-width="2.5" points="'+X(0)+','+Y(o.fixed)+' '+X(xmax)+','+Y(o.fixed+o.varU*xmax)+'"/>';
+ var bu=o.fixed/o.cm,bx=X(bu),by=Y(o.price*bu),right=bx>W*0.6;
+ s+='<circle cx="'+bx+'" cy="'+by+'" r="5.5" fill="#fff" stroke="#111827" stroke-width="2"/><text x="'+(right?bx-9:bx+9)+'" y="'+(by-9)+'" text-anchor="'+(right?"end":"start")+'" font-size="11" font-weight="700" fill="#111827">손익분기 '+cnt(o.units)+'</text>';
+ if(o.cur>0){var cx=X(o.curUnits);s+='<line x1="'+cx+'" x2="'+cx+'" y1="'+T+'" y2="'+(T+ph)+'" stroke="#059669" stroke-dasharray="4 3"/><text x="'+(cx>W*0.7?cx-5:cx+5)+'" y="'+(T+12)+'" text-anchor="'+(cx>W*0.7?"end":"start")+'" font-size="10" fill="#047857">현재 매출</text>'}
+ s+='<rect x="'+(L+8)+'" y="'+(T+4)+'" width="10" height="3" fill="#4f46e5"/><text x="'+(L+22)+'" y="'+(T+9)+'" font-size="10" fill="#374151">매출</text><rect x="'+(L+58)+'" y="'+(T+4)+'" width="10" height="3" fill="#e11d48"/><text x="'+(L+72)+'" y="'+(T+9)+'" font-size="10" fill="#374151">총비용</text>';
+ el.innerHTML=s}
+function paint(){var o=calc(S),fx=o.fixed;$("fxSum").textContent=won(fx);
+ var ids=["rUnits","rSales","rDay","rDaySales","rCm","rSafe","rProfit","rTarget"];
+ if(!o.ok){ids.forEach(function(i){$(i).textContent="-"});$("warn").hidden=false;$("warn").textContent="판매가가 개당 변동비(원가+수수료)보다 커야 이익이 남아요. 가격이나 원가율을 확인해 주세요.";$("msg").textContent="";chart(o);sens();save(KEY,S);return}
+ $("warn").hidden=true;
+ $("rUnits").textContent=cnt(o.units);$("rSales").textContent=won(o.sales);$("rDay").textContent=cnt(o.unitsDay);$("rDaySales").textContent=won(o.salesDay);$("rCm").textContent=won(o.cm);
+ $("rSafe").textContent=o.safe==null?"-":(o.safe>=0?"+":"−")+Math.abs(o.safe).toFixed(1)+"%";
+ $("rProfit").textContent=o.cur>0?(o.profit<0?"−":"+")+won(Math.abs(o.profit)):"-";$("rProfit").style.color=o.cur>0&&o.profit<0?"#be123c":"#047857";
+ $("rTarget").textContent=won(o.tpSales);
+ $("msg").textContent=o.cur>0?(o.profit>=0?"현재 매출은 손익분기점보다 "+Math.abs(o.safe).toFixed(1)+"% 여유가 있어요.":"현재 매출로는 월 "+won(Math.abs(o.profit))+" 적자예요. 손익분기점까지 "+won(o.sales-o.cur)+"가 더 필요해요."):"현재 월 매출을 넣으면 여유율과 예상 손익을 보여 드려요.";
+ chart(o);sens();save(KEY,S)}
+function sens(){var rows=[["가격 −10%",0.9,1],["가격 −5%",0.95,1],["지금 그대로",1,1],["가격 +5%",1.05,1],["가격 +10%",1.1,1],["원가율 −5%p",1,0],["원가율 +5%p",1,2]],h="";
+ rows.forEach(function(r){var s2=JSON.parse(JSON.stringify(S));if(r[2]===0&&S.vm!=="amt")s2.vr=Math.max(0,n(S.vr)-5);if(r[2]===2&&S.vm!=="amt")s2.vr=n(S.vr)+5;var o=calc(s2,r[1]);
+  var skip=(r[2]===0||r[2]===2)&&S.vm==="amt";if(skip)return;
+  h+='<tr><td>'+r[0]+'</td><td class="n">'+won(o.price)+'</td><td class="n">'+(o.ok?cnt(o.units):"불가")+'</td><td class="n">'+(o.ok?won(o.sales):"불가")+'</td></tr>'});
+ $("sens").innerHTML=h}
+["price","vr","va","fee","days","cur","tp"].forEach(function(k){$(k).addEventListener("input",function(){S[k]=n(this.value);paint()})});
+$("vm").addEventListener("change",function(){S.vm=this.value;vis();paint()});
+$("fixed").addEventListener("input",function(e){var f=e.target.getAttribute("data-f");if(!f)return;var r=e.target.closest(".fx"),it=S.fixed[+r.getAttribute("data-i")];if(!it)return;it[f]=f==="a"?n(e.target.value):e.target.value;paint()});
+$("fixed").addEventListener("click",function(e){var b=e.target.closest('[data-act="del"]');if(!b)return;S.fixed.splice(+b.closest(".fx").getAttribute("data-i"),1);$("fixed").innerHTML=fixedHtml();paint()});
+$("addFx").onclick=function(){S.fixed.push({n:"",a:0});$("fixed").innerHTML=fixedHtml();paint()};
+$("sample").onclick=function(){S=sample();setInputs();paint()};
+$("print").onclick=function(){window.print()};
+$("copy").onclick=function(){var o=calc(S),b=this,t=o.ok?"[손익분기점] 월 고정비 "+won(o.fixed)+" · 판매가 "+won(o.price)+" · 개당 변동비 "+won(o.varU)+"\n손익분기 판매량 월 "+cnt(o.units)+" (하루 "+cnt(o.unitsDay)+")\n손익분기 매출 월 "+won(o.sales)+"\n목표 순이익 "+won(n(S.tp))+" 달성에 필요한 매출 "+won(o.tpSales)+(o.cur>0?"\n현재 매출 "+won(o.cur)+" → 안전 여유율 "+o.safe.toFixed(1)+"%":""):"[손익분기점] 판매가가 변동비보다 커야 계산할 수 있어요.",
+ done=function(){b.textContent="복사됐어요 ✓";setTimeout(function(){b.textContent="결과 복사"},1400)};
+ var fb=function(){var ta=document.createElement("textarea");ta.value=t;ta.style.cssText="position:fixed;opacity:0";document.body.appendChild(ta);ta.select();var ok=false;try{ok=document.execCommand("copy")}catch(e){}ta.remove();if(ok)done();else window.prompt("복사가 막혀 있어요. 아래 글을 직접 복사해 주세요.",t)};
+ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,fb)}else fb()};
+setInputs();paint();
+})();
+</script>
+</body>
+</html>

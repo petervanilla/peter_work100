@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>업무일·납기 계산기</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#d97706;--bad:#e11d48;--soft:#f8fafc}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+.wrap{max-width:840px;margin:0 auto}h1{font-size:18px;font-weight:800;letter-spacing:-.02em}.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04)}
+.card h2{font-size:13px;font-weight:900;margin-bottom:9px}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:7px 11px;font-weight:700;font-size:12px;transition:.12s}button:hover{border-color:var(--brand)}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border:0}
+button.on{background:var(--brand);color:#fff;border-color:transparent}
+input{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font-size:13px}
+input:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:10px;font-weight:800;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:end}.muted{font-size:11px;color:var(--sub)}.grow{flex:1;min-width:140px}
+.tabs{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.tab{border:1px solid var(--line);background:var(--card);color:var(--sub);border-radius:99px;padding:7px 15px;font-size:12px;font-weight:800;cursor:pointer}
+.tab.on{background:var(--brand);color:#fff;border-color:transparent}
+.pane{display:none}.pane.on{display:block}
+.hero{background:linear-gradient(135deg,#0f172a,#312e81);color:#fff;border-radius:14px;padding:18px;margin-top:12px;text-align:center}
+.hero .lbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#c7d2fe;font-weight:800}
+.hero .big{font-size:38px;font-weight:950;letter-spacing:-.04em;margin-top:4px;font-variant-numeric:tabular-nums}
+.hero .d{font-size:14px;font-weight:800;color:#a5b4fc;margin-top:4px}
+.hero .mini{display:flex;gap:14px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+.hero .mini div{background:rgba(255,255,255,.1);border-radius:10px;padding:7px 13px;min-width:96px}
+.hero .mini span{font-size:10px;color:#cbd5e1;display:block}
+.hero .mini b{font-size:15px;font-variant-numeric:tabular-nums}
+.preset{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.hols{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.hol{display:inline-flex;align-items:center;gap:6px;background:var(--soft);border:1px solid var(--line);border-radius:99px;padding:5px 11px;font-size:12px;font-weight:700}
+.hol button{border:0;background:transparent;color:#cbd5e1;padding:0 2px;font-size:13px}
+.usecases{margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}.usecases h2{font-size:12px;font-weight:900;color:var(--sub);margin-bottom:5px}
+.usecases li{font-size:11px;color:var(--sub);margin-left:15px;margin-bottom:3px}
+@media print{body{background:#fff;padding:0}.no-print{display:none!important}.hero{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style></head><body><div class="wrap">
+<header><h1>📅 업무일·납기 계산기</h1><p class="sub">업무일을 며칠 더한 날짜, 기간의 업무일 수, D-Day까지의 남은 업무일을 주말과 휴일을 빼서 계산해요.</p></header>
+
+<div class="tabs" role="tablist">
+<div class="tab on" data-m="add">업무일 더하기</div>
+<div class="tab" data-m="between">두 날짜 사이 업무일 세기</div>
+</div>
+
+<section class="card">
+<h2>계산</h2>
+
+<div class="pane on" id="pane-add">
+<div class="row">
+<div class="grow"><label for="baseDate">기준일</label><input id="baseDate" type="date"></div>
+<div class="grow"><label for="addDays">더할 업무일</label><input id="addDays" type="number" min="0" value="10"></div>
+</div>
+<div class="preset no-print">
+<button data-p="5">+5 업무일</button><button data-p="10" class="on">+10 업무일</button><button data-p="15">+15 업무일</button><button data-p="30">+30 업무일</button>
+</div>
+</div>
+
+<div class="pane" id="pane-between">
+<div class="row">
+<div class="grow"><label for="fromDate">시작일</label><input id="fromDate" type="date"></div>
+<div class="grow"><label for="toDate">종료일</label><input id="toDate" type="date"></div>
+</div>
+</div>
+</section>
+
+<div class="hero">
+<div class="lbl" id="resLabel">목표 날짜</div>
+<div class="big" id="resBig">—</div>
+<div class="d" id="resD">—</div>
+<div class="mini">
+<div><span>총 일수</span><b id="resTotal">—</b></div>
+<div><span>업무일</span><b id="resWork">—</b></div>
+<div><span>주말</span><b id="resWeekend">—</b></div>
+<div><span>휴일(내 등록)</span><b id="resHoliday">—</b></div>
+</div>
+</div>
+
+<section class="card no-print">
+<h2>제외 설정</h2>
+<div class="row">
+<label style="display:flex;align-items:center;gap:7px;margin-bottom:8px;font-size:12px;font-weight:700;cursor:pointer"><input id="skipWeekend" type="checkbox" checked style="width:17px;height:17px;accent-color:var(--brand)"> 토·일 제외하기</label>
+</div>
+<div class="row">
+<div class="grow"><label for="holDate">휴일 날짜 추가</label><input id="holDate" type="date"></div>
+<button id="addHol" style="align-self:flex-end">＋ 휴일 추가</button>
+</div>
+<div class="hols" id="hols"></div>
+<p class="muted" style="margin-top:8px">회사 휴일·설날·추석처럼 정해진 휴일을 위에 날짜로 넣어 두면 계산에서 빠져요. 저장해 두면 다음에 그대로 쓰입니다.</p>
+</section>
+
+<section class="card no-print">
+<div class="row"><button class="primary" id="copyBtn">결과 복사</button><button id="clearHol">휴일 모두 지우기</button></div>
+</section>
+
+<div class="usecases"><h2>이럴 때 좋아요</h2><ul>
+<li><b>모든 직장인</b> · 「업무일 기준 10일 안에」처럼 말한 납기일이 실제 며칠인지 헷갈릴 때 — 목표 날짜를 바로 확인해요.</li>
+<li><b>총무·영업</b> · 발주·납품 소요 기간을 주말·휴일까지 포함해 정확히 계산해야 할 때 — 제외할 날을 빼고 남은 날을 세요.</li>
+<li><b>팀장</b> · 프로젝트 일정을 짜며 남은 업무일을 기준으로 범위를 정할 때 — 시작일부터 종료일까지의 업무일 수를 세어 보고해요.</li>
+</ul></div>
+</div>
+<script>
+(function(){"use strict";
+var KEY="business-days-v1";
+var WD=["일","월","화","수","목","금","토"];
+function ld(d){d=d||new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function fmt(d){return d.getFullYear()+"."+(d.getMonth()+1)+"."+d.getDate()+" ("+WD[d.getDay()]+")"}
+function parse(s){return new Date(s+"T00:00:00")}
+function isWeekend(d){var g=d.getDay();return g===0||g===6}
+var state={mode:"add",baseDate:ld(),addDays:10,fromDate:ld(),toDate:ld(new Date(Date.now()+14*864e5)),skipWeekend:true,hols:[]};
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+function load(){try{var s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&s.mode)state=s}catch(e){}}
+function holSet(){var m={};state.hols.forEach(function(h){m[h]=1});return m}
+function workday(d,skipWkend,hols){if(hols[ld(d)])return false;if(skipWkend&&isWeekend(d))return false;return true}
+function render(){
+document.getElementById("baseDate").value=state.baseDate;
+document.getElementById("addDays").value=state.addDays;
+document.getElementById("fromDate").value=state.fromDate;
+document.getElementById("toDate").value=state.toDate;
+document.getElementById("skipWeekend").checked=state.skipWeekend;
+document.querySelectorAll(".tab").forEach(function(t){t.classList.toggle("on",t.getAttribute("data-m")===state.mode)});
+document.getElementById("pane-add").classList.toggle("on",state.mode==="add");
+document.getElementById("pane-between").classList.toggle("on",state.mode==="between");
+document.querySelectorAll("[data-p]").forEach(function(b){b.classList.toggle("on",state.mode==="add"&&Number(b.getAttribute("data-p"))===Number(state.addDays))});
+var hb=document.getElementById("hols");hb.innerHTML="";
+if(!state.hols.length)hb.innerHTML='<span class="muted">등록된 휴일이 없어요.</span>';
+state.hols.slice().sort().forEach(function(h,i){
+var el=document.createElement("span");el.className="hol";
+el.innerHTML=''+esc(h)+' <button aria-label="삭제">×</button>';
+el.querySelector("button").onclick=function(){state.hols.splice(state.hols.indexOf(h),1);save();render()};
+hb.appendChild(el)});
+var hols=holSet(),sw=state.skipWeekend;
+
+if(state.mode==="add"){
+var base=parse(state.baseDate),n=Math.max(0,Math.round(Number(state.addDays)||0));
+var cur=new Date(base),count=0,guard=0;
+while(count<n&&guard<4000){cur.setDate(cur.getDate()+1);guard++;if(workday(cur,sw,hols))count++}
+var total=Math.round((cur-base)/864e5)+1;
+var workBetween=0,wkend=0,holDays=0;
+for(var t=new Date(base);t<=cur;t.setDate(t.getDate()+1)){
+if(hols[ld(t)])holDays++;else if(isWeekend(t))wkend++;else workBetween++}
+var dday=Math.round((cur-parse(ld()))/864e5);
+document.getElementById("resLabel").textContent="목표 날짜 ("+n+" 업무일 뒤)";
+document.getElementById("resBig").textContent=fmt(cur);
+document.getElementById("resD").textContent=dday>0?"오늘부터 D+"+dday+" · 오늘 기준":dday===0?"오늘이 목표일입니다":dday===-1?"어제가 목표일입니다":"D-"+(-dday)+" 이미 지났어요";
+document.getElementById("resTotal").textContent=total+"일";
+document.getElementById("resWork").textContent=n+"일";
+document.getElementById("resWeekend").textContent=wkend+"일";
+document.getElementById("resHoliday").textContent=holDays+"일";
+}else{
+var a=parse(state.fromDate),b=parse(state.toDate);
+if(a>b){var tmp=a;a=b;b=tmp}
+var w=0,ke=0,ho=0,tot=0;
+for(var d=new Date(a);d<=b;d.setDate(d.getDate()+1)){tot++;
+if(hols[ld(d)])ho++;else if(isWeekend(d))ke++;else w++}
+var dd=Math.round((b-parse(ld()))/864e5);
+document.getElementById("resLabel").textContent="기간의 업무일";
+document.getElementById("resBig").textContent=w+"일";
+document.getElementById("resD").textContent=fmt(a)+" ~ "+fmt(b)+(dd>0?" · 마감까지 D+"+dd:dd===0?" · 오늘 마감":" · 지난 기간");
+document.getElementById("resTotal").textContent=tot+"일";
+document.getElementById("resWork").textContent=w+"일";
+document.getElementById("resWeekend").textContent=ke+"일";
+document.getElementById("resHoliday").textContent=ho+"일";
+}
+save()}
+function buildText(){
+if(state.mode==="add"){
+var base=parse(state.baseDate),n=Math.max(0,Math.round(Number(state.addDays)||0));
+var cur=new Date(base),c=0,g=0,hols=holSet();
+while(c<n&&g<4000){cur.setDate(cur.getDate()+1);g++;if(workday(cur,state.skipWeekend,hols))c++}
+return "[업무일 계산] 기준 "+state.baseDate+" + 업무일 "+n+"일\n→ 목표일 "+fmt(cur)+"\n(토·일 "+(state.skipWeekend?"제외":"포함")+", 휴일 "+state.hols.length+"일 반영)"}
+var a=parse(state.fromDate),b=parse(state.toDate);if(a>b){var t=a;a=b;b=t}
+var hols=holSet(),w=0;
+for(var d=new Date(a);d<=b;d.setDate(d.getDate()+1)){if(workday(d,state.skipWeekend,hols))w++}
+return "[업무일 계산] "+state.fromDate+" ~ "+state.toDate+"\n총 "+Math.round((b-a)/864e5+1)+"일 중 업무일 "+w+"일\n(토·일 "+(state.skipWeekend?"제외":"포함")+", 휴일 "+state.hols.length+"일 반영)"}
+document.querySelectorAll(".tab").forEach(function(t){t.onclick=function(){state.mode=t.getAttribute("data-m");save();render()}});
+document.querySelectorAll("[data-p]").forEach(function(b){b.onclick=function(){state.mode="add";state.addDays=Number(b.getAttribute("data-p"));save();render()}});
+["baseDate","addDays","fromDate","toDate"].forEach(function(k){document.getElementById(k).addEventListener("input",function(){state[k]=this.value;save();render()})});
+document.getElementById("skipWeekend").addEventListener("change",function(){state.skipWeekend=this.checked;save();render()});
+document.getElementById("addHol").onclick=function(){var v=document.getElementById("holDate").value;if(!v)return;
+if(state.hols.indexOf(v)<0)state.hols.push(v);document.getElementById("holDate").value="";save();render()};
+document.getElementById("clearHol").onclick=function(){if(!state.hols.length)return;if(confirm("등록한 휴일을 모두 지울까요?")){state.hols=[];save();render()}};
+document.getElementById("copyBtn").onclick=function(){var t=buildText(),b=this;
+var ok=function(){b.textContent="복사됐어요 ✓";setTimeout(function(){b.textContent="결과 복사"},1400)};
+if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(ok,function(){prompt("복사하세요",t)});else prompt("복사하세요",t)};
+function esc(s){return String(s).replace(/[&<>\"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'\"':"&quot;"}[c]})}
+load();render();
+})();
+</script></body></html>

@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>비상 상황 대응 카드</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#d97706;--bad:#e11d48;--soft:#f8fafc}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+.wrap{max-width:980px;margin:0 auto}h1{font-size:18px;font-weight:800;letter-spacing:-.02em}.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04)}
+.card h2{font-size:13px;font-weight:900;margin-bottom:9px;display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:7px 11px;font-weight:700;font-size:12px;transition:.12s}button:hover{border-color:var(--brand)}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border:0}
+input{font:inherit;width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);font-size:13px}
+input:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:10px;font-weight:800;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:end}.muted{font-size:11px;color:var(--sub)}.grow{flex:1;min-width:120px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.tile{border:1.5px solid var(--line);border-radius:12px;padding:12px 8px;background:var(--card);text-align:center;cursor:pointer;font-weight:800;font-size:13px}
+.tile .em{font-size:26px;display:block;margin-bottom:3px}
+.tile.on{border-color:var(--bad);background:#fef2f2;color:#9f1239}
+.big{border:2px solid var(--bad);border-radius:16px;overflow:hidden;margin-top:12px;background:var(--card)}
+.big .hd{background:linear-gradient(135deg,#be123c,#e11d48);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.big .hd .em{font-size:34px}
+.big .hd h2{font-size:20px;font-weight:950;letter-spacing:-.02em;margin:0;color:#fff}
+.big .hd p{font-size:11px;opacity:.9}
+.steps{padding:12px 16px;counter-reset:s}
+.step{display:grid;grid-template-columns:30px 1fr 26px;gap:9px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--line)}
+.step:last-child{border:0}
+.step .n{width:28px;height:28px;border-radius:50%;background:#fee2e2;color:#be123c;display:grid;place-items:center;font-weight:950;font-size:13px}
+.step input{border:0;background:transparent;font-size:14px;font-weight:700;padding:3px}
+.step .rm{border:0;background:transparent;color:#cbd5e1;padding:2px}
+.calls{display:flex;gap:7px;flex-wrap:wrap;padding:0 16px 14px}
+.call{display:inline-flex;align-items:center;gap:6px;background:#fef2f2;border:1px solid #fecaca;color:#9f1239;border-radius:99px;padding:6px 12px;font-weight:900;font-size:13px;text-decoration:none}
+.contact{display:grid;grid-template-columns:1fr 1fr 26px;gap:7px;margin-top:6px}
+.printable{display:none}
+.usecases{margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}.usecases h2{font-size:12px;font-weight:900;color:var(--sub);margin-bottom:5px}
+.usecases li{font-size:11px;color:var(--sub);margin-left:15px;margin-bottom:3px}
+@media print{body{background:#fff;padding:0}.no-print,.screen{display:none!important}.printable{display:block}
+.pcard{border:2px solid #be123c;border-radius:12px;padding:12px 14px;margin-bottom:10px;break-inside:avoid}
+.pcard h3{font-size:16px;color:#be123c;margin-bottom:6px}.pcard ol{margin-left:20px;font-size:13px;line-height:1.7}.pcard p{font-size:12px;margin-top:6px}}
+</style></head><body><div class="wrap">
+<header><h1>🚨 비상 상황 대응 카드</h1><p class="sub">화재·정전·누수·부상 같은 상황을 고르면 해야 할 일이 큰 글씨로 순서대로 나와요. 우리 매장에 맞게 고쳐서 인쇄해 붙여 두세요.</p></header>
+
+<div class="screen">
+<section class="card">
+<h2>무슨 일이 생겼나요?</h2>
+<div class="tiles" id="tiles"></div>
+</section>
+
+<div class="big" id="big"></div>
+
+<section class="card no-print">
+<h2>비상 연락처<span class="muted" style="font-weight:600">카드 아래에 항상 같이 나와요</span></h2>
+<div id="contacts"></div>
+<div class="row" style="margin-top:8px"><button id="addContact">＋ 연락처 추가</button></div>
+</section>
+
+<section class="card no-print">
+<div class="row">
+<input id="newStep" class="grow" placeholder="선택한 상황에 행동 추가 (예: 사장님께 사진 보내기)"><button id="addStep">＋ 행동 추가</button>
+</div>
+<div class="row" style="margin-top:10px">
+<input id="newScene" class="grow" placeholder="새 상황 이름 (예: 냉장고 고장)"><button id="addScene">＋ 상황 추가</button>
+<button class="primary" id="printBtn">전체 카드 인쇄</button><button id="copyBtn">이 카드 복사</button><button id="sampleBtn">예시로 되돌리기</button>
+</div>
+<p class="muted" style="margin-top:7px">행동 문구를 눌러 바로 고칠 수 있어요. 내용은 이 브라우저에 저장됩니다. 실제 위급 상황에서는 먼저 119·112에 신고하세요.</p>
+</section>
+</div>
+
+<div class="printable" id="printable"></div>
+
+<div class="usecases screen"><h2>이럴 때 좋아요</h2><ul>
+<li><b>알바·직원</b> · 혼자 근무하는데 갑자기 불이 나거나 물이 샐 때 — 당황하지 않고 카드의 순서대로 움직이면 돼요.</li>
+<li><b>사장님(가게)</b> · 직원이 바뀔 때마다 비상 대응을 설명하기 어려울 때 — 우리 매장용으로 고친 카드를 인쇄해 계산대 옆에 붙여 두세요.</li>
+<li><b>매장 관리자</b> · 차단기·가스 밸브 위치처럼 매장마다 다른 정보를 알려 줄 때 — 행동 문구에 위치까지 적어 두면 누구나 찾을 수 있어요.</li>
+</ul></div>
+</div>
+<script>
+(function(){"use strict";
+var KEY="emergency-card-v1";
+function uid(){return "e"+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function sample(){return{active:0,scenes:[
+{id:uid(),em:"🔥",name:"화재",note:"작은 불이라도 혼자 끄려다 늦지 않게",steps:["「불이야」 크게 외쳐 주변에 알리기","119 신고 (주소: 매장 주소를 미리 적어 두세요)","작은 불이면 소화기로 진화, 커지면 즉시 대피","손님을 비상구로 안내, 엘리베이터 사용 금지","가스 밸브 잠금(가능할 때만)","사장님께 상황 연락"]},
+{id:uid(),em:"⚡",name:"정전",note:"차단기 위치를 미리 알아 두세요",steps:["손님 안전 확인, 휴대폰 손전등 켜기","건물 전체 정전인지 우리 매장만인지 확인","우리 매장만이면 분전반 차단기 확인","한국전력 123 신고(지역 전체 정전일 때)","냉장·냉동고 문 열지 않기","사장님께 연락하고 영업 중단 여부 결정"]},
+{id:uid(),em:"💧",name:"누수·침수",note:"전기 기기 근처 물은 특히 위험",steps:["물 근처 전기 기기 전원 차단(젖은 손 금지)","메인 수도 밸브 잠그기","바닥에 미끄럼 주의 표시","귀중품·재고를 높은 곳으로 옮기기","건물 관리실·사장님께 연락","피해 부위 사진 찍어 두기"]},
+{id:uid(),em:"🩹",name:"부상·응급",note:"의식·호흡이 없으면 바로 119",steps:["다친 사람을 안전한 곳에 두고 움직이지 않게","의식·호흡 확인, 이상하면 즉시 119","출혈은 깨끗한 천으로 눌러 지혈","화상은 흐르는 찬물로 15분 이상 식히기","구급상자 위치 확인","사장님께 연락하고 상황 기록"]},
+{id:uid(),em:"🚔",name:"도난·위협 고객",note:"맞서지 말고 안전이 먼저",steps:["맞서거나 쫓아가지 않기","안전한 곳으로 피하고 112 신고","인상착의·시간 기억하거나 메모","CCTV 영상 보존(지우지 않기)","사장님께 연락"]},
+{id:uid(),em:"💳",name:"결제 단말기 고장",note:"영업은 계속할 수 있어요",steps:["단말기 전원 껐다 켜기, 케이블 연결 확인","계좌이체·현금 결제로 안내","결제 대기 고객 명단 메모","단말기 업체 고객센터 연락(번호는 단말기 뒷면)","사장님께 연락"]}],
+contacts:[{name:"화재·구급",tel:"119"},{name:"경찰",tel:"112"},{name:"한국전력(정전)",tel:"123"},{name:"사장님",tel:""},{name:"건물 관리실",tel:""}]}}
+var state=sample();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+function load(){try{var s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&s.scenes)state=s}catch(e){}}
+function cur(){if(state.active>=state.scenes.length)state.active=0;return state.scenes[state.active]}
+function callChips(){return state.contacts.filter(function(c){return c.tel}).map(function(c){return "<a class='call' href='tel:"+esc(c.tel.replace(/[^0-9+]/g,""))+"'>📞 "+esc(c.name)+" "+esc(c.tel)+"</a>"}).join("")}
+function render(){
+var tb=document.getElementById("tiles");tb.innerHTML="";
+state.scenes.forEach(function(s,i){var b=document.createElement("button");b.className="tile"+(i===state.active?" on":"");
+b.innerHTML="<span class='em'>"+esc(s.em)+"</span>"+esc(s.name);b.setAttribute("aria-pressed",i===state.active?"true":"false");
+b.onclick=function(){state.active=i;save();render()};tb.appendChild(b)});
+var s=cur(),big=document.getElementById("big");
+if(!s){big.innerHTML="<p class='muted' style='padding:14px'>상황을 추가해 주세요.</p>";}
+else{
+big.innerHTML="<div class='hd'><span class='em'>"+esc(s.em)+"</span><div style='flex:1'><h2>"+esc(s.name)+"</h2><p>"+esc(s.note||"")+"</p></div><button class='no-print' id='delScene' style='background:rgba(255,255,255,.18);color:#fff;border:0'>상황 삭제</button></div>"+
+"<div class='steps' id='steps'></div><div class='calls'>"+callChips()+"</div>";
+var st=big.querySelector("#steps");
+s.steps.forEach(function(t,i){var row=document.createElement("div");row.className="step";
+row.innerHTML="<span class='n'>"+(i+1)+"</span><input value='"+esc(t)+"' aria-label='"+(i+1)+"번째 행동'><button class='rm no-print' aria-label='행동 삭제'>×</button>";
+row.querySelector("input").oninput=function(){s.steps[i]=this.value;save()};
+row.querySelector(".rm").onclick=function(){s.steps.splice(i,1);save();render()};
+st.appendChild(row)});
+big.querySelector("#delScene").onclick=function(){if(confirm("「"+s.name+"」 상황을 삭제할까요?")){state.scenes.splice(state.active,1);state.active=0;save();render()}}}
+var cb=document.getElementById("contacts");cb.innerHTML="";
+state.contacts.forEach(function(c,i){var row=document.createElement("div");row.className="contact";
+row.innerHTML="<input value='"+esc(c.name)+"' placeholder='이름' aria-label='연락처 이름'><input value='"+esc(c.tel)+"' placeholder='전화번호' inputmode='tel' aria-label='전화번호'><button aria-label='연락처 삭제' style='border:0;background:transparent;color:#cbd5e1'>×</button>";
+var ins=row.querySelectorAll("input");
+ins[0].oninput=function(){c.name=this.value;save()};
+ins[1].onchange=function(){c.tel=this.value;save();render()};
+row.querySelector("button").onclick=function(){state.contacts.splice(i,1);save();render()};
+cb.appendChild(row)});
+var contactsLine=state.contacts.filter(function(c){return c.tel}).map(function(c){return c.name+" "+c.tel}).join(" · ");
+document.getElementById("printable").innerHTML=state.scenes.map(function(x){return "<div class='pcard'><h3>"+esc(x.em)+" "+esc(x.name)+"</h3><ol>"+x.steps.map(function(t){return "<li>"+esc(t)+"</li>"}).join("")+"</ol><p>📞 "+esc(contactsLine)+"</p></div>"}).join("");
+save()}
+document.getElementById("addStep").onclick=function(){var v=document.getElementById("newStep").value.trim(),s=cur();if(!v||!s)return;s.steps.push(v);document.getElementById("newStep").value="";save();render()};
+document.getElementById("newStep").addEventListener("keydown",function(e){if(e.key==="Enter")document.getElementById("addStep").click()});
+document.getElementById("addScene").onclick=function(){var v=document.getElementById("newScene").value.trim();if(!v)return;
+state.scenes.push({id:uid(),em:"⚠️",name:v,note:"",steps:["상황 확인하고 사람 안전부터 챙기기","사장님께 연락"]});state.active=state.scenes.length-1;document.getElementById("newScene").value="";save();render()};
+document.getElementById("addContact").onclick=function(){state.contacts.push({name:"",tel:""});save();render()};
+document.getElementById("printBtn").onclick=function(){render();window.print()};
+document.getElementById("copyBtn").onclick=function(){var s=cur();if(!s)return;
+var text=["[비상 대응] "+s.em+" "+s.name].concat(s.steps.map(function(t,i){return (i+1)+". "+t})).concat(["","연락처: "+state.contacts.filter(function(c){return c.tel}).map(function(c){return c.name+" "+c.tel}).join(", ")]).join("\n"),b=this;
+var ok=function(){b.textContent="복사됐어요 ✓";setTimeout(function(){b.textContent="이 카드 복사"},1400)};
+if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(ok,function(){prompt("복사하세요",text)});else prompt("복사하세요",text)};
+document.getElementById("sampleBtn").onclick=function(){if(confirm("예시 카드로 되돌릴까요? 고친 내용은 지워져요.")){state=sample();save();render()}};
+load();render();
+})();
+</script></body></html>

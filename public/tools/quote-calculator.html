@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>견적서 계산기</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#d97706;--bad:#e11d48;--r:14px}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+.wrap{max-width:800px;margin:0 auto}
+h1{font-size:18px;font-weight:800;letter-spacing:-.02em}
+.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04)}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:8px 12px;font-weight:600;font-size:13px;transition:.12s}
+button:hover{border-color:#c7cddb;background:#fafafa}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}
+button.primary:hover{filter:brightness(1.07)}
+button.on{background:var(--brand);color:#fff;border-color:transparent}
+input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:13px;font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:12px;font-weight:700;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grow{flex:1;min-width:110px}
+.muted{color:var(--sub);font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+th,td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:right}
+th:first-child,td:first-child{text-align:left}
+th{font-size:11px;color:var(--sub);background:#f8fafc}
+td input{text-align:right;border:none;background:transparent;padding:2px}
+td input.name{text-align:left}
+td.sum{font-variant-numeric:tabular-nums;font-weight:700}
+.totals{margin-top:12px;border-top:2px solid var(--line);padding-top:10px}
+.trow{display:flex;justify-content:space-between;padding:5px 2px;font-size:14px}
+.trow.grand{font-size:19px;font-weight:900;border-top:1px dashed var(--line);margin-top:6px;padding-top:10px}
+.preview{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:14px;white-space:pre-wrap;font-size:13px;line-height:1.7;font-family:inherit;margin-top:10px}
+.usecases{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+.usecases h2{font-size:12px;font-weight:800;color:var(--sub);margin-bottom:6px}
+.usecases li{font-size:12px;color:var(--sub);margin-left:14px;margin-bottom:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🧾 견적서 계산기</h1>
+  <p class="sub">품목과 수량·단가를 넣으면 합계·부가세·총액을 계산하고, 견적서 글로 복사해 보세요.</p>
+
+  <div class="card">
+    <div class="row">
+      <div class="grow"><label for="qTo">받는 곳</label><input id="qTo" placeholder="예: ㈜한빛솔루션 귀중"></div>
+      <div class="grow"><label for="qValid">유효기간</label><input id="qValid" placeholder="예: 견적일로부터 30일"></div>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <div class="grow"><label for="qVat">부가세</label><select id="qVat">
+        <option value="separate" selected>별도(10%)</option>
+        <option value="included">포함</option>
+        <option value="free">면세</option>
+      </select></div>
+      <div class="grow"><label for="qDiscountType">할인</label><select id="qDiscountType">
+        <option value="none">없음</option>
+        <option value="rate">율(%)</option>
+        <option value="amount">금액(원)</option>
+      </select></div>
+      <div class="grow"><label for="qDiscount">할인 값</label><input id="qDiscount" type="number" min="0" value="0"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <b style="font-size:13px">품목</b>
+    <div style="overflow-x:auto">
+    <table id="itemTable">
+      <thead><tr><th style="width:38%">품목</th><th>수량</th><th>단가</th><th>금액</th><th></th></tr></thead>
+      <tbody id="itemBody"></tbody>
+    </table>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button id="btnAdd">+ 품목 추가</button>
+      <button id="btnSaveItems">이 품목 저장</button>
+      <button id="btnLoadItems">저장한 품목 불러오기</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="totals" id="totals"></div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <button class="primary" id="btnPreview">견적서 글 만들기</button>
+      <button id="btnCopy">복사</button>
+      <button id="btnCsv">엑셀(CSV) 내보내기</button>
+      <button id="btnReset">예시로 되돌리기</button>
+    </div>
+    <div class="preview" id="preview" style="display:none"></div>
+  </div>
+
+  <div class="usecases">
+    <h2>이럴 때 좋아요</h2>
+    <ul>
+      <li><b>영업</b> · 미팅 중에 대충 된 금액을 바로 보여줘야 할 때 — 수량만 바꿔도 총액이 바로 바뀌어 「이 구성이면 이 정도입니다」를 바로 말할 수 있어요.</li>
+      <li><b>회계</b> · 부가세와 합계를 매번 손으로 계산하다 실수할 때 — 품목별 합계와 부가세·총액을 자동으로 계산하고 검토용으로 남길 수 있어요.</li>
+      <li><b>프리랜서</b> · 견적서를 매번 새로 만들기가 귀찮을 때 — 자주 쓰는 품목을 저장해 두고 수량만 고치면 견적서가 완성돼요.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var KEY="quote-calculator-v1";
+var SAMPLE=[
+  {name:"기획·설계 용역",qty:1,price:3000000},
+  {name:"디자인 시안 제작",qty:2,price:500000},
+  {name:"유지보수(월)",qty:3,price:200000}
+];
+var items=[];
+function load(){try{var s=localStorage.getItem(KEY);if(s)items=JSON.parse(s)}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(items))}catch(e){}}
+function num(x){var n=parseFloat(x);return isFinite(n)?n:0}
+function fmt(n){return Math.round(n).toLocaleString("ko-KR")}
+function calc(){
+  var supply=items.reduce(function(a,b){return a+num(b.qty)*num(b.price)},0);
+  var disc=0;
+  var dt=document.getElementById("qDiscountType").value;
+  var dv=num(document.getElementById("qDiscount").value);
+  if(dt==="rate")disc=supply*Math.min(100,dv)/100;
+  else if(dt==="amount")disc=Math.min(supply,dv);
+  var after=supply-disc;
+  var vatMode=document.getElementById("qVat").value;
+  var vat=vatMode==="separate"?after*0.1:0;
+  var total=vatMode==="included"?after:after+vat;
+  return {supply:supply,disc:disc,after:after,vat:vat,total:total,vatMode:vatMode};
+}
+function renderItems(){
+  var tb=document.getElementById("itemBody");tb.innerHTML="";
+  items.forEach(function(it,i){
+    var tr=document.createElement("tr");
+    tr.innerHTML='<td><input class="name" value="'+it.name.replace(/"/g,"&quot;")+'" placeholder="품목 이름"></td>'+
+      '<td><input type="number" min="0" value="'+it.qty+'" style="width:64px"></td>'+
+      '<td><input type="number" min="0" value="'+it.price+'" style="width:110px"></td>'+
+      '<td class="sum">'+fmt(num(it.qty)*num(it.price))+'</td>'+
+      '<td><button data-del="'+i+'" style="color:#d1d5db;padding:2px 8px">✕</button></td>';
+    var inputs=tr.querySelectorAll("input");
+    inputs[0].addEventListener("input",function(){it.name=this.value;save()});
+    inputs[1].addEventListener("input",function(){it.qty=num(this.value);save();renderTotals();renderItems()});
+    inputs[2].addEventListener("input",function(){it.price=num(this.value);save();renderTotals();renderItems()});
+    tr.querySelector("[data-del]").onclick=function(){items.splice(i,1);save();renderItems();renderTotals()};
+    tb.appendChild(tr);
+  });
+  if(!items.length){
+    tb.innerHTML='<tr><td colspan="5" class="muted" style="text-align:center;padding:16px">품목을 추가해 주세요.</td></tr>';
+  }
+}
+function renderTotals(){
+  var c=calc();
+  document.getElementById("totals").innerHTML=
+    '<div class="trow"><span>공급가 합계</span><b>'+fmt(c.supply)+'원</b></div>'+
+    (c.disc>0?'<div class="trow"><span>할인</span><b style="color:var(--bad)">-'+fmt(c.disc)+'원</b></div>':"")+
+    '<div class="trow"><span>부가세'+(c.vatMode==="separate"?" (10%)":c.vatMode==="included"?" (포함)":" (면세)")+'</span><b>'+fmt(c.vat)+'원</b></div>'+
+    '<div class="trow grand"><span>총 견적 금액</span><span style="color:var(--brand)">'+fmt(c.total)+'원</span></div>';
+}
+function buildText(){
+  var c=calc();
+  var L=[];
+  L.push("[견적서]");
+  L.push("받는 곳: "+(document.getElementById("qTo").value.trim()||"-"));
+  var _d=new Date();var _ds=_d.getFullYear()+"-"+String(_d.getMonth()+1).padStart(2,"0")+"-"+String(_d.getDate()).padStart(2,"0");
+  L.push("견적일: "+_ds+(document.getElementById("qValid").value.trim()?" · "+document.getElementById("qValid").value.trim():""));
+  L.push("");
+  items.forEach(function(it,i){
+    L.push((i+1)+". "+it.name+" — "+fmt(it.qty)+"개 × "+fmt(it.price)+"원 = "+fmt(num(it.qty)*num(it.price))+"원");
+  });
+  L.push("");
+  L.push("공급가 합계: "+fmt(c.supply)+"원");
+  if(c.disc>0)L.push("할인: -"+fmt(c.disc)+"원");
+  L.push("부가세"+(c.vatMode==="separate"?"(10%)":"")+": "+fmt(c.vat)+"원");
+  L.push("총 견적 금액: "+fmt(c.total)+"원");
+  return L.join("\n");
+}
+function copyText(t,btn){
+  function ok(){btn.textContent="복사됐어요 ✓";setTimeout(function(){btn.textContent="복사"},1500)}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fb)}else fb();
+  function fb(){var ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");ok()}catch(e){alert(t)}ta.remove()}
+}
+document.getElementById("btnAdd").onclick=function(){items.push({name:"",qty:1,price:0});save();renderItems()};
+document.getElementById("btnSaveItems").onclick=function(){save();this.textContent="저장됐어요 ✓";setTimeout(function(){document.getElementById("btnSaveItems").textContent="이 품목 저장"},1500)};
+document.getElementById("btnLoadItems").onclick=function(){load();renderItems();renderTotals()};
+document.getElementById("btnReset").onclick=function(){items=SAMPLE.map(function(s){return{name:s.name,qty:s.qty,price:s.price}});save();renderItems();renderTotals()};
+["qVat","qDiscountType","qDiscount"].forEach(function(id){document.getElementById(id).addEventListener("input",renderTotals)});
+document.getElementById("btnPreview").onclick=function(){
+  document.getElementById("preview").style.display="block";
+  document.getElementById("preview").textContent=buildText();
+};
+document.getElementById("btnCopy").onclick=function(){copyText(buildText(),this)};
+document.getElementById("btnCsv").onclick=function(){
+  function esc(s){return '"'+String(s).replace(/"/g,'""')+'"'}
+  var rows=[["품목","수량","단가","금액"]];
+  items.forEach(function(it){rows.push([it.name,it.qty,it.price,num(it.qty)*num(it.price)])});
+  var c=calc();
+  rows.push(["공급가 합계","","",c.supply]);
+  if(c.disc)rows.push(["할인","","",-c.disc]);
+  rows.push(["부가세","","",c.vat]);
+  rows.push(["총액","","",c.total]);
+  var csv="\uFEFF"+rows.map(function(r){return r.map(esc).join(",")}).join("\r\n");
+  var blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+  var a=document.createElement("a");
+  if(window.URL&&window.URL.createObjectURL){
+    a.href=URL.createObjectURL(blob);a.download="quote.csv";a.click();
+    setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
+  }else{
+    a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(csv);
+    a.download="quote.csv";a.click();
+  }
+};
+load();
+if(!items.length)items=SAMPLE.map(function(s){return{name:s.name,qty:s.qty,price:s.price}});
+renderItems();renderTotals();
+})();
+</script>
+</body>
+</html>

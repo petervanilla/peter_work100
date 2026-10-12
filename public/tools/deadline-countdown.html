@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>마감 카운트다운 판</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#d97706;--bad:#e11d48;--r:14px}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+.wrap{max-width:680px;margin:0 auto}
+h1{font-size:18px;font-weight:800;letter-spacing:-.02em}
+.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04)}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:8px 12px;font-weight:600;font-size:13px;transition:.12s}
+button:hover{border-color:#c7cddb;background:#fafafa}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}
+button.primary:hover{filter:brightness(1.07)}
+input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:13px}
+input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:12px;font-weight:700;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grow{flex:1;min-width:110px}
+.muted{color:var(--sub);font-size:12px}
+.item{display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:12px;margin-top:8px;background:#fff}
+.item.soon{border-color:#fcd34d;background:#fffbeb}
+.item.late{border-color:#fecaca;background:#fef2f2}
+.item.done{opacity:.5}
+.dday{font-size:20px;font-weight:900;width:74px;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.dday.late{color:var(--bad)}.dday.soon{color:var(--warn)}.dday.far{color:var(--brand)}
+.nm{flex:1;min-width:0}
+.nm b{font-size:14px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item.done .nm b{text-decoration:line-through}
+.chk{width:22px;height:22px;accent-color:var(--brand);cursor:pointer}
+.usecases{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+.usecases h2{font-size:12px;font-weight:800;color:var(--sub);margin-bottom:6px}
+.usecases li{font-size:12px;color:var(--sub);margin-left:14px;margin-bottom:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📅 마감 카운트다운 판</h1>
+  <p class="sub">마감 이름과 날짜를 넣으면 「D-3」처럼 남은 날 순서로 줄을 세워요. 오늘·내일은 노란색, 지난 마감은 빨간색.</p>
+
+  <div class="card">
+    <div class="row">
+      <div class="grow"><label for="dName">마감 이름</label><input id="dName" placeholder="예: 3분기 실적 제출"></div>
+      <div style="width:150px"><label for="dDate">날짜</label><input id="dDate" type="date"></div>
+      <button id="btnAdd" class="primary" style="align-self:flex-end">+ 추가</button>
+    </div>
+  </div>
+
+  <div id="list"></div>
+
+  <div class="row" style="margin-top:12px">
+    <button id="btnShowDone">끝낸 일 보기 / 숨기기</button>
+    <button id="btnCopy">목록 복사</button>
+    <button id="btnSample">예시로 되돌리기</button>
+  </div>
+
+  <div class="usecases">
+    <h2>이럴 때 좋아요</h2>
+    <ul>
+      <li><b>모든 직장인</b> · 마감이 여러 개인데 어떤 게 먼저인지 헷갈릴 때 — 이름과 날짜만 적으면 남은 날 순서로 줄을 세워 줘요.</li>
+      <li><b>팀장</b> · 팀의 마감을 한 화면에 모아 두고 싶을 때 — 한 판에 적어 회의실 화면에 띄워 두면 모두가 같은 걸 봐요.</li>
+      <li><b>총무</b> · 납기·신고일을 놓치면 큰일 날 때 — 지난 마감은 빨간색으로 남아 바로 눈에 띄어요.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var KEY="deadline-countdown-v1";
+var showDone=true;
+function todayStr(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function addDays(n){var d=new Date();d.setDate(d.getDate()+n);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+var SAMPLE=[
+  {name:"3분기 실적 보고 제출",date:addDays(3),done:false},
+  {name:"거래처 견적 회신",date:addDays(1),done:false},
+  {name:"교육 신청 마감",date:addDays(-2),done:false},
+  {name:"사무실 비품 발주",date:addDays(7),done:false}
+];
+var items=[];
+function save(){try{localStorage.setItem(KEY,JSON.stringify(items))}catch(e){}}
+function load(){try{var s=localStorage.getItem(KEY);if(s)items=JSON.parse(s)}catch(e){}}
+function dday(str){
+  var a=new Date(todayStr()+"T00:00:00"),b=new Date(str+"T00:00:00");
+  return Math.round((b-a)/86400000);
+}
+function render(){
+  var box=document.getElementById("list");box.innerHTML="";
+  var sorted=items.slice().sort(function(a,b){
+    if(a.done!==b.done)return a.done?1:-1;
+    return dday(a.date)-dday(b.date);
+  });
+  var visible=sorted.filter(function(i){return showDone||!i.done});
+  if(!visible.length){
+    box.innerHTML='<div class="card" style="text-align:center;color:var(--sub);font-size:13px">마감을 추가해 주세요.</div>';
+    return;
+  }
+  visible.forEach(function(it){
+    var d=dday(it.date);
+    var cls=it.done?"done":(d<0?"late":(d<=1?"soon":""));
+    var el=document.createElement("div");el.className="item "+cls;
+    var label=d<0?("D+"+(-d)):(d===0?"D-Day":("D-"+d));
+    var dcls=d<0?"late":(d<=1?"soon":"far");
+    el.innerHTML='<input type="checkbox" class="chk" '+(it.done?"checked":"")+' title="끝난 일로 보관">'+
+      '<span class="dday '+dcls+'">'+label+'</span>'+
+      '<span class="nm"><b>'+it.name.replace(/</g,"&lt;")+'</b><span class="muted">'+it.date+'</span></span>'+
+      '<button class="del" title="지우기" style="color:#d1d5db">✕</button>';
+    el.querySelector(".chk").onchange=function(){it.done=this.checked;save();render()};
+    el.querySelector(".del").onclick=function(){items=items.filter(function(x){return x!==it});save();render()};
+    box.appendChild(el);
+  });
+}
+document.getElementById("btnAdd").onclick=function(){
+  var n=document.getElementById("dName").value.trim();
+  var d=document.getElementById("dDate").value;
+  if(!n||!d){document.getElementById("dName").focus();return}
+  items.push({name:n,date:d,done:false});
+  document.getElementById("dName").value="";document.getElementById("dDate").value="";
+  save();render();
+};
+document.getElementById("dName").addEventListener("keydown",function(e){if(e.key==="Enter")document.getElementById("btnAdd").click()});
+document.getElementById("btnShowDone").onclick=function(){showDone=!showDone;render()};
+document.getElementById("btnSample").onclick=function(){items=SAMPLE.map(function(s){return{name:s.name,date:s.date,done:false}});save();render()};
+document.getElementById("btnCopy").onclick=function(){
+  var lines=["[마감 목록] "+todayStr()];
+  items.slice().sort(function(a,b){return dday(a.date)-dday(b.date)}).forEach(function(it){
+    lines.push((it.done?"✓ ":"□ ")+it.name+" — "+it.date+" ("+(dday(it.date)<0?"D+"+(-dday(it.date)):dday(it.date)===0?"D-Day":"D-"+dday(it.date))+")");
+  });
+  copyText(lines.join("\n"),this);
+};
+function copyText(t,btn){
+  function ok(){btn.textContent="복사됐어요 ✓";setTimeout(function(){btn.textContent="목록 복사"},1500)}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fb)}else fb();
+  function fb(){var ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");ok()}catch(e){alert(t)}ta.remove()}
+}
+document.getElementById("dDate").value=todayStr();
+load();
+if(!items.length)items=SAMPLE.map(function(s){return{name:s.name,date:s.date,done:false}});
+render();
+})();
+</script>
+</body>
+</html>

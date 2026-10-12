@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>회의 타이머</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#d97706;--bad:#e11d48;--r:14px}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+.wrap{max-width:780px;margin:0 auto}
+h1{font-size:18px;font-weight:800;letter-spacing:-.02em}
+.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04)}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:8px 12px;font-weight:600;font-size:13px;transition:.12s}
+button:hover{border-color:#c7cddb;background:#fafafa}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}
+button.primary:hover{filter:brightness(1.07)}
+button.danger{color:var(--bad)}
+input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:13px}
+input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:12px;font-weight:700;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grow{flex:1;min-width:110px}
+.muted{color:var(--sub);font-size:12px}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700}
+.good{background:#ecfdf5;color:#047857}.warn{background:#fffbeb;color:#b45309}.bad{background:#fef2f2;color:#be123c}.info{background:#eef2ff;color:#4338ca}
+#timer{font-variant-numeric:tabular-nums;font-weight:900;letter-spacing:-.03em}
+.usecases{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+.usecases h2{font-size:12px;font-weight:800;color:var(--sub);margin-bottom:6px}
+.usecases li{font-size:12px;color:var(--sub);margin-left:14px;margin-bottom:2px}
+.ag{display:flex;gap:6px;align-items:center;padding:7px 8px;border:1px solid var(--line);border-radius:10px;margin-top:6px;background:#fff}
+.ag.now{border-color:var(--brand);background:#eef2ff}
+.ag.past{opacity:.55}
+.ag .nm{flex:1;min-width:60px;border:none;background:transparent;font-weight:700;padding:2px}
+.ag .mn{width:58px;text-align:center}
+.ag .el{font-size:11px;color:var(--sub);width:74px;text-align:right;font-variant-numeric:tabular-nums}
+.ag .mv{width:26px;padding:5px 0;text-align:center;color:var(--sub)}
+.ag .del{width:26px;padding:5px 0;text-align:center;color:#d1d5db}
+.ag .del:hover{color:var(--bad);background:#fef2f2;border-color:#fecaca}
+.big{padding:18px;text-align:center;border-radius:var(--r);border:2px solid var(--line);background:#fff;margin-top:12px;transition:.2s}
+.big.warn{border-color:#fbbf24;background:#fffbeb}
+.big.over{border-color:var(--bad);background:#fef2f2;animation:pulse 1s infinite}
+@keyframes pulse{50%{background:#fee2e2}}
+#tName{font-size:15px;font-weight:800}
+#timer{font-size:52px;line-height:1.1}
+.sumline{display:flex;justify-content:space-between;font-size:12px;padding:5px 2px;border-bottom:1px dashed var(--line)}
+.over-t{color:var(--bad);font-weight:800}
+.bighint{display:none;margin-top:10px;font-size:13px}
+.big.bigmode,.big:fullscreen{position:fixed;inset:0;z-index:50;margin:0;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff;overflow:auto}
+.big.bigmode.warn,.big:fullscreen.warn{background:#fffbeb}
+.big.bigmode.over,.big:fullscreen.over{background:#fef2f2}
+.bigmode #tName,.big:fullscreen #tName{font-size:clamp(20px,4vw,40px)}
+.bigmode #timer,.big:fullscreen #timer{font-size:clamp(72px,24vw,38vh)}
+.bigmode .bighint,.big:fullscreen .bighint{display:block}
+@media(max-width:560px){#timer{font-size:44px}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <h1>⏱️ 회의 타이머</h1>
+  <p class="sub">안건마다 시간을 나눠 주고, 1분 남으면 노란색, 넘기면 빨간색과 넘긴 시간으로 알려 줘요.</p>
+
+  <div class="big" id="bigBox">
+    <div id="tName">안건을 추가하고 시작하세요</div>
+    <div id="timer">--:--</div>
+    <div class="muted" id="tSub">전체 남은 시간 · 예정 종료 시각이 여기 보여요</div>
+    <div class="muted bighint">스페이스: 시작·멈춤 · →: 다음 안건 · Esc: 닫기</div>
+  </div>
+
+  <div class="row" style="margin-top:12px">
+    <button class="primary" id="btnStart">▶ 시작</button>
+    <button id="btnNext">다음 안건 →</button>
+    <button id="btnExt">+1분</button>
+    <button id="btnReset" class="danger">처음으로</button>
+    <button id="btnBig">🔍 크게 보기</button>
+  </div>
+
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <b style="font-size:13px">안건 목록</b>
+      <span class="muted" id="totalInfo"></span>
+    </div>
+    <div id="agendaList"></div>
+    <div class="row" style="margin-top:10px">
+      <input class="grow" id="newName" placeholder="새 안건 이름">
+      <input id="newMin" type="number" min="1" value="5" style="width:70px" aria-label="분">
+      <span class="muted">분</span>
+      <button id="btnAdd">+ 추가</button>
+      <button id="btnSample" class="ghost">예시로 되돌리기</button>
+    </div>
+  </div>
+
+  <div class="card" id="summaryCard" style="display:none">
+    <b style="font-size:13px">회의 결과</b>
+    <div id="summaryList" style="margin-top:8px"></div>
+    <div class="row" style="margin-top:10px">
+      <button id="btnCopyResult">결과를 메신저에 붙일 글로 복사</button>
+    </div>
+  </div>
+
+  <div class="usecases">
+    <h2>이럴 때 좋아요</h2>
+    <ul>
+      <li><b>팀장</b> · 주간 회의가 매번 30분씩 늘어질 때 — 안건별 시간을 정해 「크게 보기」로 회의실 화면에 띄워 두세요. 노란색이 되면 결론부터 정리합니다.</li>
+      <li><b>교육 담당</b> · 조별 발표 시간을 똑같이 지켜야 할 때 — 조 이름으로 안건을 하나씩 만들고 ▲▼로 순서를 맞추세요.</li>
+      <li><b>영업 담당</b> · 거래처 미팅에서 할 말을 다 못 하고 끝날 때 — 미팅 전에 안건 3~4개와 분을 적어 켜 두세요.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var KEY="meeting-timer-v1";
+var SAMPLE=[{name:"지난주 회고",min:5},{name:"이번 주 숫자 공유",min:10},{name:"안건 논의",min:10},{name:"다음 주 계획",min:5}];
+var state={agendas:SAMPLE.map(function(a){return{name:a.name,min:a.min}}),cur:-1,running:false,startedAt:0,elapsed:0,results:[],status:"idle",resetArmed:false};
+
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+function load(){try{var s=localStorage.getItem(KEY);if(s){var p=JSON.parse(s);if(p&&p.agendas&&p.agendas.length)state=p}}catch(e){}}
+
+function fmt(ms){if(ms<0)ms=0;var s=Math.floor(ms/1000);var m=Math.floor(s/60);s%=60;return (m<10?"0":"")+m+":"+(s<10?"0":"")+s;}
+function now(){return Date.now()}
+
+function currentAg(){return state.cur>=0&&state.cur<state.agendas.length?state.agendas[state.cur]:null}
+function totalMs(){return state.agendas.reduce(function(a,b){return a+b.min*60000},0)}
+function passedMs(){var t=0;for(var i=0;i<state.cur;i++)t+=(state.results[i]||0);if(state.cur>=0)t+=(state.results[state.cur]||state.elapsed);return t}
+
+function bigState(el,c){el.classList.remove("warn","over");if(c)el.classList.add(c)}
+function tick(){
+  var ag=currentAg();
+  var big=document.getElementById("bigBox");
+  if(!ag||state.status!=="running"){
+    if(state.status==="done"){
+      document.getElementById("tName").textContent="회의가 끝났어요";
+      document.getElementById("timer").textContent="회의 끝!";
+      bigState(big,"");
+      document.getElementById("tSub").textContent="아래 결과를 확인하세요.";
+    } else if(!ag){
+      document.getElementById("timer").textContent="--:--";
+      document.getElementById("tName").textContent=state.cur<0?"시작 버튼을 누르면 첫 안건부터":"모든 안건이 끝났어요";
+      document.getElementById("tSub").textContent=state.cur<0?("전체 "+state.agendas.length+"개 안건 · 총 "+Math.round(totalMs()/60000)+"분"):"결과를 아래에서 확인하세요.";
+      bigState(big,"");
+    }
+    return;
+  }
+  document.getElementById("tName").textContent=ag.name+"  ("+(state.cur+1)+"/"+state.agendas.length+")";
+  var used=state.elapsed+(state.running?now()-state.startedAt:0);
+  var left=ag.min*60000-used;
+  document.getElementById("timer").textContent=left>=0?fmt(left):"+"+fmt(-left);
+  if(left<0){bigState(big,"over");}
+  else if(left<=60000){bigState(big,"warn");}
+  else{bigState(big,"");}
+  var totalLeft=totalMs()-passedMs();
+  var endAt=new Date(now()+totalLeft);
+  document.getElementById("tSub").textContent="전체 남은 "+fmt(totalLeft)+" · 지금 속도면 "+endAt.getHours()+":"+(endAt.getMinutes()<10?"0":"")+endAt.getMinutes()+"에 끝나요";
+}
+
+function renderList(){
+  var box=document.getElementById("agendaList");box.innerHTML="";
+  state.agendas.filter(Boolean).forEach(function(a){
+    var i=state.agendas.indexOf(a);
+    var d=document.createElement("div");
+    d.className="ag"+(i===state.cur?" now":"")+(i<state.cur?" past":"");
+    var used=state.results[i];
+    var el=document.createElement("span");el.className="el";
+    el.textContent=used!=null?(i<state.cur||state.status==="done"?fmt(used)+" 사용":"진행 중"):(a.min+"분 계획");
+    var nm=document.createElement("input");nm.className="nm";nm.value=a.name;nm.addEventListener("change",function(){a.name=nm.value;save()});
+    var mn=document.createElement("input");mn.className="mn";mn.type="number";mn.min="1";mn.value=a.min;mn.addEventListener("change",function(){a.min=Math.max(1,parseInt(mn.value)||1);save();renderAll()});
+    var up=document.createElement("button");up.className="mv";up.textContent="▲";up.title="위로";up.onclick=function(){var idx=state.agendas.indexOf(a);if(idx>0){var t=state.agendas[idx-1];state.agendas[idx-1]=a;state.agendas[idx]=t;save();renderAll()}};
+    var dn=document.createElement("button");dn.className="mv";dn.textContent="▼";dn.title="아래로";dn.onclick=function(){var idx=state.agendas.indexOf(a);if(idx>=0&&idx<state.agendas.length-1){var t=state.agendas[idx+1];state.agendas[idx+1]=a;state.agendas[idx]=t;save();renderAll()}};
+    var del=document.createElement("button");del.className="del";del.textContent="✕";del.title="지우기";del.onclick=function(){var idx=state.agendas.indexOf(a);if(idx>=0){state.agendas.splice(idx,1);save();renderAll()}};
+    d.appendChild(el);d.appendChild(nm);d.appendChild(mn);
+    d.appendChild(document.createTextNode("분 "));
+    d.appendChild(up);d.appendChild(dn);d.appendChild(del);
+    box.appendChild(d);
+  });
+  document.getElementById("totalInfo").textContent="안건 "+state.agendas.length+"개 · 총 "+Math.round(totalMs()/60000)+"분";
+  if(state.agendas.length===0){
+    var p=document.createElement("p");p.className="muted";p.style.marginTop="8px";p.textContent="아래에서 안건을 추가해 주세요.";box.appendChild(p);
+  }
+}
+
+function renderSummary(){
+  var card=document.getElementById("summaryCard");
+  if(state.status!=="done"){card.style.display="none";return}
+  card.style.display="block";
+  var box=document.getElementById("summaryList");box.innerHTML="";
+  var totalPlan=totalMs()/60000,totalUsed=0;
+  state.agendas.forEach(function(a,i){
+    var used=(state.results[i]||0)/60000;totalUsed+=used;
+    var over=used-a.min;
+    var d=document.createElement("div");d.className="sumline";
+    d.innerHTML="<span>"+(i+1)+". "+a.name.replace(/</g,"&lt;")+"</span><span>"+a.min+"분 계획 → "+used.toFixed(1)+"분 사용"+(over>0.01?' <span class="over-t">(+'+over.toFixed(1)+'분 넘김)</span>':"")+"</span>";
+    box.appendChild(d);
+  });
+  var diff=totalUsed-totalPlan;
+  var p=document.createElement("p");p.style.marginTop="8px";p.style.fontSize="13px";p.style.fontWeight="700";
+  p.innerHTML="전체 "+totalUsed.toFixed(1)+"분 사용 · 계획 "+totalPlan+"분보다 "+(diff>0.01?'<span class="over-t">'+diff.toFixed(1)+"분 넘겼어요</span>":'<span style="color:var(--ok)">'+(-diff).toFixed(1)+"분 일찍 끝났어요</span>");
+  box.appendChild(p);
+}
+
+function renderAll(){renderList();renderSummary();tick()}
+
+function startPause(){
+  if(state.status==="done")return;
+  if(state.cur<0)state.cur=0;
+  if(state.running){state.elapsed+=now()-state.startedAt;state.running=false;state.results[state.cur]=state.elapsed;}
+  else{state.startedAt=now();state.running=true;}
+  state.status="running";
+  document.getElementById("btnStart").textContent=state.running?"⏸ 일시정지":"▶ 시작";
+  save();tick();beep(state.running);
+}
+function nextAg(){
+  if(state.status==="done")return;
+  if(state.cur<0){state.cur=0;state.running=true;state.startedAt=now();state.status="running";beep(1);save();renderAll();return}
+  if(state.running)state.elapsed+=now()-state.startedAt;
+  state.running=false;state.results[state.cur]=state.elapsed;
+  if(state.cur>=state.agendas.length-1){state.status="done";state.running=false;beep(2);}
+  else{state.cur++;state.elapsed=0;state.stedAt=0;state.startedAt=0;state.running=true;state.status="running";beep(1);}
+  document.getElementById("btnStart").textContent=state.running?"⏸ 일시정지":"▶ 시작";
+  save();renderAll();
+}
+function extend(){if(currentAg()){state.elapsed-=60000;save();tick();beep(1)}}
+function reset(){
+  if(!state.resetArmed){state.resetArmed=true;document.getElementById("btnReset").textContent="정말 처음으로? (한 번 더)";setTimeout(function(){state.resetArmed=false;document.getElementById("btnReset").textContent="처음으로"},2500);return}
+  state.cur=-1;state.running=false;state.elapsed=0;state.results=[];state.status="idle";state.resetArmed=false;
+  document.getElementById("btnReset").textContent="처음으로";
+  document.getElementById("btnStart").textContent="▶ 시작";
+  save();renderAll();
+}
+var AC=null;
+function beep(n){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();for(var i=0;i<(n||1);i++){(function(i){var o=AC.createOscillator(),g=AC.createGain();o.connect(g);g.connect(AC.destination);o.frequency.value=n===2?520:740;g.gain.setValueAtTime(.0001,AC.currentTime+i*.18);g.gain.exponentialRampToValueAtTime(.25,AC.currentTime+i*.18+.02);g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+i*.18+.15);o.start(AC.currentTime+i*.18);o.stop(AC.currentTime+i*.18+.16)})(i)}}catch(e){}}
+
+document.getElementById("btnStart").onclick=startPause;
+document.getElementById("btnNext").onclick=nextAg;
+document.getElementById("btnExt").onclick=extend;
+document.getElementById("btnReset").onclick=reset;
+document.getElementById("btnAdd").onclick=function(){
+  var n=document.getElementById("newName").value.trim();
+  var m=Math.max(1,parseInt(document.getElementById("newMin").value)||5);
+  if(!n){document.getElementById("newName").focus();return}
+  state.agendas.push({name:n,min:m});document.getElementById("newName").value="";save();renderAll();beep(1);
+};
+document.getElementById("btnSample").onclick=function(){
+  state.agendas=SAMPLE.map(function(a){return{name:a.name,min:a.min}});
+  state.cur=-1;state.running=false;state.elapsed=0;state.results=[];state.status="idle";
+  save();renderAll();
+};
+document.getElementById("btnBig").onclick=function(){
+  var b=document.getElementById("bigBox");
+  if(document.fullscreenElement){document.exitFullscreen();return}
+  if(b.classList.contains("bigmode")){b.classList.remove("bigmode");return}
+  var fallback=function(){b.classList.add("bigmode")};
+  if(b.requestFullscreen){
+    var p=b.requestFullscreen();
+    if(p&&p.catch)p.catch(fallback)
+  }else{fallback()}
+};
+document.getElementById("btnCopyResult").onclick=function(){
+  var lines=["[회의 결과] "+new Date().toLocaleDateString("ko-KR")];
+  state.agendas.forEach(function(a,i){var u=(state.results[i]||0)/60000;lines.push((i+1)+". "+a.name+" — "+a.min+"분 계획 / "+u.toFixed(1)+"분 사용")});
+  copyText(lines.join("\n"),this);
+};
+function copyText(t,btn){
+  function ok(){btn.textContent="복사됐어요 ✓";setTimeout(function(){btn.textContent="결과를 메신저에 붙일 글로 복사"},1500)}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fallback)}else fallback();
+  function fallback(){var ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");ok()}catch(e){alert("복사가 막혀 있어요. 아래 글을 직접 복사해 주세요.\n\n"+t)}ta.remove()}
+}
+document.addEventListener("keydown",function(e){
+  if(e.code==="Escape"){var bb=document.getElementById("bigBox");if(bb.classList.contains("bigmode"))bb.classList.remove("bigmode")}
+  if(e.target.tagName==="INPUT"||e.target.tagName==="TEXTAREA")return;
+  if(e.code==="Space"){e.preventDefault();startPause()}
+  if(e.code==="ArrowRight"){e.preventDefault();nextAg()}
+});
+
+load();renderAll();
+setInterval(tick,250);
+})();
+</script>
+</body>
+</html>

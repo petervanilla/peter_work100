@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>일정 조율표</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f6f7fb;--card:#fff;--line:#e5e9f2;--ink:#111827;--sub:#6b7280;--brand:#4f46e5;--brand2:#7c3aed;--ok:#059669;--warn:#d97706;--bad:#e11d48;--r:14px}
+body{font-family:'Pretendard',ui-sans-serif,system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);padding:14px;min-height:100vh;font-size:14px;line-height:1.5}
+.wrap{max-width:860px;margin:0 auto}
+h1{font-size:18px;font-weight:800;letter-spacing:-.02em}
+.sub{color:var(--sub);font-size:12px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:12px;box-shadow:0 1px 2px rgba(17,24,39,.04)}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:6px 10px;font-weight:600;font-size:12px;transition:.12s}
+button:hover{border-color:#c7cddb;background:#fafafa}
+button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}
+button.primary:hover{filter:brightness(1.07)}
+button.on{background:var(--brand);color:#fff;border-color:transparent}
+button.maybe.on{background:var(--warn);border-color:transparent}
+button.no.on{background:#9ca3af;border-color:transparent}
+input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:13px;font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+label{font-size:12px;font-weight:700;color:var(--sub);display:block;margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grow{flex:1;min-width:110px}
+.muted{color:var(--sub);font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+th,td{border:1px solid var(--line);padding:6px 4px;text-align:center}
+th{background:#f8fafc;font-size:11px;color:var(--sub)}
+td.slot{font-weight:700;font-size:11px;white-space:nowrap}
+td .btns{display:flex;gap:3px;justify-content:center}
+td .btns button{padding:3px 6px;font-size:11px;border-radius:6px}
+.bar{height:8px;background:#f1f5f9;border-radius:999px;overflow:hidden;margin-top:3px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),var(--brand2))}
+.best{background:#eef2ff;border-color:#c7d2fe!important}
+.usecases{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+.usecases h2{font-size:12px;font-weight:800;color:var(--sub);margin-bottom:6px}
+.usecases li{font-size:12px;color:var(--sub);margin-left:14px;margin-bottom:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📆 일정 조율표</h1>
+  <p class="sub">날짜·시간 후보를 올려두면 참여자가 체크해 가장 많이 겹치는 시간을 찾아 줘요.</p>
+
+  <div class="card">
+    <div class="row">
+      <div class="grow"><label for="pTitle">무엇의 일정인가요?</label><input id="pTitle" placeholder="예: 10월 팀 회의"></div>
+      <div style="width:150px"><label for="pDate">날짜</label><input id="pDate" type="date"></div>
+      <div class="grow"><label for="pSlots">시간대 (쉼표로)</label><input id="pSlots" value="10:00, 11:00, 14:00, 15:00, 16:00"></div>
+      <button id="btnAddDate" class="primary" style="align-self:flex-end">+ 날짜 추가</button>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <div class="grow"><label for="pPerson">참여자 이름</label><input id="pPerson" placeholder="예: 김보고"></div>
+      <button id="btnAddPerson" style="align-self:flex-end">+ 참여자 추가</button>
+      <button id="btnSample" style="align-self:flex-end">예시로 되돌리기</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <b style="font-size:13px">참석 체크</b>
+    <p class="muted" style="margin-top:2px">참석(파랑) · 애매함(노랑) · 불참(회색)을 누르세요. 참석 인원이 많은 후보가 위로 정렬돼요.</p>
+    <div style="overflow-x:auto"><table id="pollTable"></table></div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <button class="primary" id="btnBest">가장 좋은 시간 고르기</button>
+      <button id="btnCopy">결과를 글로 복사</button>
+    </div>
+    <div class="row" style="margin-top:10px" id="bestBox"></div>
+  </div>
+
+  <div class="usecases">
+    <h2>이럴 때 좋아요</h2>
+    <ul>
+      <li><b>팀장</b> · 5명이 있는데 회의 시간을 정하는 데만 이틀이 걸릴 때 — 후보 시간을 올려두고 참석 버튼만 누르게 하면 겹치는 시간이 바로 보여요.</li>
+      <li><b>교육 담당</b> · 수강생 여러 명과 교육 일정을 맞춰야 할 때 — 날짜별·시간대별로 참석자를 모아 가장 많이 겹치는 날짜를 고르세요.</li>
+      <li><b>모든 직장인</b> · 점심·회식 날짜를 정할 때 — 투표처럼 가볍게 체크하고, 결과를 메신저에 붙여 공유하면 끝.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var KEY="schedule-poll-v1";
+function todayStr(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function addDays(n){var d=new Date();d.setDate(d.getDate()+n);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+var state={title:"",dates:[],people:[],votes:{}};
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+function load(){try{var s=localStorage.getItem(KEY);if(s)state=JSON.parse(s)}catch(e){}}
+function voteKey(d,s,p){return d+"|"+s+"|"+p}
+function getVote(d,s,p){return state.votes[voteKey(d,s,p)]||""}
+function setVote(d,s,p,val){state.votes[voteKey(d,s,p)]=val;save()}
+function slotStats(d,s){
+  var yes=0,maybe=0;
+  state.people.forEach(function(p){
+    var v=getVote(d,s,p);
+    if(v==="yes")yes++;else if(v==="maybe")maybe++;
+  });
+  return {yes:yes,maybe:maybe,total:yes+maybe};
+}
+function sortedSlots(){
+  var all=[];
+  state.dates.forEach(function(d){d.slots.forEach(function(s){all.push({date:d.date,slots:s})})});
+  return all.sort(function(a,b){
+    var sa=sortedStats(a),sb=sortedStats(b);
+    return sb.yes-sa.yes||sb.total-sa.total||a.date.localeCompare(b.date);
+  });
+}
+function sortedStats(x){return slotStats(x.date,x.slots)}
+function render(){
+  var tb=document.getElementById("pollTable");
+  if(!state.dates.length||!state.people.length){
+    tb.innerHTML='<tr><td class="muted" style="text-align:center;padding:16px">날짜와 참여자를 추가하면 표가 만들어져요.</td></tr>';
+    return;
+  }
+  var slots=sortedSlots();
+  var html="<tr><th style='text-align:left'>날짜 · 시간</th>"+state.people.map(function(p){return "<th>"+p+"</th>"}).join("")+"<th>참석</th></tr>";
+  slots.forEach(function(x){
+    var st=sortedStats(x);
+    var best=st.yes>0&&st.yes===Math.max.apply(null,slots.map(function(y){return sortedStats(y).yes}));
+    html+="<tr class='"+(best?"best":"")+"'><td class='slot'>"+x.date.slice(5).replace("-","/")+" "+x.slots+"</td>";
+    state.people.forEach(function(p){
+      var v=getVote(x.date,x.slots,p);
+      html+="<td><div class='btns'>"+
+        "<button class='y "+(v==="yes"?"on":"")+"' data-d='"+x.date+"' data-s='"+x.slots+"' data-p='"+p+"' data-v='yes'>참</button>"+
+        "<button class='maybe "+(v==="maybe"?"on":"")+"' data-d='"+x.date+"' data-s='"+x.slots+"' data-p='"+p+"' data-v='maybe'>애</button>"+
+        "<button class='no "+(v==="no"?"on":"")+"' data-d='"+x.date+"' data-s='"+x.slots+"' data-p='"+p+"' data-v='no'>불</button>"+
+        "</div></td>";
+    });
+    html+="<td><b>"+st.yes+"</b>/"+state.people.length+"<div class='bar'><i style='width:"+(st.yes/state.people.length*100)+"%'></i></div></td></tr>";
+  });
+  tb.innerHTML=html;
+  tb.querySelectorAll("[data-v]").forEach(function(b){
+    b.onclick=function(){
+      var d=b.getAttribute("data-d"),s=b.getAttribute("data-s"),p=b.getAttribute("data-p"),v=b.getAttribute("data-v");
+      var cur=getVote(d,s,p);
+      setVote(d,s,p,cur===v?"":v);
+      render();
+    };
+  });
+}
+document.getElementById("btnAddDate").onclick=function(){
+  var d=document.getElementById("pDate").value;
+  var slots=document.getElementById("pSlots").value.split(",").map(function(s){return s.trim()}).filter(Boolean);
+  if(!d||!slots.length)return;
+  var exist=state.dates.filter(function(x){return x.date===d})[0];
+  if(exist)exist.slots=slots;else state.dates.push({date:d,slots:slots});
+  save();render();
+};
+document.getElementById("btnAddPerson").onclick=function(){
+  var p=document.getElementById("pPerson").value.trim();
+  if(!p||state.people.indexOf(p)>=0)return;
+  state.people.push(p);document.getElementById("pPerson").value="";save();render();
+};
+document.getElementById("pPerson").addEventListener("keydown",function(e){if(e.key==="Enter")document.getElementById("btnAddPerson").click()});
+document.getElementById("btnSample").onclick=function(){
+  state={title:"10월 팀 회의",
+    dates:[{date:addDays(2),slots:["10:00","11:00","14:00","15:00"]},{date:addDays(3),slots:["10:00","11:00","14:00","15:00"]}],
+    people:["김보고","이개발","박디자인","최성장"],votes:{}};
+  save();render();
+};
+document.getElementById("btnBest").onclick=function(){
+  var slots=sortedSlots();
+  var box=document.getElementById("bestBox");box.innerHTML="";
+  if(!slots.length){box.innerHTML='<span class="muted">먼저 날짜를 추가해 주세요.</span>';return}
+  var top=slots.filter(function(x){return sortedStats(x).yes===sortedStats(slots[0]).yes&&sortedStats(x).yes>0});
+  if(!top.length){box.innerHTML='<span class="muted">아직 참석 체크가 없어요.</span>';return}
+  box.innerHTML=top.map(function(x){
+    var st=sortedStats(x);
+    return "<span class='pill' style='background:#eef2ff;color:#4338ca;font-size:12px;padding:6px 12px'>📌 "+x.date.slice(5).replace("-","/")+" "+x.slots+" — "+st.yes+"명 참석"+(st.maybe?" ("+st.maybe+"명 애매)":"")+"</span>";
+  }).join("");
+};
+document.getElementById("btnCopy").onclick=function(){
+  var lines=["["+(state.title||"일정 조율")+" 결과]"];
+  var slots=sortedSlots();
+  if(!slots.length)lines.push("(후보 없음)");
+  slots.forEach(function(x){
+    var st=sortedStats(x);
+    lines.push("- "+x.date.slice(5).replace("-","/")+" "+x.slots+" → 참석 "+st.yes+"명 / 애매 "+st.maybe+"명");
+  });
+  copyText(lines.join("\n"),this);
+};
+function copyText(t,btn){
+  function ok(){btn.textContent="복사됐어요 ✓";setTimeout(function(){btn.textContent="결과를 글로 복사"},1500)}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fb)}else fb();
+  function fb(){var ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");ok()}catch(e){alert(t)}ta.remove()}
+}
+document.getElementById("pDate").value=todayStr();
+load();
+if(!state.dates.length){
+  state.dates=[{date:addDays(2),slots:["10:00","11:00","14:00","15:00"]},{date:addDays(3),slots:["10:00","11:00","14:00","15:00"]}];
+  state.people=["김보고","이개발","박디자인","최성장"];
+}
+render();
+})();
+</script>
+</body>
+</html>
